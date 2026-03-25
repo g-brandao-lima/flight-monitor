@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-25T19:13:08.384Z"
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-25T19:34:52.836Z"
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 15
+  completed_plans: 13
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** Detectar o momento certo de comprar uma passagem antes que o preço suba, usando dados de booking class inventory (Amadeus API) que nenhum sistema consumer expõe.
-**Current focus:** Phase 04 — gmail-alerts
+**Current focus:** Phase 05 — web-dashboard
 
 ## Current Position
 
-Phase: 04 (gmail-alerts) — EXECUTING
-Plan: 3 of 3
+Phase: 05 (web-dashboard) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Plan: 3 of 3
 | Phase 04-gmail-alerts P02 | 3min | 2 tasks | 5 files |
 | Phase 04-gmail-alerts P01 | 4min | 2 tasks | 4 files |
 | Phase 04-gmail-alerts P03 | 12min | 2 tasks | 2 files |
+| Phase 05 P01 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 04-gmail-alerts]: SMTP_SSL porta 465 com timeout=30 previne travamento do polling em falha de rede
 - [Phase 04-gmail-alerts]: try/except per signal in polling cycle — finer isolation than per-group
 - [Phase 04-gmail-alerts]: REFACTOR checklist (CLAUDE.md 4.1) applied to Phase 4 files — code was already clean, no changes needed
+- [Phase 05]: SQLAlchemy case() for urgency ordering (MAXIMA=3, ALTA=2, MEDIA=1)
+- [Phase 05]: 12h signal freshness window for dashboard summary display
 
 ### Pending Todos
 
@@ -103,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T19:13:08.378Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-web-dashboard/05-CONTEXT.md
+Last session: 2026-03-25T19:34:52.826Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: None
