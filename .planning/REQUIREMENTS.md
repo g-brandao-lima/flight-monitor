@@ -76,7 +76,7 @@
 
 ### Correcoes
 
-- [ ] **FIX-01**: Polling nao salva snapshots duplicados (mesmo voo salvo 2x no mesmo ciclo)
+- [x] **FIX-01**: Polling nao salva snapshots duplicados (mesmo voo salvo 2x no mesmo ciclo)
 
 ---
 
@@ -148,7 +148,7 @@
 | DASH-03 | Phase 5 | Complete |
 | DASH-04 | Phase 5 | Complete |
 | DASH-05 | Phase 5 | Complete |
-| FIX-01 | Phase 6 | Pending |
+| FIX-01 | Phase 6 | Complete |
 | UX-01 | Phase 6 | Pending |
 | UX-02 | Phase 6 | Pending |
 | EMAIL-01 | Phase 7 | Pending |

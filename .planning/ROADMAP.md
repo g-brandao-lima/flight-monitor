@@ -120,7 +120,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01-PLAN.md - TDD deduplicacao de snapshots no polling (FIX-01)
+- [x] 06-01-PLAN.md - TDD deduplicacao de snapshots no polling (FIX-01)
 - [ ] 06-02-PLAN.md - Flash messages de feedback + pagina de erro amigavel (UX-01, UX-02)
 
 ### Phase 7: Consolidated Email
