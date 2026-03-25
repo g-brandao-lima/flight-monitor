@@ -1,0 +1,132 @@
+# Requirements: Flight Monitor
+
+**Defined:** 2026-03-24
+**Core Value:** Detectar o momento certo de comprar uma passagem antes que o preço suba, usando dados de inventário reais (booking classes via Amadeus API) que nenhum sistema consumer expõe.
+
+## v1 Requirements
+
+### Route Groups (Grupos de Rota)
+
+- [ ] **ROUTE-01**: Usuário pode criar um Grupo de Rota com: nome, lista de aeroportos de origem (múltiplos códigos IATA), lista de aeroportos de destino (múltiplos códigos IATA), duração da viagem em dias, e período de viagem (mês específico ou intervalo de datas)
+- [ ] **ROUTE-02**: Usuário pode definir preço-alvo opcional por Grupo de Rota
+- [ ] **ROUTE-03**: Usuário pode ativar e desativar um Grupo de Rota sem deletar
+- [ ] **ROUTE-04**: Usuário pode editar um Grupo de Rota existente
+- [ ] **ROUTE-05**: Usuário pode deletar um Grupo de Rota
+- [ ] **ROUTE-06**: Sistema limita a 10 grupos ativos simultaneamente (constraint do free tier Amadeus)
+
+### Data Collection (Coleta de Dados)
+
+- [ ] **COLL-01**: Sistema faz polling da Amadeus API a cada 6 horas para cada Grupo de Rota ativo
+- [ ] **COLL-02**: Por ciclo de polling, sistema encontra as 5 combinações mais baratas de (origem × destino × data_ida × data_volta) dentro do período configurado via Amadeus Flight Cheapest Date Search e Flight Offers Search
+- [ ] **COLL-03**: Para cada combinação encontrada, sistema captura inventário de booking classes (Y, B, M, H, Q, K, L com contagem de assentos) via Amadeus Flight Availabilities Search
+- [ ] **COLL-04**: Sistema captura classificação histórica do preço (LOW / MEDIUM / HIGH) via Amadeus Flight Price Analysis para cada combinação
+- [ ] **COLL-05**: Sistema persiste todos os dados como snapshots com timestamp no banco SQLite
+- [ ] **COLL-06**: Sistema trata graciosamente falhas de API (timeout, rate limit) sem crashar o scheduler
+
+### Signal Detection (Detecção de Sinais)
+
+- [ ] **SIGN-01**: Sistema detecta sinal BALDE FECHANDO quando classe K ou Q passou de >=3 para <=1 comparado ao snapshot anterior — urgência ALTA
+- [ ] **SIGN-02**: Sistema detecta sinal BALDE REABERTO quando classe estava em 0 e voltou a ter assentos no snapshot atual — urgência MÁXIMA
+- [ ] **SIGN-03**: Sistema detecta sinal PREÇO ABAIXO DO HISTÓRICO quando Amadeus retorna LOW e preço atual está abaixo da média dos últimos 14 snapshots — urgência MÉDIA
+- [ ] **SIGN-04**: Sistema detecta sinal JANELA ÓTIMA quando dias restantes antes do voo entra na faixa 21-90 dias (doméstico) ou 30-120 dias (internacional) — urgência MÉDIA
+- [ ] **SIGN-05**: Sistema não re-alerta o mesmo sinal para a mesma rota dentro de uma janela de 12 horas (deduplicação)
+
+### Alerts (Alertas via Telegram)
+
+- [ ] **ALRT-01**: Sistema envia mensagem via Telegram Bot quando sinal detectado contendo: nome do grupo, rota específica (origem→destino + datas), preço atual, contexto histórico e urgência
+- [ ] **ALRT-02**: Usuário pode enviar comando `/silenciar [grupo]` para pausar alertas daquele grupo por 24 horas
+- [ ] **ALRT-03**: Bot Telegram responde a `/status` com lista de grupos ativos e melhor preço atual de cada um
+
+### Web Dashboard
+
+- [ ] **DASH-01**: Dashboard lista todos os Grupos de Rota com: melhor preço atual, rota mais barata encontrada e indicador visual de sinal ativo (nenhum / médio / alto / máximo)
+- [ ] **DASH-02**: Clicando em um Grupo de Rota abre histórico de preço das últimas 2 semanas em gráfico de linha
+- [ ] **DASH-03**: Dashboard tem formulário para criar novo Grupo de Rota
+- [ ] **DASH-04**: Dashboard permite editar e desativar Grupo de Rota existente
+- [ ] **DASH-05**: Interface funciona em navegador mobile (layout responsivo simples)
+
+### Infrastructure (Infraestrutura)
+
+- [ ] **INFRA-01**: Aplicação inicia com um único comando (`python main.py` ou `uvicorn app.main:app`)
+- [ ] **INFRA-02**: Configuração via arquivo `.env` (Amadeus API keys, Telegram bot token, Telegram chat ID)
+- [ ] **INFRA-03**: Banco SQLite é criado automaticamente na primeira execução com todas as tabelas necessárias
+
+---
+
+## v2 Requirements
+
+### Extended Sources
+
+- **SRC-01**: Integração com Duffel API como fonte secundária NDC para comparar preços exclusivos não disponíveis no GDS
+- **SRC-02**: Integração com SerpApi Google Flights para usar sinal de previsão "prices unlikely to drop" como confirmação
+
+### Extended Monitoring
+
+- **MON-01**: Suporte a voos de ida apenas (one-way), além de roundtrip
+- **MON-02**: Histórico de variação por booking class individual (gráfico Y, B, M... separados)
+- **MON-03**: Cálculo automático de custo total incluindo bagagem estimada por rota
+
+### Extended Interface
+
+- **UI-01**: Autocomplete de código IATA ao digitar aeroportos no formulário (busca por nome da cidade)
+- **UI-02**: Exportar histórico de alertas em CSV
+- **UI-03**: Guia de deploy passo a passo para Fly.io integrado na interface
+
+---
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Compra de passagens | Apenas monitoramento — integração com booking adiciona complexidade e responsabilidade |
+| Múltiplos usuários / autenticação | Ferramenta pessoal; adicionar auth não agrega valor agora |
+| Web scraping | Somente APIs oficiais; scraping viola ToS e é frágil |
+| Hotéis, carros, multimodal | Foco em voos — expansão dilui o core value |
+| App mobile nativo | Interface web responsiva é suficiente para o uso |
+| Notificações por email ou WhatsApp | Telegram gratuito e com push nativo resolve |
+| Multi-tenant / SaaS | Escopo pessoal — virar SaaS é decisão de negócio futura |
+| Real-time streaming de preços | Polling a cada 6h é suficiente; streaming aumentaria custo de API |
+
+---
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| ROUTE-01 | Phase 1 | Pending |
+| ROUTE-02 | Phase 1 | Pending |
+| ROUTE-03 | Phase 1 | Pending |
+| ROUTE-04 | Phase 1 | Pending |
+| ROUTE-05 | Phase 1 | Pending |
+| ROUTE-06 | Phase 1 | Pending |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Pending |
+| COLL-01 | Phase 2 | Pending |
+| COLL-02 | Phase 2 | Pending |
+| COLL-03 | Phase 2 | Pending |
+| COLL-04 | Phase 2 | Pending |
+| COLL-05 | Phase 2 | Pending |
+| COLL-06 | Phase 2 | Pending |
+| SIGN-01 | Phase 3 | Pending |
+| SIGN-02 | Phase 3 | Pending |
+| SIGN-03 | Phase 3 | Pending |
+| SIGN-04 | Phase 3 | Pending |
+| SIGN-05 | Phase 3 | Pending |
+| ALRT-01 | Phase 4 | Pending |
+| ALRT-02 | Phase 4 | Pending |
+| ALRT-03 | Phase 4 | Pending |
+| DASH-01 | Phase 5 | Pending |
+| DASH-02 | Phase 5 | Pending |
+| DASH-03 | Phase 5 | Pending |
+| DASH-04 | Phase 5 | Pending |
+| DASH-05 | Phase 5 | Pending |
+
+**Coverage:**
+- v1 requirements: 28 total
+- Mapped to phases: 28
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-03-24*
+*Last updated: 2026-03-24 after initial definition*
