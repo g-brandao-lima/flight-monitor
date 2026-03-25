@@ -121,7 +121,7 @@ Plans:
 
 Plans:
 - [x] 06-01-PLAN.md - TDD deduplicacao de snapshots no polling (FIX-01)
-- [ ] 06-02-PLAN.md - Flash messages de feedback + pagina de erro amigavel (UX-01, UX-02)
+- [x] 06-02-PLAN.md - Flash messages de feedback + pagina de erro amigavel (UX-01, UX-02)
 
 ### Phase 7: Consolidated Email
 **Goal**: Usuario recebe 1 email util por grupo com todas as informacoes necessarias para decidir se compra

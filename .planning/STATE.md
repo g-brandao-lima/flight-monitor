@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & UX
-status: Ready to execute
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-03-25T21:46:18.658Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-03-25T21:49:28.037Z"
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -50,6 +50,7 @@ Plan: 2 of 2
 - Trend: Stable
 
 | Phase 06 P01 | 2min | 1 tasks | 3 files |
+| Phase 06 P02 | 4min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -63,6 +64,8 @@ Recent decisions affecting current work:
 - [Phase 05]: format_price_brl passed as template context function for Jinja2
 - [v1.1]: Gmail para alertas (substituiu Telegram por decisao do usuario)
 - [Phase 06]: Dedup por query no banco (temporal 1h) ao inves de cache em memoria
+- [Phase 06]: Flash messages via query param ?msg= (stateless, sem sessao)
+- [Phase 06]: Exception handler global com mapeamento de mensagens por status code
 
 ### Pending Todos
 
@@ -75,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T21:46:18.652Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-03-25T21:49:28.017Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None

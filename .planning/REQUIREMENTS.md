@@ -71,8 +71,8 @@
 
 ### Feedback e Erros
 
-- [ ] **UX-01**: Mensagem de confirmacao aparece apos criar, editar ou desativar grupo
-- [ ] **UX-02**: Pagina de erro amigavel ao inves de "Internal Server Error" generico
+- [x] **UX-01**: Mensagem de confirmacao aparece apos criar, editar ou desativar grupo
+- [x] **UX-02**: Pagina de erro amigavel ao inves de "Internal Server Error" generico
 
 ### Correcoes
 
@@ -149,8 +149,8 @@
 | DASH-04 | Phase 5 | Complete |
 | DASH-05 | Phase 5 | Complete |
 | FIX-01 | Phase 6 | Complete |
-| UX-01 | Phase 6 | Pending |
-| UX-02 | Phase 6 | Pending |
+| UX-01 | Phase 6 | Complete |
+| UX-02 | Phase 6 | Complete |
 | EMAIL-01 | Phase 7 | Pending |
 | EMAIL-02 | Phase 7 | Pending |
 | EMAIL-03 | Phase 7 | Pending |
