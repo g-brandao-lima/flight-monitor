@@ -99,7 +99,7 @@ Plans:
 Plans:
 - [x] 05-01-PLAN.md - TDD dashboard_service: queries de aggregation + dependencias Jinja2 (ALRT-03, DASH-01, DASH-02)
 - [x] 05-02-PLAN.md - Dashboard routes + templates: lista de grupos com badges + detalhe com Chart.js (ALRT-03, DASH-01, DASH-02, DASH-05)
-- [ ] 05-03-PLAN.md - Formularios criar/editar/toggle grupo + checkpoint visual (DASH-03, DASH-04)
+- [x] 05-03-PLAN.md - Formularios criar/editar/toggle grupo + checkpoint visual (DASH-03, DASH-04)
 
 ## Progress
 

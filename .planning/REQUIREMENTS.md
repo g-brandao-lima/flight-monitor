@@ -41,8 +41,8 @@
 
 - [x] **DASH-01**: Dashboard lista todos os Grupos de Rota com: melhor preço atual, rota mais barata encontrada e indicador visual de sinal ativo (nenhum / médio / alto / máximo)
 - [x] **DASH-02**: Clicando em um Grupo de Rota abre histórico de preço das últimas 2 semanas em gráfico de linha
-- [ ] **DASH-03**: Dashboard tem formulário para criar novo Grupo de Rota
-- [ ] **DASH-04**: Dashboard permite editar e desativar Grupo de Rota existente
+- [x] **DASH-03**: Dashboard tem formulário para criar novo Grupo de Rota
+- [x] **DASH-04**: Dashboard permite editar e desativar Grupo de Rota existente
 - [x] **DASH-05**: Interface funciona em navegador mobile (layout responsivo simples)
 
 ### Infrastructure (Infraestrutura)
@@ -118,8 +118,8 @@
 | ALRT-03 | Phase 4 | Complete |
 | DASH-01 | Phase 5 | Complete |
 | DASH-02 | Phase 5 | Complete |
-| DASH-03 | Phase 5 | Pending |
-| DASH-04 | Phase 5 | Pending |
+| DASH-03 | Phase 5 | Complete |
+| DASH-04 | Phase 5 | Complete |
 | DASH-05 | Phase 5 | Complete |
 
 **Coverage:**
