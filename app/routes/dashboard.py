@@ -1,11 +1,14 @@
 import re
 import datetime
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+
+from fastapi.responses import JSONResponse
 
 from app.database import get_db
 from app.models import RouteGroup
@@ -14,9 +17,11 @@ from app.services.dashboard_service import (
     get_price_history,
     format_price_brl,
 )
+from app.services.airport_service import is_valid_code, get_all_airports, search_airports
 
 router = APIRouter(tags=["dashboard"])
-templates = Jinja2Templates(directory="app/templates")
+_TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
+templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 
 IATA_PATTERN = re.compile(r"^[A-Z]{3}$")
 MAX_ACTIVE_GROUPS = 10
@@ -32,7 +37,9 @@ def _validate_iata_codes(codes: list[str]) -> str | None:
     """Return error message if any code is invalid, else None."""
     for code in codes:
         if not IATA_PATTERN.match(code):
-            return f"Codigo IATA invalido: {code}. Deve ter 3 letras."
+            return f"Codigo IATA invalido: {code}. Deve ter 3 letras maiusculas."
+        if not is_valid_code(code):
+            return f"Aeroporto nao encontrado: {code}. Verifique o codigo IATA."
     return None
 
 
@@ -75,22 +82,45 @@ def _validate_form(
     return origins, destinations, None
 
 
+FLASH_MESSAGES = {
+    "grupo_criado": "Grupo criado com sucesso!",
+    "grupo_atualizado": "Grupo atualizado com sucesso!",
+    "grupo_ativado": "Grupo ativado com sucesso!",
+    "grupo_desativado": "Grupo desativado com sucesso!",
+}
+
+
 @router.get("/", response_class=HTMLResponse)
-def dashboard_index(request: Request, db: Session = Depends(get_db)):
+def dashboard_index(request: Request, msg: str | None = None, db: Session = Depends(get_db)):
     groups = get_groups_with_summary(db)
+    flash_message = FLASH_MESSAGES.get(msg) if msg else None
     return templates.TemplateResponse(
         request=request,
         name="dashboard/index.html",
-        context={"groups": groups, "format_price_brl": format_price_brl},
+        context={
+            "groups": groups,
+            "format_price_brl": format_price_brl,
+            "flash_message": flash_message,
+        },
     )
+
+
+@router.get("/api/airports/search")
+def api_search_airports(q: str = ""):
+    """Endpoint de busca de aeroportos para autocomplete."""
+    if len(q) < 2:
+        return JSONResponse([])
+    results = search_airports(q, limit=8)
+    return JSONResponse(results)
 
 
 @router.get("/groups/create", response_class=HTMLResponse)
 def create_group_page(request: Request):
+    airports = get_all_airports()
     return templates.TemplateResponse(
         request=request,
         name="dashboard/create.html",
-        context={},
+        context={"airports": airports},
     )
 
 
@@ -128,7 +158,7 @@ def create_group_form(
         return templates.TemplateResponse(
             request=request,
             name="dashboard/create.html",
-            context={"error": error, "form_data": form_data},
+            context={"error": error, "form_data": form_data, "airports": get_all_airports()},
         )
 
     tp = float(target_price) if target_price.strip() else None
@@ -144,7 +174,7 @@ def create_group_form(
     )
     db.add(group)
     db.commit()
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url="/?msg=grupo_criado", status_code=303)
 
 
 @router.get("/groups/{group_id}", response_class=HTMLResponse)
@@ -171,7 +201,7 @@ def edit_group_page(
     return templates.TemplateResponse(
         request=request,
         name="dashboard/edit.html",
-        context={"group": group},
+        context={"group": group, "airports": get_all_airports()},
     )
 
 
@@ -209,7 +239,7 @@ def edit_group_form(
         return templates.TemplateResponse(
             request=request,
             name="dashboard/edit.html",
-            context={"group": group, "error": error, "form_data": form_data},
+            context={"group": group, "error": error, "form_data": form_data, "airports": get_all_airports()},
         )
 
     tp = float(target_price) if target_price.strip() else None
@@ -221,7 +251,7 @@ def edit_group_form(
     group.travel_end = travel_end
     group.target_price = tp
     db.commit()
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url="/?msg=grupo_atualizado", status_code=303)
 
 
 @router.post("/groups/{group_id}/toggle")
@@ -237,4 +267,5 @@ def toggle_group(group_id: int, db: Session = Depends(get_db)):
 
     group.is_active = not group.is_active
     db.commit()
-    return RedirectResponse(url="/", status_code=303)
+    status = "ativado" if group.is_active else "desativado"
+    return RedirectResponse(url=f"/?msg=grupo_{status}", status_code=303)

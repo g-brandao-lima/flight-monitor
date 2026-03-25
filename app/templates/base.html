@@ -11,6 +11,11 @@
         nav a { color: white; text-decoration: none; font-weight: 500; }
         nav a:hover { text-decoration: underline; }
         .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        @keyframes fadeOut {
+            0%, 80% { opacity: 1; }
+            100% { opacity: 0; display: none; }
+        }
+        .flash-message { animation: fadeOut 5s forwards; }
         @media (max-width: 768px) {
             .container { padding: 1rem; }
             .card-grid { grid-template-columns: 1fr !important; }
@@ -24,6 +29,11 @@
         <a href="/groups/create">Novo Grupo</a>
     </nav>
     <div class="container">
+        {% if flash_message %}
+        <div class="flash-message" style="background: #059669; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; margin-bottom: 1rem; font-weight: 500;">
+            {{ flash_message }}
+        </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </div>
 </body>

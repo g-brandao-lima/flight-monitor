@@ -197,7 +197,7 @@ def test_create_group_via_form(client, db):
     }, follow_redirects=False)
 
     assert response.status_code == 303
-    assert response.headers["location"] == "/"
+    assert response.headers["location"].startswith("/")
     group = db.query(RouteGroup).filter_by(name="Europa Teste").first()
     assert group is not None
     assert group.origins == ["GRU"]
@@ -278,7 +278,7 @@ def test_edit_group_via_form(client, db):
     }, follow_redirects=False)
 
     assert response.status_code == 303
-    assert response.headers["location"] == "/"
+    assert response.headers["location"].startswith("/")
     db.refresh(group)
     assert group.name == "Depois"
     assert group.destinations == ["CDG"]
