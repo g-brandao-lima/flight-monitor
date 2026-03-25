@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from app.database import SessionLocal
 from app.models import RouteGroup
 from app.services.amadeus_client import AmadeusClient, classify_price
+from app.services.signal_service import detect_signals
 from app.services.snapshot_service import save_flight_snapshot
 
 logger = logging.getLogger(__name__)
@@ -122,7 +123,16 @@ def _process_offer(db, client, group, origin, destination, dep_date, ret_date, o
         "booking_classes": booking_classes,
         **price_metrics,
     }
-    save_flight_snapshot(db, snapshot_data)
+    snapshot = save_flight_snapshot(db, snapshot_data)
+    try:
+        detected = detect_signals(db, snapshot)
+        for signal in detected:
+            logger.info(
+                f"Signal detected: {signal.signal_type} ({signal.urgency}) "
+                f"for {signal.origin}->{signal.destination} {signal.departure_date}"
+            )
+    except Exception as e:
+        logger.error(f"Signal detection failed for snapshot {getattr(snapshot, 'id', '?')}: {e}")
 
 
 def _extract_booking_classes(avail_data: list) -> list[dict]:
