@@ -43,7 +43,7 @@
 - [x] **DASH-02**: Clicando em um Grupo de Rota abre histórico de preço das últimas 2 semanas em gráfico de linha
 - [ ] **DASH-03**: Dashboard tem formulário para criar novo Grupo de Rota
 - [ ] **DASH-04**: Dashboard permite editar e desativar Grupo de Rota existente
-- [ ] **DASH-05**: Interface funciona em navegador mobile (layout responsivo simples)
+- [x] **DASH-05**: Interface funciona em navegador mobile (layout responsivo simples)
 
 ### Infrastructure (Infraestrutura)
 
@@ -120,7 +120,7 @@
 | DASH-02 | Phase 5 | Complete |
 | DASH-03 | Phase 5 | Pending |
 | DASH-04 | Phase 5 | Pending |
-| DASH-05 | Phase 5 | Pending |
+| DASH-05 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 28 total
