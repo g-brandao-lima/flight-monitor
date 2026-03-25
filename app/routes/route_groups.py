@@ -10,6 +10,14 @@ router = APIRouter(prefix="/route-groups", tags=["route-groups"])
 DbDep = Annotated[Session, Depends(get_db)]
 
 
+def get_group_or_404(group_id: int, db: Session) -> RouteGroup:
+    """Fetch a RouteGroup by ID or raise 404 if not found."""
+    group = db.get(RouteGroup, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Route group not found")
+    return group
+
+
 @router.post("/", response_model=RouteGroupResponse, status_code=201)
 def create_route_group(data: RouteGroupCreate, db: DbDep):
     check_active_group_limit(db)
@@ -27,17 +35,12 @@ def list_route_groups(db: DbDep):
 
 @router.get("/{group_id}", response_model=RouteGroupResponse)
 def get_route_group(group_id: int, db: DbDep):
-    group = db.get(RouteGroup, group_id)
-    if not group:
-        raise HTTPException(status_code=404, detail="Route group not found")
-    return group
+    return get_group_or_404(group_id, db)
 
 
 @router.patch("/{group_id}", response_model=RouteGroupResponse)
 def update_route_group(group_id: int, data: RouteGroupUpdate, db: DbDep):
-    group = db.get(RouteGroup, group_id)
-    if not group:
-        raise HTTPException(status_code=404, detail="Route group not found")
+    group = get_group_or_404(group_id, db)
     update_data = data.model_dump(exclude_unset=True)
     if update_data.get("is_active") is True and not group.is_active:
         check_active_group_limit(db, exclude_id=group.id)
@@ -50,8 +53,6 @@ def update_route_group(group_id: int, data: RouteGroupUpdate, db: DbDep):
 
 @router.delete("/{group_id}", status_code=204)
 def delete_route_group(group_id: int, db: DbDep):
-    group = db.get(RouteGroup, group_id)
-    if not group:
-        raise HTTPException(status_code=404, detail="Route group not found")
+    group = get_group_or_404(group_id, db)
     db.delete(group)
     db.commit()
