@@ -10,7 +10,11 @@ from app.database import Base, engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    from app.scheduler import init_scheduler, shutdown_scheduler
+
+    init_scheduler()
     yield
+    shutdown_scheduler()
 
 
 app = FastAPI(title="Flight Monitor", lifespan=lifespan)
