@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 from app.database import SessionLocal
 from app.models import RouteGroup
-from app.services.alert_service import compose_alert_email, send_email, should_alert
+from app.services.alert_service import compose_consolidated_email, send_email, should_alert
 from app.services.serpapi_client import SerpApiClient, classify_price
 from app.services.signal_service import detect_signals
 from app.services.snapshot_service import is_duplicate_snapshot, save_flight_snapshot
@@ -53,12 +53,18 @@ def _generate_date_pairs(
 
 
 def _poll_group(db, client: SerpApiClient, group: RouteGroup):
-    """Polling de um grupo: gera combinacoes, busca voos via SerpAPI (1 call por combinacao)."""
+    """Polling de um grupo: gera combinacoes, busca voos via SerpAPI (1 call por combinacao).
+
+    Acumula todos os sinais e snapshots do ciclo e envia 1 email consolidado ao final.
+    """
     origins = group.origins
     destinations = group.destinations
     date_pairs = _generate_date_pairs(
         group.travel_start, group.travel_end, group.duration_days
     )
+
+    accumulated_signals = []
+    accumulated_snapshots = []
 
     for origin in origins:
         for destination in destinations:
@@ -82,14 +88,34 @@ def _poll_group(db, client: SerpApiClient, group: RouteGroup):
                     continue
 
                 for flight in flights:
-                    _process_flight(
+                    result = _process_flight(
                         db, group, origin, destination, dep_date, ret_date,
                         flight, insights
                     )
+                    if result is not None:
+                        snapshot, signals = result
+                        if snapshot is not None:
+                            accumulated_snapshots.append(snapshot)
+                        accumulated_signals.extend(signals)
+
+    # Enviar email consolidado se houver sinais e grupo nao silenciado
+    if accumulated_signals and should_alert(group):
+        try:
+            msg = compose_consolidated_email(accumulated_signals, accumulated_snapshots, group)
+            send_email(msg)
+            logger.info(
+                f"Consolidated email sent for group {group.name}: "
+                f"{len(accumulated_signals)} signals, {len(accumulated_snapshots)} snapshots"
+            )
+        except Exception as e:
+            logger.error(f"Consolidated email failed for group {group.name}: {e}")
 
 
 def _process_flight(db, group, origin, destination, dep_date, ret_date, flight, insights):
-    """Processa um voo: classifica preco e persiste snapshot."""
+    """Processa um voo: classifica preco, persiste snapshot e detecta sinais.
+
+    Retorna tupla (snapshot, list[DetectedSignal]) ou None se duplicata.
+    """
     price = float(flight["price"])
     airline = flight.get("airline", "??")
 
@@ -115,7 +141,7 @@ def _process_flight(db, group, origin, destination, dep_date, ret_date, flight, 
             f"Duplicate snapshot skipped: {origin}->{destination} {dep_date} "
             f"price={price} airline={airline}"
         )
-        return
+        return None
 
     snapshot_data = {
         "route_group_id": group.id,
@@ -131,6 +157,7 @@ def _process_flight(db, group, origin, destination, dep_date, ret_date, flight, 
         **price_metrics,
     }
     snapshot = save_flight_snapshot(db, snapshot_data)
+    detected = []
     try:
         detected = detect_signals(db, snapshot)
         for signal in detected:
@@ -138,12 +165,6 @@ def _process_flight(db, group, origin, destination, dep_date, ret_date, flight, 
                 f"Signal detected: {signal.signal_type} ({signal.urgency}) "
                 f"for {signal.origin}->{signal.destination} {signal.departure_date}"
             )
-            try:
-                if should_alert(group):
-                    msg = compose_alert_email(signal, group)
-                    send_email(msg)
-                    logger.info(f"Alert email sent for {signal.signal_type}")
-            except Exception as e:
-                logger.error(f"Alert email failed: {e}")
     except Exception as e:
         logger.error(f"Signal detection failed for snapshot {getattr(snapshot, 'id', '?')}: {e}")
+    return (snapshot, detected)

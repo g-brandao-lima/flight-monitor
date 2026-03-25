@@ -328,10 +328,10 @@ class TestPollGroupSnapshotData:
 
 
 class TestPollingAlertIntegration:
-    """Tests for alert_service integration within the polling cycle."""
+    """Tests for alert_service integration within the polling cycle (consolidated flow)."""
 
     @patch("app.services.polling_service.send_email")
-    @patch("app.services.polling_service.compose_alert_email")
+    @patch("app.services.polling_service.compose_consolidated_email")
     @patch("app.services.polling_service.should_alert")
     @patch("app.services.polling_service.detect_signals")
     @patch("app.services.polling_service.save_flight_snapshot")
@@ -363,6 +363,8 @@ class TestPollingAlertIntegration:
         mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
+        fake_snapshot = MagicMock()
+        mock_save.return_value = fake_snapshot
         fake_signal = MagicMock()
         mock_detect.return_value = [fake_signal]
         mock_should_alert.return_value = True
@@ -375,7 +377,7 @@ class TestPollingAlertIntegration:
         mock_send_email.assert_called_once_with(fake_msg)
 
     @patch("app.services.polling_service.send_email")
-    @patch("app.services.polling_service.compose_alert_email")
+    @patch("app.services.polling_service.compose_consolidated_email")
     @patch("app.services.polling_service.should_alert")
     @patch("app.services.polling_service.detect_signals")
     @patch("app.services.polling_service.save_flight_snapshot")
@@ -407,6 +409,8 @@ class TestPollingAlertIntegration:
         mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
+        fake_snapshot = MagicMock()
+        mock_save.return_value = fake_snapshot
         fake_signal = MagicMock()
         mock_detect.return_value = [fake_signal]
         mock_should_alert.return_value = False
@@ -417,7 +421,7 @@ class TestPollingAlertIntegration:
         mock_send_email.assert_not_called()
 
     @patch("app.services.polling_service.send_email")
-    @patch("app.services.polling_service.compose_alert_email")
+    @patch("app.services.polling_service.compose_consolidated_email")
     @patch("app.services.polling_service.should_alert")
     @patch("app.services.polling_service.detect_signals")
     @patch("app.services.polling_service.save_flight_snapshot")
@@ -449,6 +453,8 @@ class TestPollingAlertIntegration:
         mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
+        fake_snapshot = MagicMock()
+        mock_save.return_value = fake_snapshot
         fake_signal = MagicMock()
         mock_detect.return_value = [fake_signal]
         mock_should_alert.return_value = True
