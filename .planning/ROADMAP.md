@@ -29,7 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Arquivo `.env` controla todas as credenciais; banco SQLite é criado automaticamente com todas as tabelas na primeira execução
   3. Usuário pode criar um Grupo de Rota com múltiplas origens, múltiplos destinos, duração e período via API
   4. Usuário pode editar, ativar, desativar e deletar grupos existentes; sistema rejeita criação de 11º grupo ativo
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md - Setup projeto + testes RED + implementacao GREEN para infraestrutura (INFRA-01/02/03)
+- [ ] 01-02-PLAN.md - Testes RED + implementacao GREEN para CRUD de Route Groups (ROUTE-01 a ROUTE-06)
+- [ ] 01-03-PLAN.md - Refatoracao (REFACTOR) + checkpoint humano de verificacao
 
 ### Phase 2: Data Collection
 **Goal**: Sistema coleta dados reais da Amadeus de forma autônoma e persiste snapshots para análise histórica
@@ -86,7 +91,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/3 | Planning complete | - |
 | 2. Data Collection | 0/TBD | Not started | - |
 | 3. Signal Detection | 0/TBD | Not started | - |
 | 4. Telegram Alerts | 0/TBD | Not started | - |
