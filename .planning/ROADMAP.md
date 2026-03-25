@@ -46,7 +46,12 @@ Plans:
   3. Para cada combinação, snapshot contém booking classes com contagem (ex: Y7 B4 M3) e classificação LOW/MEDIUM/HIGH
   4. Snapshots persistem no banco com timestamp; histórico acumula entre polling cycles
   5. Falhas de API (timeout, rate limit) são tratadas sem crashar o scheduler; próximo ciclo executa normalmente
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md - Modelos FlightSnapshot/BookingClassSnapshot + snapshot_service + config Gmail (COLL-05)
+- [ ] 02-02-PLAN.md - AmadeusClient wrapper com Flight Offers, Availability e Price Metrics (COLL-02/03/04)
+- [ ] 02-03-PLAN.md - Polling service + scheduler 6h + integracao lifespan + error handling (COLL-01/06)
 
 ### Phase 3: Signal Detection
 **Goal**: Sistema analisa snapshots sequenciais e detecta os momentos de compra mais valiosos
@@ -92,7 +97,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/3 (checkpoint) | Complete    | 2026-03-25 |
-| 2. Data Collection | 0/TBD | Not started | - |
+| 2. Data Collection | 0/3 | Planning complete | - |
 | 3. Signal Detection | 0/TBD | Not started | - |
 | 4. Gmail Alerts | 0/TBD | Not started | - |
 | 5. Web Dashboard | 0/TBD | Not started | - |
