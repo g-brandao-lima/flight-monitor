@@ -67,7 +67,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md - Spec approval + DetectedSignal model + RED tests para todos os 4 sinais e deduplicacao (SIGN-01/02/03/04/05)
-- [ ] 03-02-PLAN.md - GREEN implementacao signal_service + integracao polling_service (SIGN-01/02/03/04/05)
+- [x] 03-02-PLAN.md - GREEN implementacao signal_service + integracao polling_service (SIGN-01/02/03/04/05)
 - [ ] 03-03-PLAN.md - Refatoracao (REFACTOR) + checkpoint humano de verificacao
 
 ### Phase 4: Gmail Alerts
