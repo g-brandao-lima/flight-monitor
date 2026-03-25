@@ -20,7 +20,7 @@
 - [ ] **COLL-02**: Por ciclo de polling, sistema encontra as 5 combinações mais baratas de (origem × destino × data_ida × data_volta) dentro do período configurado via Amadeus Flight Cheapest Date Search e Flight Offers Search
 - [ ] **COLL-03**: Para cada combinação encontrada, sistema captura inventário de booking classes (Y, B, M, H, Q, K, L com contagem de assentos) via Amadeus Flight Availabilities Search
 - [ ] **COLL-04**: Sistema captura classificação histórica do preço (LOW / MEDIUM / HIGH) via Amadeus Flight Price Analysis para cada combinação
-- [ ] **COLL-05**: Sistema persiste todos os dados como snapshots com timestamp no banco SQLite
+- [x] **COLL-05**: Sistema persiste todos os dados como snapshots com timestamp no banco SQLite
 - [ ] **COLL-06**: Sistema trata graciosamente falhas de API (timeout, rate limit) sem crashar o scheduler
 
 ### Signal Detection (Detecção de Sinais)
@@ -106,7 +106,7 @@
 | COLL-02 | Phase 2 | Pending |
 | COLL-03 | Phase 2 | Pending |
 | COLL-04 | Phase 2 | Pending |
-| COLL-05 | Phase 2 | Pending |
+| COLL-05 | Phase 2 | Complete |
 | COLL-06 | Phase 2 | Pending |
 | SIGN-01 | Phase 3 | Pending |
 | SIGN-02 | Phase 3 | Pending |

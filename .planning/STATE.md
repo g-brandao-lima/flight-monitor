@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-stopped_at: "01-03-PLAN.md Task 2 checkpoint:human-verify"
-last_updated: "2026-03-25T02:48:22.505Z"
+status: Ready to execute
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-25T03:16:41.964Z"
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 6
+  completed_plans: 4
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** Detectar o momento certo de comprar uma passagem antes que o preço suba, usando dados de booking class inventory (Amadeus API) que nenhum sistema consumer expõe.
-**Current focus:** Phase 1 — Foundation
+**Current focus:** Phase 2 — data-collection
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 2 (data-collection) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Plan: Not started
 | Phase 01-foundation P01 | 3min | 2 tasks | 19 files |
 | Phase 01-foundation P02 | 3min | 2 tasks | 2 files |
 | Phase 01-foundation P03 | 2min | 1/2 tasks (checkpoint) | 1 file |
+| Phase 02-data-collection P01 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: In-memory SQLite for test fixtures for speed and isolation
 - [Phase 01-foundation]: StaticPool required for in-memory SQLite test fixtures to share DB across connections
 - [Phase 01-foundation]: Extracted get_group_or_404 helper to eliminate DRY violation across 3 endpoints
+- [Phase 02-data-collection]: Used model_fields for Pydantic v2 BaseSettings field detection instead of hasattr
+- [Phase 02-data-collection]: Cascade all,delete-orphan on booking_classes relationship for snapshot data integrity
 
 ### Pending Todos
 
@@ -78,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T01:33:00Z
-Stopped at: 01-03-PLAN.md Task 2 checkpoint:human-verify
+Last session: 2026-03-25T03:16:41.958Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
