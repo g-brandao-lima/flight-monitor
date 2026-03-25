@@ -132,7 +132,11 @@ Plans:
   2. Email inclui secao com as melhores datas para viajar dentro do periodo configurado
   3. Todas as datas no email aparecem no formato dd/mm/aaaa
   4. Email inclui resumo das demais rotas monitoradas alem da mais barata
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md - TDD compose_consolidated_email: rota mais barata, top 3 datas, resumo, formato brasileiro (EMAIL-01/02/03)
+- [ ] 07-02-PLAN.md - Refatorar polling_service para acumular sinais e enviar email consolidado (EMAIL-01)
 
 ### Phase 8: Dashboard Redesign
 **Goal**: Dashboard apresenta informacoes de forma visual e intuitiva com cards, cores e estados claros
@@ -159,5 +163,5 @@ Plans:
 | 4. Gmail Alerts | v1.0 | 3/3 | Complete | 2026-03-25 |
 | 5. Web Dashboard | v1.0 | 3/3 | Complete | 2026-03-25 |
 | 6. Quality & Feedback | v1.1 | 0/2 | Planning | - |
-| 7. Consolidated Email | v1.1 | 0/? | Not started | - |
+| 7. Consolidated Email | v1.1 | 0/2 | Planning | - |
 | 8. Dashboard Redesign | v1.1 | 0/? | Not started | - |
