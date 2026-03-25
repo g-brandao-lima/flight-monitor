@@ -16,12 +16,12 @@
 
 ### Data Collection (Coleta de Dados)
 
-- [ ] **COLL-01**: Sistema faz polling da Amadeus API a cada 6 horas para cada Grupo de Rota ativo
+- [x] **COLL-01**: Sistema faz polling da Amadeus API a cada 6 horas para cada Grupo de Rota ativo
 - [x] **COLL-02**: Por ciclo de polling, sistema encontra as 5 combinações mais baratas de (origem × destino × data_ida × data_volta) dentro do período configurado via Amadeus Flight Cheapest Date Search e Flight Offers Search
 - [x] **COLL-03**: Para cada combinação encontrada, sistema captura inventário de booking classes (Y, B, M, H, Q, K, L com contagem de assentos) via Amadeus Flight Availabilities Search
 - [x] **COLL-04**: Sistema captura classificação histórica do preço (LOW / MEDIUM / HIGH) via Amadeus Flight Price Analysis para cada combinação
 - [x] **COLL-05**: Sistema persiste todos os dados como snapshots com timestamp no banco SQLite
-- [ ] **COLL-06**: Sistema trata graciosamente falhas de API (timeout, rate limit) sem crashar o scheduler
+- [x] **COLL-06**: Sistema trata graciosamente falhas de API (timeout, rate limit) sem crashar o scheduler
 
 ### Signal Detection (Detecção de Sinais)
 
@@ -102,12 +102,12 @@
 | INFRA-01 | Phase 1 | Complete |
 | INFRA-02 | Phase 1 | Complete |
 | INFRA-03 | Phase 1 | Complete |
-| COLL-01 | Phase 2 | Pending |
+| COLL-01 | Phase 2 | Complete |
 | COLL-02 | Phase 2 | Complete |
 | COLL-03 | Phase 2 | Complete |
 | COLL-04 | Phase 2 | Complete |
 | COLL-05 | Phase 2 | Complete |
-| COLL-06 | Phase 2 | Pending |
+| COLL-06 | Phase 2 | Complete |
 | SIGN-01 | Phase 3 | Pending |
 | SIGN-02 | Phase 3 | Pending |
 | SIGN-03 | Phase 3 | Pending |

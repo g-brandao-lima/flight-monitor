@@ -13,7 +13,7 @@ O Flight Monitor é construído em cinco fases que seguem a cadeia de valor natu
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Aplicação inicia, banco criado, grupos de rota gerenciados via API (completed 2026-03-25)
-- [ ] **Phase 2: Data Collection** - Polling automático da Amadeus captura snapshots de preço e booking class
+- [x] **Phase 2: Data Collection** - Polling automático da Amadeus captura snapshots de preço e booking class (completed 2026-03-25)
 - [ ] **Phase 3: Signal Detection** - Sistema detecta os 4 sinais de compra e deduplica alertas
 - [ ] **Phase 4: Gmail Alerts** - Alertas são enviados por email com link de silenciar embutido
 - [ ] **Phase 5: Web Dashboard** - Interface web permite visualizar grupos, histórico e gerenciar configurações
@@ -51,7 +51,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md - Modelos FlightSnapshot/BookingClassSnapshot + snapshot_service + config Gmail (COLL-05)
 - [x] 02-02-PLAN.md - AmadeusClient wrapper com Flight Offers, Availability e Price Metrics (COLL-02/03/04)
-- [ ] 02-03-PLAN.md - Polling service + scheduler 6h + integracao lifespan + error handling (COLL-01/06)
+- [x] 02-03-PLAN.md - Polling service + scheduler 6h + integracao lifespan + error handling (COLL-01/06)
 
 ### Phase 3: Signal Detection
 **Goal**: Sistema analisa snapshots sequenciais e detecta os momentos de compra mais valiosos
@@ -97,7 +97,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/3 (checkpoint) | Complete    | 2026-03-25 |
-| 2. Data Collection | 1/3 | In Progress|  |
+| 2. Data Collection | 3/3 | Complete   | 2026-03-25 |
 | 3. Signal Detection | 0/TBD | Not started | - |
 | 4. Gmail Alerts | 0/TBD | Not started | - |
 | 5. Web Dashboard | 0/TBD | Not started | - |
