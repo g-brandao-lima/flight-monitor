@@ -80,7 +80,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md - TDD alert_service: composicao email, envio SMTP, token HMAC, silenciamento (ALRT-01/02)
+- [x] 04-01-PLAN.md - TDD alert_service: composicao email, envio SMTP, token HMAC, silenciamento (ALRT-01/02)
 - [x] 04-02-PLAN.md - TDD silence endpoint GET /api/v1/alerts/silence/{token} + registro router (ALRT-02)
 - [ ] 04-03-PLAN.md - Integracao polling_service + refatoracao + checkpoint humano de verificacao (ALRT-01/02)
 
@@ -107,5 +107,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Foundation | 2/3 (checkpoint) | Complete    | 2026-03-25 |
 | 2. Data Collection | 3/3 | Complete    | 2026-03-25 |
 | 3. Signal Detection | 3/3 | Complete    | 2026-03-25 |
-| 4. Gmail Alerts | 1/3 | In Progress|  |
+| 4. Gmail Alerts | 2/3 | In Progress|  |
 | 5. Web Dashboard | 0/TBD | Not started | - |

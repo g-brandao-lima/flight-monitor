@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-25T05:13:52.272Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-25T05:15:46.775Z"
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 ## Current Position
 
 Phase: 04 (gmail-alerts) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Plan: 2 of 3
 | Phase 03 P02 | 4min | 2 tasks | 2 files |
 | Phase 03 P03 | 3min | 2 tasks (1 auto + 1 checkpoint) | 1 file |
 | Phase 04-gmail-alerts P02 | 3min | 2 tasks | 5 files |
+| Phase 04-gmail-alerts P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Dedup reference time from snapshot.collected_at for testability
 - [Phase 03]: Error isolation for detect_signals in polling cycle via try/except
 - [Phase 04-gmail-alerts]: Used mock-based TDD for silence endpoint to isolate endpoint logic from HMAC token implementation (Plan 04-01 dependency)
+- [Phase 04-gmail-alerts]: Reutiliza gmail_app_password como segredo HMAC — aceitavel para single-user
+- [Phase 04-gmail-alerts]: SMTP_SSL porta 465 com timeout=30 previne travamento do polling em falha de rede
 
 ### Pending Todos
 
@@ -97,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T05:13:52.267Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-03-25T05:15:46.770Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None
