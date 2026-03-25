@@ -152,7 +152,7 @@ Plans:
 
 Plans:
 - [x] 08-01-PLAN.md - Backend summary data + rewrite index.html com cards coloridos, summary bar e estado vazio (UI-01/02/03/04/05)
-- [ ] 08-02-PLAN.md - Datas dd/mm/aaaa no detail.html + checkpoint visual (UI-05)
+- [x] 08-02-PLAN.md - Datas dd/mm/aaaa no detail.html + checkpoint visual (UI-05)
 
 ## Progress
 
