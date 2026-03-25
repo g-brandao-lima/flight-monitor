@@ -12,7 +12,7 @@ O Flight Monitor é construído em cinco fases que seguem a cadeia de valor natu
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Aplicação inicia, banco criado, grupos de rota gerenciados via API
+- [x] **Phase 1: Foundation** - Aplicação inicia, banco criado, grupos de rota gerenciados via API (completed 2026-03-25)
 - [ ] **Phase 2: Data Collection** - Polling automático da Amadeus captura snapshots de preço e booking class
 - [ ] **Phase 3: Signal Detection** - Sistema detecta os 4 sinais de compra e deduplica alertas
 - [ ] **Phase 4: Gmail Alerts** - Alertas são enviados por email com link de silenciar embutido
@@ -91,7 +91,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 (checkpoint) | Task 2 human-verify pending | - |
+| 1. Foundation | 2/3 (checkpoint) | Complete    | 2026-03-25 |
 | 2. Data Collection | 0/TBD | Not started | - |
 | 3. Signal Detection | 0/TBD | Not started | - |
 | 4. Gmail Alerts | 0/TBD | Not started | - |
