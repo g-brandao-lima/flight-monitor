@@ -94,8 +94,12 @@ Plans:
   3. Usuário pode criar novo Grupo de Rota pelo formulário no dashboard sem usar a API diretamente
   4. Usuário pode editar e desativar grupos existentes pelo dashboard
   5. Interface carrega e é utilizável no celular (layout responsivo)
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 3 plans
+
+Plans:
+- [ ] 05-01-PLAN.md - TDD dashboard_service: queries de aggregation + dependencias Jinja2 (ALRT-03, DASH-01, DASH-02)
+- [ ] 05-02-PLAN.md - Dashboard routes + templates: lista de grupos com badges + detalhe com Chart.js (ALRT-03, DASH-01, DASH-02, DASH-05)
+- [ ] 05-03-PLAN.md - Formularios criar/editar/toggle grupo + checkpoint visual (DASH-03, DASH-04)
 
 ## Progress
 
@@ -108,4 +112,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Data Collection | 3/3 | Complete    | 2026-03-25 |
 | 3. Signal Detection | 3/3 | Complete    | 2026-03-25 |
 | 4. Gmail Alerts | 3/3 | Complete   | 2026-03-25 |
-| 5. Web Dashboard | 0/TBD | Not started | - |
+| 5. Web Dashboard | 0/3 | Planning complete | - |
