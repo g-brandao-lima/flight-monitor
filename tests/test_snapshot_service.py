@@ -184,8 +184,9 @@ def test_config_has_gmail_fields():
     """Settings tem gmail_* e NAO tem telegram_*."""
     from app.config import Settings
 
-    assert hasattr(Settings, "gmail_sender")
-    assert hasattr(Settings, "gmail_app_password")
-    assert hasattr(Settings, "gmail_recipient")
-    assert not hasattr(Settings, "telegram_bot_token")
-    assert not hasattr(Settings, "telegram_chat_id")
+    fields = Settings.model_fields
+    assert "gmail_sender" in fields
+    assert "gmail_app_password" in fields
+    assert "gmail_recipient" in fields
+    assert "telegram_bot_token" not in fields
+    assert "telegram_chat_id" not in fields

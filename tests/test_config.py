@@ -18,5 +18,6 @@ def test_settings_has_all_fields():
     # Assert
     assert hasattr(s, "amadeus_client_id")
     assert hasattr(s, "amadeus_client_secret")
-    assert hasattr(s, "telegram_bot_token")
-    assert hasattr(s, "telegram_chat_id")
+    assert hasattr(s, "gmail_sender")
+    assert hasattr(s, "gmail_app_password")
+    assert hasattr(s, "gmail_recipient")
