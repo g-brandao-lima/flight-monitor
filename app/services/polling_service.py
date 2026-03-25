@@ -4,18 +4,20 @@ from datetime import date, timedelta
 from app.database import SessionLocal
 from app.models import RouteGroup
 from app.services.alert_service import compose_alert_email, send_email, should_alert
-from app.services.amadeus_client import AmadeusClient, classify_price
+from app.services.serpapi_client import SerpApiClient, classify_price
 from app.services.signal_service import detect_signals
-from app.services.snapshot_service import save_flight_snapshot
+from app.services.snapshot_service import is_duplicate_snapshot, save_flight_snapshot
 
 logger = logging.getLogger(__name__)
+
+DATE_STEP_DAYS = 7
 
 
 def run_polling_cycle():
     """Executa um ciclo de polling para todos os grupos ativos."""
-    client = AmadeusClient()
+    client = SerpApiClient()
     if not client.is_configured:
-        logger.warning("Amadeus not configured. Skipping polling cycle.")
+        logger.warning("SerpAPI not configured. Skipping polling cycle.")
         return
 
     db = SessionLocal()
@@ -37,12 +39,12 @@ def run_polling_cycle():
 def _generate_date_pairs(
     travel_start: date, travel_end: date, duration_days: int
 ) -> list[tuple[date, date]]:
-    """Gera pares (departure_date, return_date) a cada 3 dias dentro do periodo."""
+    """Gera pares (departure_date, return_date) a cada DATE_STEP_DAYS dias dentro do periodo."""
     pairs = []
     current = travel_start
     while current + timedelta(days=duration_days) <= travel_end:
         pairs.append((current, current + timedelta(days=duration_days)))
-        current += timedelta(days=3)
+        current += timedelta(days=DATE_STEP_DAYS)
     if not pairs and travel_start + timedelta(days=duration_days) <= travel_end + timedelta(
         days=duration_days
     ):
@@ -50,8 +52,8 @@ def _generate_date_pairs(
     return pairs
 
 
-def _poll_group(db, client: AmadeusClient, group: RouteGroup):
-    """Polling de um grupo: gera combinacoes, busca ofertas, captura availability e metrics, persiste."""
+def _poll_group(db, client: SerpApiClient, group: RouteGroup):
+    """Polling de um grupo: gera combinacoes, busca voos via SerpAPI (1 call por combinacao)."""
     origins = group.origins
     destinations = group.destinations
     date_pairs = _generate_date_pairs(
@@ -62,7 +64,7 @@ def _poll_group(db, client: AmadeusClient, group: RouteGroup):
         for destination in destinations:
             for dep_date, ret_date in date_pairs:
                 try:
-                    offers = client.search_cheapest_offers(
+                    flights, insights = client.search_flights_with_insights(
                         origin=origin,
                         destination=destination,
                         departure_date=dep_date.isoformat(),
@@ -70,46 +72,50 @@ def _poll_group(db, client: AmadeusClient, group: RouteGroup):
                         max_results=5,
                     )
                 except Exception as e:
-                    logger.error(
-                        f"Offers search failed for {origin}->{destination} {dep_date}: {e}"
+                    logger.warning(
+                        f"No flights found for {origin}->{destination} {dep_date}: {e}"
                     )
                     continue
 
-                for offer in offers:
-                    _process_offer(
-                        db, client, group, origin, destination, dep_date, ret_date, offer
+                if not flights:
+                    logger.info(f"No flights available for {origin}->{destination} {dep_date}")
+                    continue
+
+                for flight in flights:
+                    _process_flight(
+                        db, group, origin, destination, dep_date, ret_date,
+                        flight, insights
                     )
 
 
-def _process_offer(db, client, group, origin, destination, dep_date, ret_date, offer):
-    """Processa uma oferta: busca availability, price metrics e persiste snapshot."""
-    price = float(offer["price"]["grandTotal"])
-    airline = offer.get("validatingAirlineCodes", ["??"])[0]
+def _process_flight(db, group, origin, destination, dep_date, ret_date, flight, insights):
+    """Processa um voo: classifica preco e persiste snapshot."""
+    price = float(flight["price"])
+    airline = flight.get("airline", "??")
 
-    try:
-        avail_data = client.get_availability(
-            origin, destination, dep_date.isoformat(), ret_date.isoformat()
-        )
-    except Exception as e:
-        logger.error(f"Availability failed for {origin}->{destination}: {e}")
-        avail_data = []
-
-    booking_classes = _extract_booking_classes(avail_data)
-
-    metrics_data = client.get_price_metrics(origin, destination, dep_date.isoformat())
+    typical_range = None
     price_metrics = {}
     classification = None
-    if metrics_data and len(metrics_data) > 0 and "priceMetrics" in metrics_data[0]:
-        raw_metrics = metrics_data[0]["priceMetrics"]
-        quartiles = {m["quartileRanking"]: float(m["amount"]) for m in raw_metrics}
-        price_metrics = {
-            "price_min": quartiles.get("MINIMUM"),
-            "price_first_quartile": quartiles.get("FIRST"),
-            "price_median": quartiles.get("MEDIUM"),
-            "price_third_quartile": quartiles.get("THIRD"),
-            "price_max": quartiles.get("MAXIMUM"),
-        }
-        classification = classify_price(price, raw_metrics)
+
+    if insights:
+        typical_range = insights.get("typical_price_range")
+        classification = classify_price(price, typical_range)
+
+        if typical_range and len(typical_range) >= 2:
+            price_metrics = {
+                "price_min": insights.get("lowest_price"),
+                "price_first_quartile": typical_range[0],
+                "price_median": (typical_range[0] + typical_range[1]) / 2,
+                "price_third_quartile": typical_range[1],
+                "price_max": None,
+            }
+
+    if is_duplicate_snapshot(db, group.id, origin, destination, dep_date, ret_date, price, airline):
+        logger.debug(
+            f"Duplicate snapshot skipped: {origin}->{destination} {dep_date} "
+            f"price={price} airline={airline}"
+        )
+        return
 
     snapshot_data = {
         "route_group_id": group.id,
@@ -121,7 +127,7 @@ def _process_offer(db, client, group, origin, destination, dep_date, ret_date, o
         "currency": "BRL",
         "airline": airline,
         "price_classification": classification,
-        "booking_classes": booking_classes,
+        "booking_classes": [],
         **price_metrics,
     }
     snapshot = save_flight_snapshot(db, snapshot_data)
@@ -141,21 +147,3 @@ def _process_offer(db, client, group, origin, destination, dep_date, ret_date, o
                 logger.error(f"Alert email failed: {e}")
     except Exception as e:
         logger.error(f"Signal detection failed for snapshot {getattr(snapshot, 'id', '?')}: {e}")
-
-
-def _extract_booking_classes(avail_data: list) -> list[dict]:
-    """Extrai booking classes de todos os segmentos do availability response."""
-    classes = []
-    directions = ["OUTBOUND", "INBOUND"]
-    for i, flight in enumerate(avail_data):
-        direction = directions[i] if i < len(directions) else f"SEGMENT_{i}"
-        for segment in flight.get("segments", []):
-            for ac in segment.get("availabilityClasses", []):
-                classes.append(
-                    {
-                        "class_code": ac["class"],
-                        "seats_available": ac["numberOfBookableSeats"],
-                        "segment_direction": direction,
-                    }
-                )
-    return classes
