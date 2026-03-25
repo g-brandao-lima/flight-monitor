@@ -7,11 +7,13 @@ import pytest
 from app.models import DetectedSignal, RouteGroup
 from app.services.alert_service import (
     compose_alert_email,
+    compose_consolidated_email,
     generate_silence_token,
     send_email,
     should_alert,
     verify_silence_token,
 )
+from app.models import FlightSnapshot
 
 
 # ---------------------------------------------------------------------------
@@ -288,3 +290,214 @@ def test_should_alert_expired():
 
     # Assert
     assert result is True
+
+
+# ---------------------------------------------------------------------------
+# Helpers — compose_consolidated_email
+# ---------------------------------------------------------------------------
+
+
+def _make_snapshot(
+    origin: str = "GRU",
+    destination: str = "JFK",
+    departure_date: datetime.date = datetime.date(2026, 1, 15),
+    return_date: datetime.date = datetime.date(2026, 1, 22),
+    price: float = 3500.00,
+    airline: str = "LA",
+    route_group_id: int = 1,
+) -> unittest.mock.MagicMock:
+    snap = unittest.mock.MagicMock(spec=FlightSnapshot)
+    snap.origin = origin
+    snap.destination = destination
+    snap.departure_date = departure_date
+    snap.return_date = return_date
+    snap.price = price
+    snap.airline = airline
+    snap.route_group_id = route_group_id
+    return snap
+
+
+def _make_signals_list(count: int = 1) -> list[unittest.mock.MagicMock]:
+    signals = []
+    for i in range(count):
+        sig = _make_signal(
+            signal_type="BALDE_FECHANDO" if i % 2 == 0 else "PRECO_BAIXO",
+            urgency="ALTA" if i % 2 == 0 else "MEDIA",
+            price_at_detection=3500.00 + i * 100,
+        )
+        signals.append(sig)
+    return signals
+
+
+# ---------------------------------------------------------------------------
+# Tests — compose_consolidated_email
+# ---------------------------------------------------------------------------
+
+
+def test_consolidated_email_subject_contains_group_name_and_best_price():
+    # Arrange
+    group = _make_group(name="GRU-MIA Fevereiro")
+    snapshots = [
+        _make_snapshot(price=4200.00),
+        _make_snapshot(price=2800.50, destination="MIA"),
+        _make_snapshot(price=3500.00),
+    ]
+    signals = _make_signals_list(1)
+
+    # Act
+    msg = compose_consolidated_email(signals, snapshots, group)
+
+    # Assert
+    subject = msg["Subject"]
+    assert "GRU-MIA Fevereiro" in subject
+    assert "R$ 2.800,50" in subject
+    assert "melhor preco" in subject
+
+
+def test_consolidated_email_cheapest_route_in_body():
+    # Arrange
+    group = _make_group(name="GRU-JFK Janeiro")
+    cheapest = _make_snapshot(
+        origin="GRU",
+        destination="JFK",
+        price=2500.00,
+        airline="LA",
+        departure_date=datetime.date(2026, 3, 10),
+        return_date=datetime.date(2026, 3, 20),
+    )
+    other = _make_snapshot(price=4000.00, origin="GIG", destination="JFK")
+    snapshots = [other, cheapest]
+    signals = _make_signals_list(1)
+
+    # Act
+    msg = compose_consolidated_email(signals, snapshots, group)
+
+    # Assert
+    body = _decode_msg_body(msg)
+    assert "GRU" in body
+    assert "JFK" in body
+    assert "R$ 2.500,00" in body
+    assert "LA" in body
+    assert "10/03/2026" in body
+    assert "20/03/2026" in body
+
+
+def test_consolidated_email_top3_dates_table():
+    # Arrange
+    group = _make_group()
+    snapshots = [
+        _make_snapshot(price=5000.00, departure_date=datetime.date(2026, 1, 10), return_date=datetime.date(2026, 1, 17)),
+        _make_snapshot(price=2800.00, departure_date=datetime.date(2026, 1, 15), return_date=datetime.date(2026, 1, 22)),
+        _make_snapshot(price=3200.00, departure_date=datetime.date(2026, 1, 20), return_date=datetime.date(2026, 1, 27)),
+        _make_snapshot(price=4500.00, departure_date=datetime.date(2026, 1, 25), return_date=datetime.date(2026, 2, 1)),
+    ]
+    signals = _make_signals_list(1)
+
+    # Act
+    msg = compose_consolidated_email(signals, snapshots, group)
+
+    # Assert — tabela com top 3 ordenadas por preco crescente
+    body = _decode_msg_body(msg)
+    # Deve conter os 3 mais baratos: 2800, 3200, 5000
+    assert "R$ 2.800,00" in body
+    assert "R$ 3.200,00" in body
+    assert "R$ 5.000,00" in body
+    # O quarto (4500) pode aparecer no resumo, mas os 3 primeiros devem estar na tabela
+    # Verificar que as datas estao em formato brasileiro
+    assert "15/01/2026" in body
+    assert "20/01/2026" in body
+
+
+def test_consolidated_email_other_routes_summary():
+    # Arrange
+    group = _make_group()
+    cheapest = _make_snapshot(price=2500.00, origin="GRU", destination="JFK")
+    route2 = _make_snapshot(price=3800.00, origin="GIG", destination="MIA")
+    route3 = _make_snapshot(price=4200.00, origin="GRU", destination="MIA")
+    snapshots = [cheapest, route2, route3]
+    signals = _make_signals_list(1)
+
+    # Act
+    msg = compose_consolidated_email(signals, snapshots, group)
+
+    # Assert — corpo contem resumo de rotas que nao sao a mais barata
+    body = _decode_msg_body(msg)
+    assert "GIG" in body
+    assert "MIA" in body
+    assert "R$ 3.800,00" in body
+    assert "R$ 4.200,00" in body
+
+
+def test_consolidated_email_silence_link():
+    # Arrange
+    group = _make_group(group_id=7)
+    snapshots = [_make_snapshot(price=3000.00)]
+    signals = _make_signals_list(1)
+
+    # Act
+    msg = compose_consolidated_email(signals, snapshots, group)
+
+    # Assert
+    body = _decode_msg_body(msg)
+    assert "/api/v1/alerts/silence/" in body
+
+
+def test_consolidated_email_dates_brazilian_format():
+    # Arrange
+    group = _make_group()
+    snapshots = [
+        _make_snapshot(
+            departure_date=datetime.date(2026, 7, 15),
+            return_date=datetime.date(2026, 7, 25),
+        ),
+    ]
+    signals = _make_signals_list(1)
+
+    # Act
+    msg = compose_consolidated_email(signals, snapshots, group)
+
+    # Assert — nenhuma data no formato YYYY-MM-DD, todas em dd/mm/aaaa
+    body = _decode_msg_body(msg)
+    assert "2026-07-15" not in body
+    assert "2026-07-25" not in body
+    assert "15/07/2026" in body
+    assert "25/07/2026" in body
+
+
+def test_consolidated_email_single_snapshot():
+    # Arrange — edge case: apenas 1 snapshot
+    group = _make_group(name="Single Route")
+    snapshots = [_make_snapshot(price=1999.99, airline="G3")]
+    signals = _make_signals_list(1)
+
+    # Act
+    msg = compose_consolidated_email(signals, snapshots, group)
+
+    # Assert — funciona sem erro, contem dados do unico snapshot
+    body = _decode_msg_body(msg)
+    assert "R$ 1.999,99" in body
+    assert "G3" in body
+    subject = msg["Subject"]
+    assert "Single Route" in subject
+
+
+def test_consolidated_email_plain_text_fallback():
+    # Arrange
+    group = _make_group()
+    snapshots = [_make_snapshot(price=2750.00)]
+    signals = _make_signals_list(1)
+
+    # Act
+    msg = compose_consolidated_email(signals, snapshots, group)
+
+    # Assert — deve ter parte text/plain com informacoes legiveis
+    plain_part = None
+    for part in msg.walk():
+        if part.get_content_type() == "text/plain":
+            plain_part = part.get_payload(decode=True).decode("utf-8")
+            break
+
+    assert plain_part is not None
+    assert "GRU" in plain_part
+    assert "JFK" in plain_part
+    assert "2.750,00" in plain_part
