@@ -2,7 +2,7 @@ import re
 import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select
@@ -181,7 +181,7 @@ def create_group_form(
 def dashboard_detail(request: Request, group_id: int, db: Session = Depends(get_db)):
     group = db.query(RouteGroup).filter(RouteGroup.id == group_id).first()
     if group is None:
-        return HTMLResponse(content="Grupo nao encontrado", status_code=404)
+        raise HTTPException(status_code=404, detail="Grupo nao encontrado")
 
     chart_data = get_price_history(db, group_id)
     return templates.TemplateResponse(
@@ -197,7 +197,7 @@ def edit_group_page(
 ):
     group = db.query(RouteGroup).filter(RouteGroup.id == group_id).first()
     if group is None:
-        return HTMLResponse(content="Grupo nao encontrado", status_code=404)
+        raise HTTPException(status_code=404, detail="Grupo nao encontrado")
     return templates.TemplateResponse(
         request=request,
         name="dashboard/edit.html",
@@ -220,7 +220,7 @@ def edit_group_form(
 ):
     group = db.query(RouteGroup).filter(RouteGroup.id == group_id).first()
     if group is None:
-        return HTMLResponse(content="Grupo nao encontrado", status_code=404)
+        raise HTTPException(status_code=404, detail="Grupo nao encontrado")
 
     parsed_origins, parsed_destinations, error = _validate_form(
         name, origins, destinations, duration_days
@@ -258,7 +258,7 @@ def edit_group_form(
 def toggle_group(group_id: int, db: Session = Depends(get_db)):
     group = db.query(RouteGroup).filter(RouteGroup.id == group_id).first()
     if group is None:
-        return HTMLResponse(content="Grupo nao encontrado", status_code=404)
+        raise HTTPException(status_code=404, detail="Grupo nao encontrado")
 
     if not group.is_active:
         active_count = _count_active_groups(db, exclude_id=group_id)

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Erro - Flight Monitor{% endblock %}
+{% block content %}
+<div style="text-align: center; padding: 3rem 1rem;">
+    <h1 style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;">Ops!</h1>
+    <p style="font-size: 1.25rem; color: #64748b; margin-bottom: 0.5rem;">{{ message }}</p>
+    <p style="color: #94a3b8; margin-bottom: 2rem;">{{ detail }}</p>
+    <a href="/" style="display: inline-block; background: #1e293b; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: 500;">Voltar ao inicio</a>
+</div>
+{% endblock %}

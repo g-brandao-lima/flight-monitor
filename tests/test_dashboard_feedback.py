@@ -81,3 +81,23 @@ def test_dashboard_no_flash_without_param(client):
     response = client.get("/")
 
     assert '<div class="flash-message"' not in response.text
+
+
+# --- Error page tests ---
+
+
+def test_404_shows_friendly_error(client):
+    """GET /groups/99999 retorna 404 com pagina amigavel."""
+    response = client.get("/groups/99999")
+
+    assert response.status_code == 404
+    assert "Pagina nao encontrada" in response.text
+    assert "Voltar ao inicio" in response.text
+
+
+def test_error_page_no_stack_trace(client):
+    """GET /groups/99999 retorna HTML sem Traceback ou detalhes tecnicos."""
+    response = client.get("/groups/99999")
+
+    assert "Traceback" not in response.text
+    assert "Error" not in response.text
