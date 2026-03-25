@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-03-25T03:27:16.480Z"
+status: Ready to execute
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-25T04:07:56.825Z"
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 9
+  completed_plans: 7
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** Detectar o momento certo de comprar uma passagem antes que o preço suba, usando dados de booking class inventory (Amadeus API) que nenhum sistema consumer expõe.
-**Current focus:** Phase 2 — data-collection
+**Current focus:** Phase 3 — signal-detection
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
+Phase: 3 (signal-detection) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Plan: Not started
 | Phase 02-data-collection P01 | 3min | 2 tasks | 6 files |
 | Phase 02 P02 | 2min | 2 tasks | 2 files |
 | Phase 02 P03 | 3min | 2 tasks | 5 files |
+| Phase 03 P01 | 3min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Date pairs generated every 3 days within travel period for balanced API budget
 - [Phase 02]: Per-group try/except in polling cycle for error isolation
 - [Phase 02]: Module-level BackgroundScheduler with lifespan init/shutdown pattern
+- [Phase 03]: 19 RED tests covering all 4 signal types plus dedup and edge cases
+- [Phase 03]: DetectedSignal model with composite ix_signal_dedup index for 12h dedup window
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T03:24:15.748Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-03-25T04:07:56.820Z
+Stopped at: Completed 03-01-PLAN.md
 Resume file: None

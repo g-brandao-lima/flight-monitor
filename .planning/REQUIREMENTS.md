@@ -25,11 +25,11 @@
 
 ### Signal Detection (Detecção de Sinais)
 
-- [ ] **SIGN-01**: Sistema detecta sinal BALDE FECHANDO quando classe K ou Q passou de >=3 para <=1 comparado ao snapshot anterior — urgência ALTA
-- [ ] **SIGN-02**: Sistema detecta sinal BALDE REABERTO quando classe estava em 0 e voltou a ter assentos no snapshot atual — urgência MÁXIMA
-- [ ] **SIGN-03**: Sistema detecta sinal PREÇO ABAIXO DO HISTÓRICO quando Amadeus retorna LOW e preço atual está abaixo da média dos últimos 14 snapshots — urgência MÉDIA
-- [ ] **SIGN-04**: Sistema detecta sinal JANELA ÓTIMA quando dias restantes antes do voo entra na faixa 21-90 dias (doméstico) ou 30-120 dias (internacional) — urgência MÉDIA
-- [ ] **SIGN-05**: Sistema não re-alerta o mesmo sinal para a mesma rota dentro de uma janela de 12 horas (deduplicação)
+- [x] **SIGN-01**: Sistema detecta sinal BALDE FECHANDO quando classe K ou Q passou de >=3 para <=1 comparado ao snapshot anterior — urgência ALTA
+- [x] **SIGN-02**: Sistema detecta sinal BALDE REABERTO quando classe estava em 0 e voltou a ter assentos no snapshot atual — urgência MÁXIMA
+- [x] **SIGN-03**: Sistema detecta sinal PREÇO ABAIXO DO HISTÓRICO quando Amadeus retorna LOW e preço atual está abaixo da média dos últimos 14 snapshots — urgência MÉDIA
+- [x] **SIGN-04**: Sistema detecta sinal JANELA ÓTIMA quando dias restantes antes do voo entra na faixa 21-90 dias (doméstico) ou 30-120 dias (internacional) — urgência MÉDIA
+- [x] **SIGN-05**: Sistema não re-alerta o mesmo sinal para a mesma rota dentro de uma janela de 12 horas (deduplicação)
 
 ### Alerts (Alertas via Gmail)
 
@@ -108,11 +108,11 @@
 | COLL-04 | Phase 2 | Complete |
 | COLL-05 | Phase 2 | Complete |
 | COLL-06 | Phase 2 | Complete |
-| SIGN-01 | Phase 3 | Pending |
-| SIGN-02 | Phase 3 | Pending |
-| SIGN-03 | Phase 3 | Pending |
-| SIGN-04 | Phase 3 | Pending |
-| SIGN-05 | Phase 3 | Pending |
+| SIGN-01 | Phase 3 | Complete |
+| SIGN-02 | Phase 3 | Complete |
+| SIGN-03 | Phase 3 | Complete |
+| SIGN-04 | Phase 3 | Complete |
+| SIGN-05 | Phase 3 | Complete |
 | ALRT-01 | Phase 4 | Pending |
 | ALRT-02 | Phase 4 | Pending |
 | ALRT-03 | Phase 4 | Pending |
