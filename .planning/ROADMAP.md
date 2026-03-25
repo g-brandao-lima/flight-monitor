@@ -1,115 +1,159 @@
 # Roadmap: Flight Monitor
 
-## Overview
+## Milestones
 
-O Flight Monitor é construído em cinco fases que seguem a cadeia de valor natural do produto: primeiro a infraestrutura e gerenciamento de grupos (o que monitorar), depois a coleta de dados reais da Amadeus (os dados brutos), depois a detecção de sinais (a inteligência), depois os alertas por Gmail (a entrega do valor), e por fim o dashboard web (a visibilidade). Cada fase entrega uma capacidade verificável e desbloqueia a próxima.
+- ✅ **v1.0 MVP** - Phases 1-5 (shipped 2026-03-25)
+- 🚧 **v1.1 Polish & UX** - Phases 6-8 (in progress)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+<details>
+<summary>v1.0 MVP (Phases 1-5) - SHIPPED 2026-03-25</summary>
 
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [x] **Phase 1: Foundation** - Aplicação inicia, banco criado, grupos de rota gerenciados via API (completed 2026-03-25)
-- [x] **Phase 2: Data Collection** - Polling automático da Amadeus captura snapshots de preço e booking class (completed 2026-03-25)
-- [x] **Phase 3: Signal Detection** - Sistema detecta os 4 sinais de compra e deduplica alertas (completed 2026-03-25)
-- [x] **Phase 4: Gmail Alerts** - Alertas são enviados por email com link de silenciar embutido (completed 2026-03-25)
-- [ ] **Phase 5: Web Dashboard** - Interface web permite visualizar grupos, histórico e gerenciar configurações
-
-## Phase Details
+- [x] **Phase 1: Foundation** - Aplicacao inicia, banco criado, grupos de rota gerenciados via API
+- [x] **Phase 2: Data Collection** - Polling automatico da Amadeus captura snapshots de preco e booking class
+- [x] **Phase 3: Signal Detection** - Sistema detecta os 4 sinais de compra e deduplica alertas
+- [x] **Phase 4: Gmail Alerts** - Alertas enviados por email com link de silenciar embutido
+- [x] **Phase 5: Web Dashboard** - Interface web para visualizar grupos, historico e gerenciar configuracoes
 
 ### Phase 1: Foundation
-**Goal**: Aplicação está rodando e o usuário pode gerenciar Grupos de Rota completos via API
+**Goal**: Aplicacao esta rodando e o usuario pode gerenciar Grupos de Rota completos via API
 **Depends on**: Nothing (first phase)
 **Requirements**: INFRA-01, INFRA-02, INFRA-03, ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06
 **Success Criteria** (what must be TRUE):
-  1. Aplicação inicia com um único comando e o servidor responde em localhost
-  2. Arquivo `.env` controla todas as credenciais; banco SQLite é criado automaticamente com todas as tabelas na primeira execução
-  3. Usuário pode criar um Grupo de Rota com múltiplas origens, múltiplos destinos, duração e período via API
-  4. Usuário pode editar, ativar, desativar e deletar grupos existentes; sistema rejeita criação de 11º grupo ativo
+  1. Aplicacao inicia com um unico comando e o servidor responde em localhost
+  2. Arquivo `.env` controla todas as credenciais; banco SQLite e criado automaticamente com todas as tabelas na primeira execucao
+  3. Usuario pode criar um Grupo de Rota com multiplas origens, multiplos destinos, duracao e periodo via API
+  4. Usuario pode editar, ativar, desativar e deletar grupos existentes; sistema rejeita criacao de 11o grupo ativo
 **Plans**: 3 plans
 
 Plans:
-- [x] 01-01-PLAN.md - Setup projeto + testes RED + implementacao GREEN para infraestrutura (INFRA-01/02/03)
-- [x] 01-02-PLAN.md - Testes RED + implementacao GREEN para CRUD de Route Groups (ROUTE-01 a ROUTE-06)
-- [ ] 01-03-PLAN.md - Refatoracao (REFACTOR) + checkpoint humano de verificacao
+- [x] 01-01-PLAN.md - Setup projeto + infraestrutura (INFRA-01/02/03)
+- [x] 01-02-PLAN.md - CRUD de Route Groups (ROUTE-01 a ROUTE-06)
+- [x] 01-03-PLAN.md - Refatoracao + checkpoint humano
 
 ### Phase 2: Data Collection
-**Goal**: Sistema coleta dados reais da Amadeus de forma autônoma e persiste snapshots para análise histórica
+**Goal**: Sistema coleta dados reais da Amadeus de forma autonoma e persiste snapshots para analise historica
 **Depends on**: Phase 1
 **Requirements**: COLL-01, COLL-02, COLL-03, COLL-04, COLL-05, COLL-06
 **Success Criteria** (what must be TRUE):
-  1. Scheduler executa polling a cada 6 horas para cada grupo ativo sem intervenção manual
-  2. Por ciclo, sistema identifica as 5 combinações mais baratas de rota e data dentro do período do grupo
-  3. Para cada combinação, snapshot contém booking classes com contagem (ex: Y7 B4 M3) e classificação LOW/MEDIUM/HIGH
-  4. Snapshots persistem no banco com timestamp; histórico acumula entre polling cycles
-  5. Falhas de API (timeout, rate limit) são tratadas sem crashar o scheduler; próximo ciclo executa normalmente
+  1. Scheduler executa polling a cada 6 horas para cada grupo ativo sem intervencao manual
+  2. Por ciclo, sistema identifica as 5 combinacoes mais baratas de rota e data dentro do periodo do grupo
+  3. Para cada combinacao, snapshot contem booking classes com contagem e classificacao LOW/MEDIUM/HIGH
+  4. Snapshots persistem no banco com timestamp; historico acumula entre polling cycles
+  5. Falhas de API sao tratadas sem crashar o scheduler
 **Plans**: 3 plans
 
 Plans:
-- [x] 02-01-PLAN.md - Modelos FlightSnapshot/BookingClassSnapshot + snapshot_service + config Gmail (COLL-05)
+- [x] 02-01-PLAN.md - Modelos FlightSnapshot/BookingClassSnapshot + snapshot_service (COLL-05)
 - [x] 02-02-PLAN.md - AmadeusClient wrapper com Flight Offers, Availability e Price Metrics (COLL-02/03/04)
-- [x] 02-03-PLAN.md - Polling service + scheduler 6h + integracao lifespan + error handling (COLL-01/06)
+- [x] 02-03-PLAN.md - Polling service + scheduler 6h + error handling (COLL-01/06)
 
 ### Phase 3: Signal Detection
 **Goal**: Sistema analisa snapshots sequenciais e detecta os momentos de compra mais valiosos
 **Depends on**: Phase 2
 **Requirements**: SIGN-01, SIGN-02, SIGN-03, SIGN-04, SIGN-05
 **Success Criteria** (what must be TRUE):
-  1. Sistema detecta BALDE FECHANDO (classe K ou Q caiu de >=3 para <=1) e marca urgência ALTA
-  2. Sistema detecta BALDE REABERTO (classe estava em 0 e voltou a ter assentos) e marca urgência MAXIMA
-  3. Sistema detecta PRECO ABAIXO DO HISTORICO (Amadeus retorna LOW e preço atual abaixo da média dos últimos 14 snapshots) e marca urgência MEDIA
-  4. Sistema detecta JANELA OTIMA (dias antes do voo entra na faixa ideal por tipo de rota) e marca urgência MEDIA
-  5. Mesmo sinal para a mesma rota não é re-emitido dentro de 12 horas (deduplicação funciona)
+  1. Sistema detecta BALDE FECHANDO (classe K ou Q caiu de >=3 para <=1) com urgencia ALTA
+  2. Sistema detecta BALDE REABERTO (classe estava em 0 e voltou a ter assentos) com urgencia MAXIMA
+  3. Sistema detecta PRECO ABAIXO DO HISTORICO (LOW + preco abaixo da media) com urgencia MEDIA
+  4. Sistema detecta JANELA OTIMA (dias antes do voo na faixa ideal) com urgencia MEDIA
+  5. Mesmo sinal para a mesma rota nao e re-emitido dentro de 12 horas
 **Plans**: 3 plans
 
 Plans:
-- [x] 03-01-PLAN.md - Spec approval + DetectedSignal model + RED tests para todos os 4 sinais e deduplicacao (SIGN-01/02/03/04/05)
-- [x] 03-02-PLAN.md - GREEN implementacao signal_service + integracao polling_service (SIGN-01/02/03/04/05)
-- [x] 03-03-PLAN.md - Refatoracao (REFACTOR) + checkpoint humano de verificacao
+- [x] 03-01-PLAN.md - RED tests para todos os sinais e deduplicacao
+- [x] 03-02-PLAN.md - GREEN implementacao signal_service + integracao polling
+- [x] 03-03-PLAN.md - Refatoracao + checkpoint humano
 
 ### Phase 4: Gmail Alerts
-**Goal**: Usuário recebe alertas por email no Gmail com contexto completo e link de silenciar embutido
+**Goal**: Usuario recebe alertas por email no Gmail com contexto completo e link de silenciar embutido
 **Depends on**: Phase 3
 **Requirements**: ALRT-01, ALRT-02
 **Success Criteria** (what must be TRUE):
-  1. Quando sinal é detectado, email chega no Gmail contendo grupo, rota, preço atual, contexto histórico e nível de urgência
-  2. Email contém link que ao ser clicado pausa alertas daquele grupo por 24 horas
+  1. Quando sinal e detectado, email chega no Gmail contendo grupo, rota, preco atual, contexto historico e urgencia
+  2. Email contem link que ao ser clicado pausa alertas daquele grupo por 24 horas
 **Plans**: 3 plans
 
 Plans:
-- [x] 04-01-PLAN.md - TDD alert_service: composicao email, envio SMTP, token HMAC, silenciamento (ALRT-01/02)
-- [x] 04-02-PLAN.md - TDD silence endpoint GET /api/v1/alerts/silence/{token} + registro router (ALRT-02)
-- [x] 04-03-PLAN.md - Integracao polling_service + refatoracao + checkpoint humano de verificacao (ALRT-01/02)
+- [x] 04-01-PLAN.md - TDD alert_service: composicao email, envio SMTP, token HMAC, silenciamento
+- [x] 04-02-PLAN.md - TDD silence endpoint GET /api/v1/alerts/silence/{token}
+- [x] 04-03-PLAN.md - Integracao polling_service + refatoracao + checkpoint
 
 ### Phase 5: Web Dashboard
-**Goal**: Usuário pode visualizar o estado atual de todos os grupos, histórico de preços e gerenciar grupos pelo navegador
+**Goal**: Usuario pode visualizar o estado atual de todos os grupos, historico de precos e gerenciar grupos pelo navegador
 **Depends on**: Phase 4
 **Requirements**: ALRT-03, DASH-01, DASH-02, DASH-03, DASH-04, DASH-05
 **Success Criteria** (what must be TRUE):
-  1. Dashboard exibe todos os grupos com melhor preço atual, rota mais barata e indicador visual de sinal ativo (nenhum/medio/alto/maximo)
-  2. Clicando em um grupo, usuário vê gráfico de linha com histórico de preço das últimas 2 semanas
-  3. Usuário pode criar novo Grupo de Rota pelo formulário no dashboard sem usar a API diretamente
-  4. Usuário pode editar e desativar grupos existentes pelo dashboard
-  5. Interface carrega e é utilizável no celular (layout responsivo)
+  1. Dashboard exibe todos os grupos com melhor preco atual, rota mais barata e indicador visual de sinal ativo
+  2. Clicando em um grupo, usuario ve grafico de linha com historico de preco das ultimas 2 semanas
+  3. Usuario pode criar novo Grupo de Rota pelo formulario no dashboard
+  4. Usuario pode editar e desativar grupos existentes pelo dashboard
+  5. Interface carrega e e utilizavel no celular (layout responsivo)
 **Plans**: 3 plans
 
 Plans:
-- [x] 05-01-PLAN.md - TDD dashboard_service: queries de aggregation + dependencias Jinja2 (ALRT-03, DASH-01, DASH-02)
-- [x] 05-02-PLAN.md - Dashboard routes + templates: lista de grupos com badges + detalhe com Chart.js (ALRT-03, DASH-01, DASH-02, DASH-05)
-- [x] 05-03-PLAN.md - Formularios criar/editar/toggle grupo + checkpoint visual (DASH-03, DASH-04)
+- [x] 05-01-PLAN.md - TDD dashboard_service: queries de aggregation + dependencias Jinja2
+- [x] 05-02-PLAN.md - Dashboard routes + templates: lista de grupos com badges + detalhe com Chart.js
+- [x] 05-03-PLAN.md - Formularios criar/editar/toggle grupo + checkpoint visual
+
+</details>
+
+### v1.1 Polish & UX (In Progress)
+
+**Milestone Goal:** Melhorar a experiencia do usuario com email consolidado, dashboard redesenhado e correcoes de qualidade
+
+- [ ] **Phase 6: Quality & Feedback** - Corrigir snapshots duplicados, adicionar mensagens de confirmacao e pagina de erro amigavel
+- [ ] **Phase 7: Consolidated Email** - Reestruturar alertas para 1 email por grupo com rota mais barata, melhores datas e formato brasileiro
+- [ ] **Phase 8: Dashboard Redesign** - Cards coloridos por status, area de resumo, estado vazio e datas em formato brasileiro
+
+## Phase Details
+
+### Phase 6: Quality & Feedback
+**Goal**: Usuario recebe feedback claro das suas acoes e nunca ve erros genericos do servidor
+**Depends on**: Phase 5
+**Requirements**: FIX-01, UX-01, UX-02
+**Success Criteria** (what must be TRUE):
+  1. Polling nunca salva o mesmo voo duas vezes no mesmo ciclo de coleta
+  2. Apos criar, editar ou desativar um grupo, usuario ve mensagem de confirmacao na tela
+  3. Quando ocorre erro inesperado, usuario ve pagina amigavel com orientacao ao inves de "Internal Server Error"
+**Plans**: TBD
+
+### Phase 7: Consolidated Email
+**Goal**: Usuario recebe 1 email util por grupo com todas as informacoes necessarias para decidir se compra
+**Depends on**: Phase 6
+**Requirements**: EMAIL-01, EMAIL-02, EMAIL-03
+**Success Criteria** (what must be TRUE):
+  1. Sistema envia exatamente 1 email por grupo (nao 1 por sinal) contendo rota mais barata com preco, companhia e datas
+  2. Email inclui secao com as melhores datas para viajar dentro do periodo configurado
+  3. Todas as datas no email aparecem no formato dd/mm/aaaa
+  4. Email inclui resumo das demais rotas monitoradas alem da mais barata
+**Plans**: TBD
+
+### Phase 8: Dashboard Redesign
+**Goal**: Dashboard apresenta informacoes de forma visual e intuitiva com cards, cores e estados claros
+**Depends on**: Phase 6
+**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05
+**Success Criteria** (what must be TRUE):
+  1. Topo do dashboard mostra area de resumo com total de grupos ativos, menor preco encontrado e horario do proximo polling
+  2. Cada grupo aparece como card com borda colorida (verde=LOW, amarelo=MEDIUM, vermelho=HIGH, cinza=sem dados)
+  3. Card exibe nome, rotas, preco mais barato em destaque, companhia, datas e badge de sinal
+  4. Quando nao ha grupos cadastrados, tela mostra mensagem amigavel com botao de criar grupo
+  5. Todas as datas no dashboard aparecem no formato dd/mm/aaaa
+**Plans**: TBD
+**UI hint**: yes
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+**Execution Order:** Phase 6 > Phase 7 > Phase 8 (Phases 7 and 8 both depend on 6; 7 and 8 are independent of each other)
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 (checkpoint) | Complete    | 2026-03-25 |
-| 2. Data Collection | 3/3 | Complete    | 2026-03-25 |
-| 3. Signal Detection | 3/3 | Complete    | 2026-03-25 |
-| 4. Gmail Alerts | 3/3 | Complete   | 2026-03-25 |
-| 5. Web Dashboard | 0/3 | Planning complete | - |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Foundation | v1.0 | 3/3 | Complete | 2026-03-25 |
+| 2. Data Collection | v1.0 | 3/3 | Complete | 2026-03-25 |
+| 3. Signal Detection | v1.0 | 3/3 | Complete | 2026-03-25 |
+| 4. Gmail Alerts | v1.0 | 3/3 | Complete | 2026-03-25 |
+| 5. Web Dashboard | v1.0 | 3/3 | Complete | 2026-03-25 |
+| 6. Quality & Feedback | v1.1 | 0/? | Not started | - |
+| 7. Consolidated Email | v1.1 | 0/? | Not started | - |
+| 8. Dashboard Redesign | v1.1 | 0/? | Not started | - |

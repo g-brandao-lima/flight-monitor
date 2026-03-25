@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: Milestone complete
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-03-25T19:49:08.964Z"
+milestone: v1.1
+milestone_name: Polish & UX
+status: Ready to plan
+stopped_at: Roadmap created for v1.1
+last_updated: "2026-03-25T20:00:00.000Z"
 progress:
-  total_phases: 5
+  total_phases: 8
   completed_phases: 5
   total_plans: 15
   completed_plans: 15
@@ -16,51 +16,40 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-24)
+See: .planning/PROJECT.md (updated 2026-03-25)
 
-**Core value:** Detectar o momento certo de comprar uma passagem antes que o preço suba, usando dados de booking class inventory (Amadeus API) que nenhum sistema consumer expõe.
-**Current focus:** Phase 05 — web-dashboard
+**Core value:** Detectar o momento certo de comprar uma passagem antes que o preco suba, usando dados de booking class inventory (Amadeus API) que nenhum sistema consumer expoe.
+**Current focus:** Phase 6 - Quality & Feedback (v1.1 Polish & UX)
 
 ## Current Position
 
-Phase: 05
+Phase: 6 of 8 (Quality & Feedback)
 Plan: Not started
+Status: Ready to plan
+Last activity: 2026-03-25 - Roadmap created for v1.1 milestone
+
+Progress: [██████████░░░░░░] 63% (5/8 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 15
+- Average duration: ~3min
+- Total execution time: ~47min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-foundation | 3 | 8min | 2.7min |
+| 02-data-collection | 3 | 8min | 2.7min |
+| 03-signal-detection | 3 | 10min | 3.3min |
+| 04-gmail-alerts | 3 | 19min | 6.3min |
+| 05-web-dashboard | 3 | 8min | 2.7min |
 
 **Recent Trend:**
-
-- Last 5 plans: -
-- Trend: -
-
-*Updated after each plan completion*
-| Phase 01-foundation P01 | 3min | 2 tasks | 19 files |
-| Phase 01-foundation P02 | 3min | 2 tasks | 2 files |
-| Phase 01-foundation P03 | 2min | 1/2 tasks (checkpoint) | 1 file |
-| Phase 02-data-collection P01 | 3min | 2 tasks | 6 files |
-| Phase 02 P02 | 2min | 2 tasks | 2 files |
-| Phase 02 P03 | 3min | 2 tasks | 5 files |
-| Phase 03 P01 | 3min | 3 tasks | 3 files |
-| Phase 03 P02 | 4min | 2 tasks | 2 files |
-| Phase 03 P03 | 3min | 2 tasks (1 auto + 1 checkpoint) | 1 file |
-| Phase 04-gmail-alerts P02 | 3min | 2 tasks | 5 files |
-| Phase 04-gmail-alerts P01 | 4min | 2 tasks | 4 files |
-| Phase 04-gmail-alerts P03 | 12min | 2 tasks | 2 files |
-| Phase 05 P01 | 2min | 2 tasks | 3 files |
-| Phase 05 P02 | 3min | 1 tasks | 7 files |
-| Phase 05-web-dashboard P03 | 3min | 2 tasks | 5 files |
+- Last 5 plans: 4min, 12min, 2min, 3min, 3min
+- Trend: Stable
 
 ## Accumulated Context
 
@@ -69,38 +58,10 @@ Plan: Not started
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Init]: SQLite over PostgreSQL — uso pessoal, volume pequeno, zero configuração
-- [Init]: APScheduler embedded (não Celery) — single-user, sem workers distribuídos
-- [Init]: FastAPI + Jinja2 sem JS framework — interface mínima, sem complexidade de build
-- [Init]: Amadeus como única fonte — único que expõe availabilityClasses com contagem por booking class
-- [Init]: Roundtrip only na v1 — simplifica modelo e lógica; one-way é fase 2
-- [Phase 01-foundation]: Used latest PyPI versions (fastapi 0.115.12, sqlalchemy 2.0.40) instead of plan-specified unreleased versions
-- [Phase 01-foundation]: In-memory SQLite for test fixtures for speed and isolation
-- [Phase 01-foundation]: StaticPool required for in-memory SQLite test fixtures to share DB across connections
-- [Phase 01-foundation]: Extracted get_group_or_404 helper to eliminate DRY violation across 3 endpoints
-- [Phase 02-data-collection]: Used model_fields for Pydantic v2 BaseSettings field detection instead of hasattr
-- [Phase 02-data-collection]: Cascade all,delete-orphan on booking_classes relationship for snapshot data integrity
-- [Phase 02]: ResponseError handled gracefully in get_price_metrics returning None
-- [Phase 02]: Date pairs generated every 3 days within travel period for balanced API budget
-- [Phase 02]: Per-group try/except in polling cycle for error isolation
-- [Phase 02]: Module-level BackgroundScheduler with lifespan init/shutdown pattern
-- [Phase 03]: 19 RED tests covering all 4 signal types plus dedup and edge cases
-- [Phase 03]: DetectedSignal model with composite ix_signal_dedup index for 12h dedup window
-- [Phase 03]: Used collected_at instead of id for temporal ordering of snapshots
-- [Phase 03]: Dedup reference time from snapshot.collected_at for testability
-- [Phase 03]: Error isolation for detect_signals in polling cycle via try/except
-- [Phase 04-gmail-alerts]: Used mock-based TDD for silence endpoint to isolate endpoint logic from HMAC token implementation (Plan 04-01 dependency)
-- [Phase 04-gmail-alerts]: Reutiliza gmail_app_password como segredo HMAC — aceitavel para single-user
-- [Phase 04-gmail-alerts]: SMTP_SSL porta 465 com timeout=30 previne travamento do polling em falha de rede
-- [Phase 04-gmail-alerts]: try/except per signal in polling cycle — finer isolation than per-group
-- [Phase 04-gmail-alerts]: REFACTOR checklist (CLAUDE.md 4.1) applied to Phase 4 files — code was already clean, no changes needed
-- [Phase 05]: SQLAlchemy case() for urgency ordering (MAXIMA=3, ALTA=2, MEDIA=1)
-- [Phase 05]: 12h signal freshness window for dashboard summary display
-- [Phase 05]: Inline CSS in base.html (no external stylesheet, per D-11 constraint)
+- [Phase 05]: Inline CSS in base.html (no external stylesheet)
+- [Phase 05]: PRG pattern (303 redirect) for all dashboard form POST
 - [Phase 05]: format_price_brl passed as template context function for Jinja2
-- [Phase 05]: HTMLResponse with 404 status for nonexistent groups (simple, no exception)
-- [Phase 05-web-dashboard]: Inline IATA validation in dashboard routes for simpler form handling
-- [Phase 05-web-dashboard]: PRG pattern (303 redirect) for all dashboard form POST to prevent resubmission
+- [v1.1]: Gmail para alertas (substituiu Telegram por decisao do usuario)
 
 ### Pending Todos
 
@@ -108,11 +69,11 @@ None yet.
 
 ### Blockers/Concerns
 
-- Amadeus free tier (~2000-3000 calls/mês) limita a ~4 grupos ativos com 2 pollings/dia; arquitetura de polling deve respeitar esse orçamento desde a Phase 2
-- Companhias low-cost (Azul, Gol em algumas rotas) têm cobertura parcial no GDS; sinal pode ser ausente para essas rotas
+- Amadeus free tier (~2000-3000 calls/mes) limita a ~4 grupos ativos com 2 pollings/dia
+- Companhias low-cost (Azul, Gol em algumas rotas) tem cobertura parcial no GDS
 
 ## Session Continuity
 
-Last session: 2026-03-25T19:45:32.310Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-03-25
+Stopped at: Roadmap created for v1.1 milestone (Phases 6-8)
 Resume file: None
