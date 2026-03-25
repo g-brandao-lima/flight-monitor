@@ -1,71 +1,30 @@
 import datetime
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock
 
 from app.models import RouteGroup
-from app.services.snapshot_service import save_flight_snapshot
 
 
 # Mock data fixtures
-MOCK_OFFERS = [
+MOCK_FLIGHTS = [
     {
-        "price": {"grandTotal": "450.00"},
-        "validatingAirlineCodes": ["LA"],
-        "itineraries": [
+        "price": 450,
+        "airline": "LATAM",
+        "flights": [
             {
-                "segments": [
-                    {
-                        "departure": {"iataCode": "GRU", "at": "2026-05-01T10:00"},
-                        "arrival": {"iataCode": "GIG", "at": "2026-05-01T11:00"},
-                    }
-                ]
-            },
-            {
-                "segments": [
-                    {
-                        "departure": {"iataCode": "GIG", "at": "2026-05-08T10:00"},
-                        "arrival": {"iataCode": "GRU", "at": "2026-05-08T11:00"},
-                    }
-                ]
-            },
+                "airline": "LATAM",
+                "departure_airport": {"id": "GRU"},
+                "arrival_airport": {"id": "GIG"},
+            }
         ],
+        "type": "Round trip",
     }
 ]
 
-MOCK_AVAILABILITY = [
-    {
-        "segments": [
-            {
-                "availabilityClasses": [
-                    {"class": "Y", "numberOfBookableSeats": 9},
-                    {"class": "B", "numberOfBookableSeats": 4},
-                    {"class": "M", "numberOfBookableSeats": 3},
-                ]
-            }
-        ]
-    },
-    {
-        "segments": [
-            {
-                "availabilityClasses": [
-                    {"class": "Y", "numberOfBookableSeats": 7},
-                    {"class": "B", "numberOfBookableSeats": 2},
-                ]
-            }
-        ]
-    },
-]
-
-MOCK_METRICS = [
-    {
-        "priceMetrics": [
-            {"amount": "150.00", "quartileRanking": "MINIMUM"},
-            {"amount": "250.00", "quartileRanking": "FIRST"},
-            {"amount": "400.00", "quartileRanking": "MEDIUM"},
-            {"amount": "600.00", "quartileRanking": "THIRD"},
-            {"amount": "900.00", "quartileRanking": "MAXIMUM"},
-        ]
-    }
-]
+MOCK_INSIGHTS = {
+    "lowest_price": 350,
+    "typical_price_range": [400, 700],
+    "price_history": [[1700000000, 500], [1700100000, 480]],
+}
 
 
 def _create_route_group(db, **overrides):
@@ -76,7 +35,7 @@ def _create_route_group(db, **overrides):
         "destinations": ["GIG"],
         "duration_days": 7,
         "travel_start": datetime.date(2026, 5, 1),
-        "travel_end": datetime.date(2026, 5, 15),
+        "travel_end": datetime.date(2026, 5, 31),
         "target_price": None,
         "is_active": True,
     }
@@ -91,7 +50,7 @@ def _create_route_group(db, **overrides):
 class TestPollingCycleSkips:
     """Tests for polling cycle skip conditions."""
 
-    @patch("app.services.polling_service.AmadeusClient")
+    @patch("app.services.polling_service.SerpApiClient")
     def test_polling_cycle_skips_when_not_configured(self, mock_client_cls, db):
         from app.services.polling_service import run_polling_cycle
 
@@ -99,18 +58,16 @@ class TestPollingCycleSkips:
         mock_instance.is_configured = False
         mock_client_cls.return_value = mock_instance
 
-        # Should not raise and should not create snapshots
         run_polling_cycle()
 
-        # search_cheapest_offers should never be called
-        mock_instance.search_cheapest_offers.assert_not_called()
+        mock_instance.search_flights_with_insights.assert_not_called()
 
 
 class TestPollingCycleProcessing:
     """Tests for polling cycle group processing."""
 
     @patch("app.services.polling_service.save_flight_snapshot")
-    @patch("app.services.polling_service.AmadeusClient")
+    @patch("app.services.polling_service.SerpApiClient")
     def test_polling_cycle_processes_active_groups(
         self, mock_client_cls, mock_save, db
     ):
@@ -121,19 +78,16 @@ class TestPollingCycleProcessing:
 
         mock_instance = MagicMock()
         mock_instance.is_configured = True
-        mock_instance.search_cheapest_offers.return_value = MOCK_OFFERS
-        mock_instance.get_availability.return_value = MOCK_AVAILABILITY
-        mock_instance.get_price_metrics.return_value = MOCK_METRICS
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
         with patch("app.services.polling_service.SessionLocal", return_value=db):
             run_polling_cycle()
 
-        # Both groups should generate snapshots
         assert mock_save.call_count >= 2
 
     @patch("app.services.polling_service.save_flight_snapshot")
-    @patch("app.services.polling_service.AmadeusClient")
+    @patch("app.services.polling_service.SerpApiClient")
     def test_polling_cycle_skips_inactive_groups(
         self, mock_client_cls, mock_save, db
     ):
@@ -144,70 +98,80 @@ class TestPollingCycleProcessing:
 
         mock_instance = MagicMock()
         mock_instance.is_configured = True
-        mock_instance.search_cheapest_offers.return_value = MOCK_OFFERS
-        mock_instance.get_availability.return_value = MOCK_AVAILABILITY
-        mock_instance.get_price_metrics.return_value = MOCK_METRICS
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
         with patch("app.services.polling_service.SessionLocal", return_value=db):
             run_polling_cycle()
 
-        # Only 1 group processed, so snapshot count should reflect only active group
-        # With 1 group, 1 origin, 1 dest, and date combos generating offers
-        # At minimum, save should be called (not zero from inactive)
         assert mock_save.call_count >= 1
 
-        # Verify search was called only for active group's routes
-        # (inactive group should never trigger search)
-        call_count_for_search = mock_instance.search_cheapest_offers.call_count
-        # With 1 active group having 1 origin x 1 dest, and multiple date pairs
-        # the inactive group should add zero additional calls
-        # We verify that the call count matches what 1 group would produce
-        assert call_count_for_search >= 1
-
     @patch("app.services.polling_service.save_flight_snapshot")
-    @patch("app.services.polling_service.AmadeusClient")
+    @patch("app.services.polling_service.SerpApiClient")
     def test_polling_cycle_continues_after_group_failure(
         self, mock_client_cls, mock_save, db
     ):
         from app.services.polling_service import run_polling_cycle
 
-        group_a = _create_route_group(db, name="Failing Group")
-        group_b = _create_route_group(db, name="Working Group")
+        _create_route_group(db, name="Failing Group")
+        _create_route_group(db, name="Working Group")
 
         mock_instance = MagicMock()
         mock_instance.is_configured = True
 
-        # First group fails, second group works
         call_count = {"n": 0}
-        group_ids_seen = []
-
-        original_search = MagicMock(return_value=MOCK_OFFERS)
 
         def side_effect_search(*args, **kwargs):
             call_count["n"] += 1
             if call_count["n"] <= 1:
                 raise Exception("API Error for first group")
-            return MOCK_OFFERS
+            return (MOCK_FLIGHTS, MOCK_INSIGHTS)
 
-        mock_instance.search_cheapest_offers.side_effect = side_effect_search
-        mock_instance.get_availability.return_value = MOCK_AVAILABILITY
-        mock_instance.get_price_metrics.return_value = MOCK_METRICS
+        mock_instance.search_flights_with_insights.side_effect = side_effect_search
         mock_client_cls.return_value = mock_instance
 
         with patch("app.services.polling_service.SessionLocal", return_value=db):
-            # Should NOT raise exception
             run_polling_cycle()
 
-        # Second group should still produce snapshots
         assert mock_save.call_count >= 1
+
+
+class TestPollingUnifiedCall:
+    """Tests that polling uses a single API call per combination."""
+
+    @patch("app.services.polling_service.save_flight_snapshot")
+    @patch("app.services.polling_service.SerpApiClient")
+    def test_single_api_call_per_combination(self, mock_client_cls, mock_save, db):
+        """Cada combinacao origem x destino x data usa exatamente 1 chamada API."""
+        from app.services.polling_service import run_polling_cycle
+
+        _create_route_group(
+            db,
+            name="Single Call Test",
+            origins=["GRU"],
+            destinations=["GIG"],
+            travel_start=datetime.date(2026, 5, 1),
+            travel_end=datetime.date(2026, 5, 8),
+            duration_days=7,
+        )
+
+        mock_instance = MagicMock()
+        mock_instance.is_configured = True
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
+        mock_client_cls.return_value = mock_instance
+
+        with patch("app.services.polling_service.SessionLocal", return_value=db):
+            run_polling_cycle()
+
+        # 1 origin x 1 dest x 1 date pair = 1 API call
+        assert mock_instance.search_flights_with_insights.call_count == 1
 
 
 class TestPollGroupCombinations:
     """Tests for route and date combination generation."""
 
     @patch("app.services.polling_service.save_flight_snapshot")
-    @patch("app.services.polling_service.AmadeusClient")
+    @patch("app.services.polling_service.SerpApiClient")
     def test_poll_group_generates_origin_dest_combinations(
         self, mock_client_cls, mock_save, db
     ):
@@ -225,29 +189,26 @@ class TestPollGroupCombinations:
 
         mock_instance = MagicMock()
         mock_instance.is_configured = True
-        mock_instance.search_cheapest_offers.return_value = MOCK_OFFERS
-        mock_instance.get_availability.return_value = MOCK_AVAILABILITY
-        mock_instance.get_price_metrics.return_value = MOCK_METRICS
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
         with patch("app.services.polling_service.SessionLocal", return_value=db):
             run_polling_cycle()
 
-        # search_cheapest_offers should be called for both GRU-GIG and VCP-GIG
         origins_called = [
             c.kwargs.get("origin", c.args[0] if c.args else None)
-            for c in mock_instance.search_cheapest_offers.call_args_list
+            for c in mock_instance.search_flights_with_insights.call_args_list
         ]
         assert "GRU" in origins_called or any(
-            "GRU" in str(c) for c in mock_instance.search_cheapest_offers.call_args_list
+            "GRU" in str(c) for c in mock_instance.search_flights_with_insights.call_args_list
         )
         assert "VCP" in origins_called or any(
-            "VCP" in str(c) for c in mock_instance.search_cheapest_offers.call_args_list
+            "VCP" in str(c) for c in mock_instance.search_flights_with_insights.call_args_list
         )
 
     @patch("app.services.polling_service.save_flight_snapshot")
-    @patch("app.services.polling_service.AmadeusClient")
-    def test_poll_group_generates_date_combinations(
+    @patch("app.services.polling_service.SerpApiClient")
+    def test_poll_group_generates_date_combinations_every_7_days(
         self, mock_client_cls, mock_save, db
     ):
         from app.services.polling_service import run_polling_cycle
@@ -258,41 +219,39 @@ class TestPollGroupCombinations:
             origins=["GRU"],
             destinations=["GIG"],
             travel_start=datetime.date(2026, 5, 1),
-            travel_end=datetime.date(2026, 5, 15),
+            travel_end=datetime.date(2026, 5, 31),
             duration_days=7,
         )
 
         mock_instance = MagicMock()
         mock_instance.is_configured = True
-        mock_instance.search_cheapest_offers.return_value = MOCK_OFFERS
-        mock_instance.get_availability.return_value = MOCK_AVAILABILITY
-        mock_instance.get_price_metrics.return_value = MOCK_METRICS
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
         with patch("app.services.polling_service.SessionLocal", return_value=db):
             run_polling_cycle()
 
-        # travel_start=May 1, travel_end=May 15, duration=7
-        # Dates: May 1 (ret May 8), May 4 (ret May 11), May 7 (ret May 14)
-        # That's 3 date pairs, so search should be called 3 times (1 origin x 1 dest x 3 dates)
-        assert mock_instance.search_cheapest_offers.call_count == 3
+        # travel_start=May 1, travel_end=May 31, duration=7, step=7
+        # Dates: May 1 (ret May 8), May 8 (ret May 15), May 15 (ret May 22), May 22 (ret May 29)
+        # That's 4 date pairs
+        assert mock_instance.search_flights_with_insights.call_count == 4
 
-        # Check departure dates used
         dep_dates_used = [
             c.kwargs.get("departure_date")
-            for c in mock_instance.search_cheapest_offers.call_args_list
+            for c in mock_instance.search_flights_with_insights.call_args_list
         ]
         assert "2026-05-01" in dep_dates_used
-        assert "2026-05-04" in dep_dates_used
-        assert "2026-05-07" in dep_dates_used
+        assert "2026-05-08" in dep_dates_used
+        assert "2026-05-15" in dep_dates_used
+        assert "2026-05-22" in dep_dates_used
 
 
 class TestPollGroupSnapshotData:
     """Tests for snapshot data correctness."""
 
     @patch("app.services.polling_service.save_flight_snapshot")
-    @patch("app.services.polling_service.AmadeusClient")
-    def test_poll_group_saves_snapshot_with_booking_classes(
+    @patch("app.services.polling_service.SerpApiClient")
+    def test_poll_group_saves_snapshot_with_price_insights(
         self, mock_client_cls, mock_save, db
     ):
         from app.services.polling_service import run_polling_cycle
@@ -309,61 +268,42 @@ class TestPollGroupSnapshotData:
 
         mock_instance = MagicMock()
         mock_instance.is_configured = True
-        mock_instance.search_cheapest_offers.return_value = MOCK_OFFERS
-        mock_instance.get_availability.return_value = MOCK_AVAILABILITY
-        mock_instance.get_price_metrics.return_value = MOCK_METRICS
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
         with patch("app.services.polling_service.SessionLocal", return_value=db):
             run_polling_cycle()
 
-        # save_flight_snapshot should be called at least once
         assert mock_save.call_count >= 1
 
-        # Check the first call's data
         first_call_args = mock_save.call_args_list[0]
-        snapshot_data = first_call_args[0][1]  # positional arg: (db, data)
+        snapshot_data = first_call_args[0][1]
 
         assert snapshot_data["route_group_id"] == group.id
         assert snapshot_data["origin"] == "GRU"
         assert snapshot_data["destination"] == "GIG"
         assert snapshot_data["price"] == 450.0
-        assert snapshot_data["airline"] == "LA"
+        assert snapshot_data["airline"] == "LATAM"
         assert snapshot_data["currency"] == "BRL"
 
-        # Check booking classes are present
-        assert "booking_classes" in snapshot_data
-        classes = snapshot_data["booking_classes"]
-        assert len(classes) == 5  # 3 outbound + 2 inbound
+        assert snapshot_data["price_min"] == 350
+        assert snapshot_data["price_first_quartile"] == 400
+        assert snapshot_data["price_median"] == 550.0
+        assert snapshot_data["price_third_quartile"] == 700
+        assert snapshot_data["price_classification"] == "MEDIUM"
 
-        # Check OUTBOUND classes
-        outbound = [c for c in classes if c["segment_direction"] == "OUTBOUND"]
-        assert len(outbound) == 3
-        class_codes = {c["class_code"] for c in outbound}
-        assert class_codes == {"Y", "B", "M"}
-
-        # Check INBOUND classes
-        inbound = [c for c in classes if c["segment_direction"] == "INBOUND"]
-        assert len(inbound) == 2
-
-        # Check price metrics in snapshot
-        assert snapshot_data["price_min"] == 150.0
-        assert snapshot_data["price_first_quartile"] == 250.0
-        assert snapshot_data["price_median"] == 400.0
-        assert snapshot_data["price_third_quartile"] == 600.0
-        assert snapshot_data["price_max"] == 900.0
-        assert snapshot_data["price_classification"] == "HIGH"
+        assert snapshot_data["booking_classes"] == []
 
     @patch("app.services.polling_service.save_flight_snapshot")
-    @patch("app.services.polling_service.AmadeusClient")
-    def test_poll_group_handles_missing_price_metrics(
+    @patch("app.services.polling_service.SerpApiClient")
+    def test_poll_group_handles_missing_price_insights(
         self, mock_client_cls, mock_save, db
     ):
         from app.services.polling_service import run_polling_cycle
 
         _create_route_group(
             db,
-            name="No Metrics",
+            name="No Insights",
             origins=["GRU"],
             destinations=["GIG"],
             travel_start=datetime.date(2026, 5, 1),
@@ -373,9 +313,7 @@ class TestPollGroupSnapshotData:
 
         mock_instance = MagicMock()
         mock_instance.is_configured = True
-        mock_instance.search_cheapest_offers.return_value = MOCK_OFFERS
-        mock_instance.get_availability.return_value = MOCK_AVAILABILITY
-        mock_instance.get_price_metrics.return_value = None  # No metrics available
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, None)
         mock_client_cls.return_value = mock_instance
 
         with patch("app.services.polling_service.SessionLocal", return_value=db):
@@ -385,12 +323,8 @@ class TestPollGroupSnapshotData:
 
         snapshot_data = mock_save.call_args_list[0][0][1]
         assert snapshot_data["price_classification"] is None
-        # Price metric fields should not be present or should be None
         assert snapshot_data.get("price_min") is None
         assert snapshot_data.get("price_first_quartile") is None
-        assert snapshot_data.get("price_median") is None
-        assert snapshot_data.get("price_third_quartile") is None
-        assert snapshot_data.get("price_max") is None
 
 
 class TestPollingAlertIntegration:
@@ -401,7 +335,7 @@ class TestPollingAlertIntegration:
     @patch("app.services.polling_service.should_alert")
     @patch("app.services.polling_service.detect_signals")
     @patch("app.services.polling_service.save_flight_snapshot")
-    @patch("app.services.polling_service.AmadeusClient")
+    @patch("app.services.polling_service.SerpApiClient")
     def test_polling_sends_alert_on_signal(
         self,
         mock_client_cls,
@@ -412,11 +346,9 @@ class TestPollingAlertIntegration:
         mock_send_email,
         db,
     ):
-        """Quando detect_signals retorna sinal e grupo nao silenciado, send_email e chamado."""
-        # Arrange
         from app.services.polling_service import run_polling_cycle
 
-        group = _create_route_group(
+        _create_route_group(
             db,
             name="Alert Group",
             origins=["GRU"],
@@ -428,9 +360,7 @@ class TestPollingAlertIntegration:
 
         mock_instance = MagicMock()
         mock_instance.is_configured = True
-        mock_instance.search_cheapest_offers.return_value = MOCK_OFFERS
-        mock_instance.get_availability.return_value = MOCK_AVAILABILITY
-        mock_instance.get_price_metrics.return_value = MOCK_METRICS
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
         fake_signal = MagicMock()
@@ -439,11 +369,9 @@ class TestPollingAlertIntegration:
         fake_msg = MagicMock()
         mock_compose.return_value = fake_msg
 
-        # Act
         with patch("app.services.polling_service.SessionLocal", return_value=db):
             run_polling_cycle()
 
-        # Assert — send_email deve ter sido chamado com a mensagem composta
         mock_send_email.assert_called_once_with(fake_msg)
 
     @patch("app.services.polling_service.send_email")
@@ -451,7 +379,7 @@ class TestPollingAlertIntegration:
     @patch("app.services.polling_service.should_alert")
     @patch("app.services.polling_service.detect_signals")
     @patch("app.services.polling_service.save_flight_snapshot")
-    @patch("app.services.polling_service.AmadeusClient")
+    @patch("app.services.polling_service.SerpApiClient")
     def test_polling_skips_alert_silenced_group(
         self,
         mock_client_cls,
@@ -462,8 +390,6 @@ class TestPollingAlertIntegration:
         mock_send_email,
         db,
     ):
-        """Quando should_alert retorna False, send_email NAO e chamado."""
-        # Arrange
         from app.services.polling_service import run_polling_cycle
 
         _create_route_group(
@@ -478,20 +404,16 @@ class TestPollingAlertIntegration:
 
         mock_instance = MagicMock()
         mock_instance.is_configured = True
-        mock_instance.search_cheapest_offers.return_value = MOCK_OFFERS
-        mock_instance.get_availability.return_value = MOCK_AVAILABILITY
-        mock_instance.get_price_metrics.return_value = MOCK_METRICS
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
         fake_signal = MagicMock()
         mock_detect.return_value = [fake_signal]
-        mock_should_alert.return_value = False  # grupo silenciado
+        mock_should_alert.return_value = False
 
-        # Act
         with patch("app.services.polling_service.SessionLocal", return_value=db):
             run_polling_cycle()
 
-        # Assert — send_email nao deve ser chamado
         mock_send_email.assert_not_called()
 
     @patch("app.services.polling_service.send_email")
@@ -499,7 +421,7 @@ class TestPollingAlertIntegration:
     @patch("app.services.polling_service.should_alert")
     @patch("app.services.polling_service.detect_signals")
     @patch("app.services.polling_service.save_flight_snapshot")
-    @patch("app.services.polling_service.AmadeusClient")
+    @patch("app.services.polling_service.SerpApiClient")
     def test_polling_continues_on_smtp_failure(
         self,
         mock_client_cls,
@@ -510,8 +432,6 @@ class TestPollingAlertIntegration:
         mock_send_email,
         db,
     ):
-        """Quando send_email levanta Exception, o polling continua sem crashar."""
-        # Arrange
         from app.services.polling_service import run_polling_cycle
 
         _create_route_group(
@@ -526,9 +446,7 @@ class TestPollingAlertIntegration:
 
         mock_instance = MagicMock()
         mock_instance.is_configured = True
-        mock_instance.search_cheapest_offers.return_value = MOCK_OFFERS
-        mock_instance.get_availability.return_value = MOCK_AVAILABILITY
-        mock_instance.get_price_metrics.return_value = MOCK_METRICS
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
         mock_client_cls.return_value = mock_instance
 
         fake_signal = MagicMock()
@@ -537,9 +455,247 @@ class TestPollingAlertIntegration:
         mock_compose.return_value = MagicMock()
         mock_send_email.side_effect = Exception("SMTP connection refused")
 
-        # Act — nao deve levantar excecao
         with patch("app.services.polling_service.SessionLocal", return_value=db):
-            run_polling_cycle()  # must not raise
+            run_polling_cycle()
 
-        # Assert — send_email foi chamado mas falhou; polling sobreviveu
         mock_send_email.assert_called_once()
+
+
+class TestConsolidatedEmailFlow:
+    """Tests for consolidated email flow: 1 email per group per cycle."""
+
+    @patch("app.services.polling_service.send_email")
+    @patch("app.services.polling_service.compose_consolidated_email")
+    @patch("app.services.polling_service.should_alert")
+    @patch("app.services.polling_service.detect_signals")
+    @patch("app.services.polling_service.save_flight_snapshot")
+    @patch("app.services.polling_service.SerpApiClient")
+    def test_poll_group_sends_consolidated_email_when_signals_detected(
+        self,
+        mock_client_cls,
+        mock_save,
+        mock_detect,
+        mock_should_alert,
+        mock_compose,
+        mock_send_email,
+        db,
+    ):
+        """Quando sinais sao detectados, envia 1 email consolidado via compose_consolidated_email."""
+        from app.services.polling_service import run_polling_cycle
+
+        group = _create_route_group(
+            db,
+            name="Consolidated Test",
+            origins=["GRU"],
+            destinations=["GIG"],
+            travel_start=datetime.date(2026, 5, 1),
+            travel_end=datetime.date(2026, 5, 8),
+            duration_days=7,
+        )
+
+        mock_instance = MagicMock()
+        mock_instance.is_configured = True
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
+        mock_client_cls.return_value = mock_instance
+
+        fake_snapshot = MagicMock()
+        mock_save.return_value = fake_snapshot
+
+        fake_signal = MagicMock()
+        mock_detect.return_value = [fake_signal]
+        mock_should_alert.return_value = True
+        fake_msg = MagicMock()
+        mock_compose.return_value = fake_msg
+
+        with patch("app.services.polling_service.SessionLocal", return_value=db):
+            run_polling_cycle()
+
+        # compose_consolidated_email deve ser chamado (nao compose_alert_email)
+        mock_compose.assert_called_once()
+        call_args = mock_compose.call_args
+        # Primeiro arg: lista de sinais
+        assert isinstance(call_args[0][0], list)
+        assert fake_signal in call_args[0][0]
+        # Segundo arg: lista de snapshots
+        assert isinstance(call_args[0][1], list)
+        # Terceiro arg: grupo
+        assert call_args[0][2].name == "Consolidated Test"
+        # send_email chamado 1 vez
+        mock_send_email.assert_called_once_with(fake_msg)
+
+    @patch("app.services.polling_service.send_email")
+    @patch("app.services.polling_service.compose_consolidated_email")
+    @patch("app.services.polling_service.should_alert")
+    @patch("app.services.polling_service.detect_signals")
+    @patch("app.services.polling_service.save_flight_snapshot")
+    @patch("app.services.polling_service.SerpApiClient")
+    def test_poll_group_no_email_when_no_signals(
+        self,
+        mock_client_cls,
+        mock_save,
+        mock_detect,
+        mock_should_alert,
+        mock_compose,
+        mock_send_email,
+        db,
+    ):
+        """Quando nenhum sinal e detectado, nenhum email e enviado."""
+        from app.services.polling_service import run_polling_cycle
+
+        _create_route_group(
+            db,
+            name="No Signals",
+            origins=["GRU"],
+            destinations=["GIG"],
+            travel_start=datetime.date(2026, 5, 1),
+            travel_end=datetime.date(2026, 5, 8),
+            duration_days=7,
+        )
+
+        mock_instance = MagicMock()
+        mock_instance.is_configured = True
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
+        mock_client_cls.return_value = mock_instance
+
+        fake_snapshot = MagicMock()
+        mock_save.return_value = fake_snapshot
+        mock_detect.return_value = []  # Nenhum sinal
+
+        with patch("app.services.polling_service.SessionLocal", return_value=db):
+            run_polling_cycle()
+
+        mock_compose.assert_not_called()
+        mock_send_email.assert_not_called()
+
+    @patch("app.services.polling_service.send_email")
+    @patch("app.services.polling_service.compose_consolidated_email")
+    @patch("app.services.polling_service.should_alert")
+    @patch("app.services.polling_service.detect_signals")
+    @patch("app.services.polling_service.save_flight_snapshot")
+    @patch("app.services.polling_service.SerpApiClient")
+    def test_poll_group_no_email_when_silenced(
+        self,
+        mock_client_cls,
+        mock_save,
+        mock_detect,
+        mock_should_alert,
+        mock_compose,
+        mock_send_email,
+        db,
+    ):
+        """Quando grupo esta silenciado, nenhum email e enviado mesmo com sinais."""
+        from app.services.polling_service import run_polling_cycle
+
+        _create_route_group(
+            db,
+            name="Silenced Consolidated",
+            origins=["GRU"],
+            destinations=["GIG"],
+            travel_start=datetime.date(2026, 5, 1),
+            travel_end=datetime.date(2026, 5, 8),
+            duration_days=7,
+        )
+
+        mock_instance = MagicMock()
+        mock_instance.is_configured = True
+        mock_instance.search_flights_with_insights.return_value = (MOCK_FLIGHTS, MOCK_INSIGHTS)
+        mock_client_cls.return_value = mock_instance
+
+        fake_snapshot = MagicMock()
+        mock_save.return_value = fake_snapshot
+        fake_signal = MagicMock()
+        mock_detect.return_value = [fake_signal]
+        mock_should_alert.return_value = False  # Silenciado
+
+        with patch("app.services.polling_service.SessionLocal", return_value=db):
+            run_polling_cycle()
+
+        mock_send_email.assert_not_called()
+
+    @patch("app.services.polling_service.send_email")
+    @patch("app.services.polling_service.compose_consolidated_email")
+    @patch("app.services.polling_service.should_alert")
+    @patch("app.services.polling_service.detect_signals")
+    @patch("app.services.polling_service.save_flight_snapshot")
+    @patch("app.services.polling_service.SerpApiClient")
+    def test_poll_group_accumulates_all_signals(
+        self,
+        mock_client_cls,
+        mock_save,
+        mock_detect,
+        mock_should_alert,
+        mock_compose,
+        mock_send_email,
+        db,
+    ):
+        """Quando multiplos voos geram sinais, todos sao acumulados no email unico."""
+        from app.services.polling_service import run_polling_cycle
+
+        _create_route_group(
+            db,
+            name="Multi Signal",
+            origins=["GRU"],
+            destinations=["GIG"],
+            travel_start=datetime.date(2026, 5, 1),
+            travel_end=datetime.date(2026, 5, 15),
+            duration_days=7,
+        )
+
+        mock_instance = MagicMock()
+        mock_instance.is_configured = True
+        # 2 flights per search, 2 date pairs
+        two_flights = [
+            {"price": 450, "airline": "LATAM", "flights": [], "type": "Round trip"},
+            {"price": 550, "airline": "GOL", "flights": [], "type": "Round trip"},
+        ]
+        mock_instance.search_flights_with_insights.return_value = (two_flights, MOCK_INSIGHTS)
+        mock_client_cls.return_value = mock_instance
+
+        fake_snapshot = MagicMock()
+        mock_save.return_value = fake_snapshot
+
+        signal_a = MagicMock(signal_type="PRECO_BAIXO")
+        signal_b = MagicMock(signal_type="BALDE_FECHANDO")
+        # Alternate signals per call
+        mock_detect.side_effect = [[signal_a], [signal_b], [signal_a], [signal_b]]
+        mock_should_alert.return_value = True
+        mock_compose.return_value = MagicMock()
+
+        with patch("app.services.polling_service.SessionLocal", return_value=db):
+            run_polling_cycle()
+
+        # compose_consolidated_email chamado 1 vez com TODOS os sinais acumulados
+        mock_compose.assert_called_once()
+        all_signals = mock_compose.call_args[0][0]
+        assert len(all_signals) >= 2  # Pelo menos 2 sinais acumulados
+
+    @patch("app.services.polling_service.detect_signals")
+    @patch("app.services.polling_service.save_flight_snapshot")
+    @patch("app.services.polling_service.is_duplicate_snapshot")
+    def test_process_flight_returns_signal_and_snapshot(
+        self,
+        mock_is_dup,
+        mock_save,
+        mock_detect,
+        db,
+    ):
+        """_process_flight retorna (snapshot, signals) ao inves de enviar email."""
+        from app.services.polling_service import _process_flight
+
+        group = _create_route_group(db, name="Return Test")
+        mock_is_dup.return_value = False
+        fake_snapshot = MagicMock()
+        mock_save.return_value = fake_snapshot
+        fake_signal = MagicMock()
+        mock_detect.return_value = [fake_signal]
+
+        result = _process_flight(
+            db, group, "GRU", "GIG",
+            datetime.date(2026, 5, 1), datetime.date(2026, 5, 8),
+            {"price": 450, "airline": "LATAM"}, MOCK_INSIGHTS,
+        )
+
+        assert result is not None
+        snapshot_result, signals_result = result
+        assert snapshot_result == fake_snapshot
+        assert signals_result == [fake_signal]
