@@ -12,7 +12,12 @@ Detectar o momento certo de comprar uma passagem antes que o preço suba, usando
 
 ### Validated
 
-(None yet — ship to validate)
+**Phase 1 (Foundation) — validated 2026-03-25**
+- Aplicação inicia com um único comando e responde em localhost
+- Banco SQLite criado automaticamente com todas as tabelas
+- Grupos de Rota: criação, edição, ativação/desativação, deleção via API
+- Sistema rejeita criação de 11º grupo ativo
+- Validação de IATA codes, duração mínima, campos obrigatórios
 
 ### Active
 
@@ -116,4 +121,4 @@ Este documento evolui a cada transição de fase e milestone.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-24 after alert channel change (Telegram → Gmail)*
+*Last updated: 2026-03-25 after Phase 1 completion*
