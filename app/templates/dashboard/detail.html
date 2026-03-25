@@ -17,7 +17,7 @@
     <p><strong>Origens:</strong> {{ group.origins | join(", ") }}</p>
     <p><strong>Destinos:</strong> {{ group.destinations | join(", ") }}</p>
     <p><strong>Duracao:</strong> {{ group.duration_days }} dias</p>
-    <p><strong>Periodo:</strong> {{ group.travel_start }} a {{ group.travel_end }}</p>
+    <p><strong>Periodo:</strong> {{ format_date_br(group.travel_start) }} a {{ format_date_br(group.travel_end) }}</p>
 </div>
 
 {% if chart_data.prices %}

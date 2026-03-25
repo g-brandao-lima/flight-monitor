@@ -192,7 +192,7 @@ def dashboard_detail(request: Request, group_id: int, db: Session = Depends(get_
     return templates.TemplateResponse(
         request=request,
         name="dashboard/detail.html",
-        context={"group": group, "chart_data": chart_data},
+        context={"group": group, "chart_data": chart_data, "format_date_br": format_date_br},
     )
 
 
