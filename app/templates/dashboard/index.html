@@ -32,20 +32,23 @@
     }
     .empty-state p {
         color: #64748b;
-        font-size: 1.1rem;
+        font-size: 0.875rem;
         margin-bottom: 2rem;
     }
     .empty-state a.btn-create {
-        background: #059669;
+        background: #22c55e;
         color: white;
-        padding: 0.75rem 1.5rem;
+        padding: 0.5rem 1.5rem;
         border-radius: 6px;
         text-decoration: none;
-        font-weight: 600;
-        display: inline-block;
+        font-weight: 700;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        min-height: 40px;
     }
     .empty-state a.btn-create:hover {
-        background: #047857;
+        background: #16a34a;
     }
     .cards-grid {
         display: grid;
@@ -56,12 +59,16 @@
         background: white;
         border-radius: 8px;
         padding: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
         border-left: 4px solid #94a3b8;
+        transition: box-shadow 0.2s ease;
     }
-    .group-card.border-low { border-left-color: #059669; }
-    .group-card.border-medium { border-left-color: #d97706; }
-    .group-card.border-high { border-left-color: #dc2626; }
+    .group-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .group-card.border-low { border-left-color: #22c55e; }
+    .group-card.border-medium { border-left-color: #f59e0b; }
+    .group-card.border-high { border-left-color: #ef4444; }
     .group-card.border-none { border-left-color: #94a3b8; }
     .group-card.inactive { opacity: 0.6; }
     .card-header {
@@ -76,8 +83,8 @@
         gap: 0.5rem;
     }
     .card-header .name-area a {
-        font-size: 1.1rem;
-        font-weight: 600;
+        font-size: 0.875rem;
+        font-weight: 700;
         color: #1e293b;
         text-decoration: none;
     }
@@ -87,9 +94,11 @@
     .badge {
         padding: 0.2rem 0.5rem;
         border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 600;
+        font-size: 0.8rem;
+        font-weight: 700;
         color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
     .badge-inactive { background-color: #cbd5e1; color: #475569; }
     .badge-maxima { background-color: #ef4444; }
@@ -97,13 +106,15 @@
     .badge-media { background-color: #eab308; }
     .badge-sem { background-color: #94a3b8; }
     .card-price {
+        font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, monospace;
         font-size: 1.75rem;
         font-weight: 700;
+        line-height: 1.2;
         margin-bottom: 0.5rem;
     }
-    .price-low { color: #059669; }
-    .price-medium { color: #d97706; }
-    .price-high { color: #dc2626; }
+    .price-low { color: #22c55e; }
+    .price-medium { color: #f59e0b; }
+    .price-high { color: #ef4444; }
     .price-none { color: #94a3b8; }
     .card-route {
         color: #64748b;
@@ -121,10 +132,10 @@
         align-items: center;
         margin-top: 0.5rem;
         padding-top: 0.75rem;
-        border-top: 1px solid #f1f5f9;
+        border-top: 1px solid #e2e8f0;
     }
     .card-footer a {
-        color: #3b82f6;
+        color: #0ea5e9;
         font-size: 0.875rem;
         text-decoration: none;
     }
@@ -146,7 +157,7 @@
     .awaiting-text {
         color: #94a3b8;
         font-style: italic;
-        font-size: 1rem;
+        font-size: 0.875rem;
         margin-bottom: 0.5rem;
     }
     @media (max-width: 768px) {
@@ -163,7 +174,7 @@
 {% endblock %}
 
 {% block content %}
-<h1 style="margin-bottom: 1.5rem;">Grupos de Rota</h1>
+<h1 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 1.5rem;">Grupos de Rota</h1>
 
 {% if not groups %}
 <div class="empty-state">
