@@ -178,7 +178,7 @@ Plans:
 
 Plans:
 - [x] 09-01-PLAN.md - Paleta global (base.html) + cards, summary bar, estado vazio e tipografia (index.html) (VIS-01/02/03/04/05/06)
-- [ ] 09-02-PLAN.md - Paginas secundarias (detail, create, edit) + checkpoint visual (VIS-01/06)
+- [x] 09-02-PLAN.md - Paginas secundarias (detail, create, edit) + checkpoint visual (VIS-01/06)
 
 ## Progress
 
