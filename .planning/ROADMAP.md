@@ -3,7 +3,8 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** - Phases 1-5 (shipped 2026-03-25)
-- 🚧 **v1.1 Polish & UX** - Phases 6-8 (in progress)
+- ✅ **v1.1 Polish & UX** - Phases 6-8 (shipped 2026-03-26)
+- 🚧 **v1.2 Visual Polish** - Phase 9 (in progress)
 
 ## Phases
 
@@ -99,15 +100,12 @@ Plans:
 
 </details>
 
-### v1.1 Polish & UX (In Progress)
+<details>
+<summary>v1.1 Polish & UX (Phases 6-8) - SHIPPED 2026-03-26</summary>
 
-**Milestone Goal:** Melhorar a experiencia do usuario com email consolidado, dashboard redesenhado e correcoes de qualidade
-
-- [ ] **Phase 6: Quality & Feedback** - Corrigir snapshots duplicados, adicionar mensagens de confirmacao e pagina de erro amigavel
-- [ ] **Phase 7: Consolidated Email** - Reestruturar alertas para 1 email por grupo com rota mais barata, melhores datas e formato brasileiro
-- [ ] **Phase 8: Dashboard Redesign** - Cards coloridos por status, area de resumo, estado vazio e datas em formato brasileiro
-
-## Phase Details
+- [x] **Phase 6: Quality & Feedback** - Corrigir snapshots duplicados, adicionar mensagens de confirmacao e pagina de erro amigavel
+- [x] **Phase 7: Consolidated Email** - Reestruturar alertas para 1 email por grupo com rota mais barata, melhores datas e formato brasileiro
+- [x] **Phase 8: Dashboard Redesign** - Cards coloridos por status, area de resumo, estado vazio e datas em formato brasileiro
 
 ### Phase 6: Quality & Feedback
 **Goal**: Usuario recebe feedback claro das suas acoes e nunca ve erros genericos do servidor
@@ -154,9 +152,33 @@ Plans:
 - [x] 08-01-PLAN.md - Backend summary data + rewrite index.html com cards coloridos, summary bar e estado vazio (UI-01/02/03/04/05)
 - [x] 08-02-PLAN.md - Datas dd/mm/aaaa no detail.html + checkpoint visual (UI-05)
 
+</details>
+
+### v1.2 Visual Polish (In Progress)
+
+**Milestone Goal:** Aplicar o UI-SPEC aprovado para transformar o dashboard num visual profissional inspirado em Hopper/Linear/Going.com
+
+- [ ] **Phase 9: Visual Polish** - Aplicar paleta, tipografia, cards redesenhados, summary bar e estado vazio conforme UI-SPEC
+
+## Phase Details
+
+### Phase 9: Visual Polish
+**Goal**: Dashboard tem aparencia profissional e coesa seguindo o UI-SPEC aprovado, com paleta de cores padronizada, tipografia hierarquica e componentes visualmente refinados
+**Depends on**: Phase 8
+**Requirements**: VIS-01, VIS-02, VIS-03, VIS-04, VIS-05, VIS-06
+**UI-SPEC**: .planning/phases/08-dashboard-redesign/08-UI-SPEC.md
+**Success Criteria** (what must be TRUE):
+  1. Dashboard usa paleta de cores consistente: fundo #f8fafc, cards brancos, accent sky blue #0ea5e9, e cores semanticas verde/amarelo/vermelho para classificacao de preco (LOW/MEDIUM/HIGH)
+  2. Preco em cada card e exibido em fonte monospace 28px bold como elemento focal, com borda esquerda de 4px colorida pela classificacao do preco
+  3. Cards respondem a hover com transicao de sombra em 0.2s, footer tem separador visivel, e grupos inativos aparecem com opacidade reduzida (0.6)
+  4. Summary bar tem fundo escuro (#1e293b) com metricas em 20px bold e labels em 13px, visualmente distinta do restante da pagina
+  5. Estado vazio exibe icone SVG de aviao, texto em 14px e botao CTA verde com min-height 40px, convidando o usuario a criar o primeiro grupo
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
-**Execution Order:** Phase 6 > Phase 7 > Phase 8 (Phases 7 and 8 both depend on 6; 7 and 8 are independent of each other)
+**Execution Order:** Phase 9 (single phase milestone)
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -165,6 +187,7 @@ Plans:
 | 3. Signal Detection | v1.0 | 3/3 | Complete | 2026-03-25 |
 | 4. Gmail Alerts | v1.0 | 3/3 | Complete | 2026-03-25 |
 | 5. Web Dashboard | v1.0 | 3/3 | Complete | 2026-03-25 |
-| 6. Quality & Feedback | v1.1 | 0/2 | Planning | - |
-| 7. Consolidated Email | v1.1 | 0/2 | Planning | - |
-| 8. Dashboard Redesign | v1.1 | 0/2 | Planning | - |
+| 6. Quality & Feedback | v1.1 | 2/2 | Complete | 2026-03-26 |
+| 7. Consolidated Email | v1.1 | 2/2 | Complete | 2026-03-26 |
+| 8. Dashboard Redesign | v1.1 | 2/2 | Complete | 2026-03-26 |
+| 9. Visual Polish | v1.2 | 0/0 | Not started | - |

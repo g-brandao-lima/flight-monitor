@@ -172,11 +172,18 @@
 | UI-03 | Phase 8 | Complete |
 | UI-04 | Phase 8 | Complete |
 | UI-05 | Phase 8 | Complete |
+| VIS-01 | Phase 9 | Pending |
+| VIS-02 | Phase 9 | Pending |
+| VIS-03 | Phase 9 | Pending |
+| VIS-04 | Phase 9 | Pending |
+| VIS-05 | Phase 9 | Pending |
+| VIS-06 | Phase 9 | Pending |
 
 **Coverage:**
 - v1 requirements: 28 total, 28 mapped, 0 unmapped
 - v1.1 requirements: 11 total, 11 mapped, 0 unmapped
+- v1.2 requirements: 6 total, 6 mapped, 0 unmapped
 
 ---
 *Requirements defined: 2026-03-24*
-*Last updated: 2026-03-25 after v1.1 roadmap creation*
+*Last updated: 2026-03-26 after v1.2 roadmap creation*

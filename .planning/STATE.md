@@ -1,38 +1,42 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Polish & UX
-status: Milestone complete
-stopped_at: Phase 8 UI-SPEC approved
-last_updated: "2026-03-26T04:16:25.038Z"
+milestone: v1.2
+milestone_name: Visual Polish
+status: Ready to plan
+stopped_at: Roadmap created for v1.2
+last_updated: "2026-03-26"
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-25)
+See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Detectar o momento certo de comprar uma passagem antes que o preco suba, usando dados de booking class inventory (Amadeus API) que nenhum sistema consumer expoe.
-**Current focus:** Phase 08 — dashboard-redesign
+**Current focus:** Phase 09 - Visual Polish
 
 ## Current Position
 
-Phase: 08
-Plan: Not started
+Phase: 9 of 9 (Visual Polish)
+Plan: 0 of 0 in current phase (TBD - awaiting planning)
+Status: Ready to plan
+Last activity: 2026-03-26 - Roadmap created for v1.2 Visual Polish milestone
+
+Progress: [████████████████████░] 95% (21/22 phases-plans complete across all milestones)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 15
+- Total plans completed: 21
 - Average duration: ~3min
-- Total execution time: ~47min
+- Total execution time: ~63min
 
 **By Phase:**
 
@@ -43,18 +47,14 @@ Plan: Not started
 | 03-signal-detection | 3 | 10min | 3.3min |
 | 04-gmail-alerts | 3 | 19min | 6.3min |
 | 05-web-dashboard | 3 | 8min | 2.7min |
+| 06-quality-feedback | 2 | 6min | 3.0min |
+| 07-consolidated-email | 2 | 6min | 3.0min |
+| 08-dashboard-redesign | 2 | 4min | 2.0min |
 
 **Recent Trend:**
 
-- Last 5 plans: 4min, 12min, 2min, 3min, 3min
+- Last 5 plans: 3min, 3min, 3min, 3min, 1min
 - Trend: Stable
-
-| Phase 06 P01 | 2min | 1 tasks | 3 files |
-| Phase 06 P02 | 4min | 2 tasks | 6 files |
-| Phase 07 P01 | 3min | 1 tasks | 2 files |
-| Phase 07 P02 | 3min | 2 tasks | 2 files |
-| Phase 08 P01 | 3min | 2 tasks | 4 files |
-| Phase 08 P02 | 1min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -63,18 +63,9 @@ Plan: Not started
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Phase 05]: Inline CSS in base.html (no external stylesheet)
-- [Phase 05]: PRG pattern (303 redirect) for all dashboard form POST
-- [Phase 05]: format_price_brl passed as template context function for Jinja2
-- [v1.1]: Gmail para alertas (substituiu Telegram por decisao do usuario)
-- [Phase 06]: Dedup por query no banco (temporal 1h) ao inves de cache em memoria
-- [Phase 06]: Flash messages via query param ?msg= (stateless, sem sessao)
-- [Phase 06]: Exception handler global com mapeamento de mensagens por status code
-- [Phase 07]: Reusar format_price_brl de dashboard_service para consistencia BRL no email consolidado
-- [Phase 07]: _process_flight retorna tupla (snapshot, signals) para desacoplar deteccao de envio
-- [Phase 08]: Scheduler import wrapped in try/except inside get_dashboard_summary for test isolation
 - [Phase 08]: CSS classes for card border colors instead of inline styles
-- [Phase 08]: Reused format_date_br from dashboard_service for consistency across all dashboard pages
+- [Phase 08]: Reused format_date_br from dashboard_service for consistency
+- [v1.2]: UI-SPEC approved as visual contract for Phase 9
 
 ### Pending Todos
 
@@ -87,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T04:16:25.032Z
-Stopped at: Phase 8 UI-SPEC approved
+Last session: 2026-03-26
+Stopped at: Roadmap created for v1.2 Visual Polish milestone
 Resume file: .planning/phases/08-dashboard-redesign/08-UI-SPEC.md
