@@ -103,17 +103,16 @@ Sistemas consumer (Google Flights, Kayak) são reativos: alertam quando o preço
 | Fly.io free tier para cloud | Zero custo, suporte a persistent volume para SQLite, sempre ativo | — Pending |
 | Roundtrip only na v1 | Simplifica modelo de dados e lógica de busca; one-way pode ser fase 2 | — Pending |
 
-## Current Milestone: v1.1 Polish & UX
+## Current Milestone: v1.2 Visual Polish
 
-**Goal:** Melhorar a experiencia do usuario com email consolidado, dashboard redesenhado e correcoes de qualidade
+**Goal:** Aplicar o UI-SPEC aprovado para transformar o dashboard num visual profissional inspirado em Hopper/Linear/Going.com
 
 **Target features:**
-- Email consolidado: 1 email por grupo com rota mais barata, melhores datas e resumo
-- Datas formato brasileiro (dd/mm/aaaa) no dashboard e emails
-- Dashboard UI redesign: cards, area de resumo, cores por status, estado vazio
-- Mensagens de feedback: confirmacao ao criar/editar/desativar grupo
-- Pagina de erro amigavel ao inves de "Internal Server Error"
-- Fix snapshots duplicados no polling
+- Aplicar paleta de cores do UI-SPEC (sky blue accent, verde/amarelo/vermelho semantico)
+- Cards com preco monospace 28px, borda colorida, hover com sombra
+- Summary bar com fundo escuro e 3 metricas
+- Estado vazio com SVG aviao e CTA verde
+- Tipografia limpa com escala 13/14/20/28px
 
 ## Evolution
 
@@ -133,4 +132,4 @@ Este documento evolui a cada transição de fase e milestone.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after v1.1 milestone start*
+*Last updated: 2026-03-26 after v1.2 milestone start*
