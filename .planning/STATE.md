@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Multi-usuario
-status: Ready to plan
-stopped_at: Phase 11 context gathered
-last_updated: "2026-03-28T21:18:53.865Z"
+status: Ready to execute
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-28T21:49:09.796Z"
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 5
+  completed_plans: 3
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Detectar o momento certo de comprar uma passagem antes que o preco suba, usando dados de inventario reais que nenhum sistema consumer expoe.
-**Current focus:** Phase 10 — postgresql-foundation
+**Current focus:** Phase 11 — google-oauth
 
 ## Current Position
 
-Phase: 11
-Plan: Not started
+Phase: 11 (google-oauth) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Plan: Not started
 
 | Phase 10 P01 | 3min | 2 tasks | 7 files |
 | Phase 10 P02 | 1min | 2 tasks | 2 files |
+| Phase 11 P01 | 3min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,7 @@ Recent decisions affecting current work:
 - [Phase 10]: Alembic autogenerate para baseline migration (4 tabelas + indice detectados automaticamente)
 - [Phase 10]: env.py usa create_engine direto com get_url() ao inves de engine_from_config
 - [Phase 10]: DATABASE_URL as sync:false in render.yaml (secret configured in Render dashboard)
+- [Phase 11]: Fixtures test_user e authenticated_client criadas ANTES de middleware para nao quebrar 188 testes
 
 ### Pending Todos
 
@@ -88,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T21:18:53.859Z
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-google-oauth/11-CONTEXT.md
+Last session: 2026-03-28T21:49:09.790Z
+Stopped at: Completed 11-01-PLAN.md
+Resume file: None
