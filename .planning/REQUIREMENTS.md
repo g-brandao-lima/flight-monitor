@@ -105,9 +105,9 @@
 
 - [x] **AUTH-01**: Usuario pode fazer login com um clique via Google OAuth
 - [x] **AUTH-02**: Sessao do usuario persiste entre abas e refreshes do navegador
-- [ ] **AUTH-03**: Usuario pode fazer logout de qualquer pagina
+- [x] **AUTH-03**: Usuario pode fazer logout de qualquer pagina
 - [ ] **AUTH-04**: Header exibe nome e foto do usuario logado (dados do Google)
-- [ ] **AUTH-05**: Falha na autenticacao mostra mensagem clara na landing page
+- [x] **AUTH-05**: Falha na autenticacao mostra mensagem clara na landing page
 
 ### Multi-usuario
 
@@ -216,9 +216,9 @@
 | DB-03 | Phase 10 | Complete |
 | AUTH-01 | Phase 11 | Complete |
 | AUTH-02 | Phase 11 | Complete |
-| AUTH-03 | Phase 11 | Pending |
+| AUTH-03 | Phase 11 | Complete |
 | AUTH-04 | Phase 11 | Pending |
-| AUTH-05 | Phase 11 | Pending |
+| AUTH-05 | Phase 11 | Complete |
 | MULTI-01 | Phase 12 | Pending |
 | MULTI-02 | Phase 12 | Pending |
 | MULTI-03 | Phase 12 | Pending |

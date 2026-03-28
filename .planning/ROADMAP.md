@@ -220,7 +220,7 @@ Plans:
 
 Plans:
 - [x] 11-01-PLAN.md — User model + Authlib + config + Alembic migration + test fixtures (AUTH-01, AUTH-02)
-- [ ] 11-02-PLAN.md — OAuth routes + SessionMiddleware + AuthMiddleware + testes (AUTH-01, AUTH-02, AUTH-03, AUTH-05)
+- [x] 11-02-PLAN.md — OAuth routes + SessionMiddleware + AuthMiddleware + testes (AUTH-01, AUTH-02, AUTH-03, AUTH-05)
 - [ ] 11-03-PLAN.md — Header UI (avatar/nome/logout) + render.yaml + checkpoint visual (AUTH-04, AUTH-05)
 
 ### Phase 12: Data Isolation
@@ -262,6 +262,6 @@ Plans:
 | 8. Dashboard Redesign | v1.1 | 2/2 | Complete | 2026-03-26 |
 | 9. Visual Polish | v1.2 | 2/2 | Complete | 2026-03-28 |
 | 10. PostgreSQL Foundation | v2.0 | 2/2 | Complete    | 2026-03-28 |
-| 11. Google OAuth | v2.0 | 1/3 | In Progress|  |
+| 11. Google OAuth | v2.0 | 2/3 | In Progress|  |
 | 12. Data Isolation | v2.0 | 0/? | Not started | - |
 | 13. Landing Page | v2.0 | 0/? | Not started | - |
