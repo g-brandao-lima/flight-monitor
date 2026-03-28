@@ -12,6 +12,14 @@ Detectar o momento certo de comprar uma passagem antes que o preço suba, usando
 
 ### Validated
 
+**Phase 11 (Google OAuth) — validated 2026-03-28**
+- Login via Google OAuth com um clique (Authlib + OIDC)
+- Sessao persistente via cookie assinado (sem expiracao, ate logout)
+- Logout visivel em todas as paginas, limpa sessao
+- Header exibe nome e foto do Google (iniciais quando sem foto)
+- Middleware global protege rotas, flash message para nao logados
+- 202 testes passando (14 novos de auth)
+
 **Phase 10 (PostgreSQL Foundation) — validated 2026-03-28**
 - Sistema usa PostgreSQL (Neon.tech) em producao, SQLite in-memory nos testes
 - Alembic gerencia todas as migrations de schema (baseline com 4 tabelas)
@@ -139,4 +147,4 @@ Este documento evolui a cada transição de fase e milestone.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 after Phase 10 completion*
+*Last updated: 2026-03-28 after Phase 11 completion*
