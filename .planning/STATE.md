@@ -7,7 +7,7 @@ stopped_at: null
 last_updated: "2026-03-28"
 last_activity: 2026-03-28
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,23 +20,25 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-03-28)
 
-**Core value:** Detectar o momento certo de comprar uma passagem antes que o preco suba, usando dados de preco e sinais de oportunidade que nenhum sistema consumer expoe.
-**Current focus:** Defining requirements for v2.0
+**Core value:** Detectar o momento certo de comprar uma passagem antes que o preco suba, usando dados de inventario reais que nenhum sistema consumer expoe.
+**Current focus:** Phase 10 - PostgreSQL Foundation
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-28 — Milestone v2.0 started
+Phase: 10 of 13 (PostgreSQL Foundation)
+Plan: 0 of ? in current phase
+Status: Ready to plan
+Last activity: 2026-03-28 — Roadmap v2.0 criado (Phases 10-13)
+
+Progress: [██████████████████████░░░░░░░░] 69% (9/13 phases complete — v1.0-v1.2 shipped)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 21
+- Total plans completed: 22
 - Average duration: ~3min
-- Total execution time: ~63min
+- Total execution time: ~65min
 
 **By Phase:**
 
@@ -50,14 +52,12 @@ Last activity: 2026-03-28 — Milestone v2.0 started
 | 06-quality-feedback | 2 | 6min | 3.0min |
 | 07-consolidated-email | 2 | 6min | 3.0min |
 | 08-dashboard-redesign | 2 | 4min | 2.0min |
+| 09-visual-polish | 2 | 4min | 2.0min |
 
 **Recent Trend:**
 
-- Last 5 plans: 3min, 3min, 3min, 3min, 1min
+- Last 5 plans: 3min, 3min, 3min, 2min, 2min
 - Trend: Stable
-
-| Phase 09 P01 | 2min | 2 tasks | 2 files |
-| Phase 09 P02 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -66,11 +66,11 @@ Last activity: 2026-03-28 — Milestone v2.0 started
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Phase 08]: CSS classes for card border colors instead of inline styles
-- [Phase 08]: Reused format_date_br from dashboard_service for consistency
-- [v1.2]: UI-SPEC approved as visual contract for Phase 9
-- [Phase 09]: CSS-only changes, no HTML structure modifications per plan constraint
-- [Phase 09]: Kept #dc2626 in forms for required asterisks and error messages (semantic, not card color)
+- [v2.0]: PostgreSQL via Neon.tech (free tier, no expiration, pooled connections)
+- [v2.0]: Google OAuth via Authlib (not fastapi-users, not JWT)
+- [v2.0]: user_id only on route_groups (child tables inherit via FK)
+- [v2.0]: Alembic replaces Base.metadata.create_all() in production
+- [v2.0]: Tests keep SQLite in-memory (no PostgreSQL dependency)
 
 ### Pending Todos
 
@@ -78,11 +78,16 @@ None yet.
 
 ### Blockers/Concerns
 
-- Amadeus free tier (~2000-3000 calls/mes) limita a ~4 grupos ativos com 2 pollings/dia
-- Companhias low-cost (Azul, Gol em algumas rotas) tem cobertura parcial no GDS
+- [Phase 10]: check_same_thread removal needed (conditional connect_args by DB type)
+- [Phase 10]: JSON mutation tracking bug on PostgreSQL (assign new lists, never mutate)
+- [Phase 10]: Neon PgBouncer may need statement_cache_size=0
+- [Phase 11]: 188 existing tests need auth fixtures BEFORE adding middleware
+- [Phase 11]: Google OAuth consent screen must be published to Production mode
+- [Phase 12]: SerpAPI quota counter schema undecided
+- [Phase 12]: Scheduler fairness policy undecided
 
 ## Session Continuity
 
-Last session: 2026-03-26T04:38:32.489Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-03-28
+Stopped at: Roadmap v2.0 created with 4 phases (10-13)
 Resume file: None

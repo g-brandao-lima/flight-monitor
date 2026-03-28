@@ -4,7 +4,8 @@
 
 - ✅ **v1.0 MVP** - Phases 1-5 (shipped 2026-03-25)
 - ✅ **v1.1 Polish & UX** - Phases 6-8 (shipped 2026-03-26)
-- 🚧 **v1.2 Visual Polish** - Phase 9 (in progress)
+- ✅ **v1.2 Visual Polish** - Phase 9 (shipped 2026-03-28)
+- 🚧 **v2.0 Multi-usuario** - Phases 10-13 (in progress)
 
 ## Phases
 
@@ -154,13 +155,10 @@ Plans:
 
 </details>
 
-### v1.2 Visual Polish (In Progress)
+<details>
+<summary>v1.2 Visual Polish (Phase 9) - SHIPPED 2026-03-28</summary>
 
-**Milestone Goal:** Aplicar o UI-SPEC aprovado para transformar o dashboard num visual profissional inspirado em Hopper/Linear/Going.com
-
-- [ ] **Phase 9: Visual Polish** - Aplicar paleta, tipografia, cards redesenhados, summary bar e estado vazio conforme UI-SPEC
-
-## Phase Details
+- [x] **Phase 9: Visual Polish** - Aplicar paleta, tipografia, cards redesenhados, summary bar e estado vazio conforme UI-SPEC
 
 ### Phase 9: Visual Polish
 **Goal**: Dashboard tem aparencia profissional e coesa seguindo o UI-SPEC aprovado, com paleta de cores padronizada, tipografia hierarquica e componentes visualmente refinados
@@ -180,9 +178,68 @@ Plans:
 - [x] 09-01-PLAN.md - Paleta global (base.html) + cards, summary bar, estado vazio e tipografia (index.html) (VIS-01/02/03/04/05/06)
 - [x] 09-02-PLAN.md - Paginas secundarias (detail, create, edit) + checkpoint visual (VIS-01/06)
 
+</details>
+
+### v2.0 Multi-usuario (In Progress)
+
+**Milestone Goal:** Transformar o Flight Monitor de ferramenta pessoal em produto multi-usuario com landing page publica, login via Google OAuth e banco PostgreSQL persistente.
+
+- [ ] **Phase 10: PostgreSQL Foundation** - Migrar banco para PostgreSQL com Alembic, mantendo todos os testes passando
+- [ ] **Phase 11: Google OAuth** - Login com Google, sessoes persistentes e infraestrutura de autenticacao
+- [ ] **Phase 12: Data Isolation** - Isolamento completo de dados por usuario, alertas por email do dono e controle de quota SerpAPI
+- [ ] **Phase 13: Landing Page** - Pagina publica com hero, proposta de valor e CTA de login
+
+## Phase Details
+
+### Phase 10: PostgreSQL Foundation
+**Goal**: Aplicacao roda sobre PostgreSQL em producao com migrations gerenciadas por Alembic, sem quebrar nenhum teste existente
+**Depends on**: Phase 9
+**Requirements**: DB-01, DB-02, DB-03
+**Success Criteria** (what must be TRUE):
+  1. Aplicacao conecta ao PostgreSQL (Neon.tech) em producao e ao SQLite in-memory nos testes, sem alteracao manual de configuracao entre ambientes
+  2. Alembic gerencia o schema completo: `alembic upgrade head` cria todas as tabelas a partir de um banco vazio, e `alembic revision --autogenerate` detecta mudancas nos models
+  3. Todos os 188+ testes existentes continuam passando com SQLite in-memory (nenhuma dependencia de PostgreSQL nos testes)
+  4. Dados existentes no Render sobrevivem a um redeploy (persistencia real, nao mais SQLite efemero)
+**Plans**: TBD
+
+### Phase 11: Google OAuth
+**Goal**: Usuario pode fazer login com Google e navegar pelo dashboard com sessao persistente, vendo seu nome e foto no header
+**Depends on**: Phase 10
+**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05
+**Success Criteria** (what must be TRUE):
+  1. Usuario clica "Entrar com Google" e apos autorizar no Google e redirecionado de volta ao dashboard logado
+  2. Sessao do usuario persiste entre abas e refreshes do navegador (cookie assinado com user_id)
+  3. Botao de logout aparece em todas as paginas autenticadas e ao clicar limpa a sessao e redireciona para a landing page
+  4. Header de todas as paginas autenticadas exibe nome e foto do usuario (vindos do perfil Google)
+  5. Se o login falhar (usuario cancelou, erro do Google), landing page exibe mensagem de erro clara sem mostrar stacktrace
+**Plans**: TBD
+
+### Phase 12: Data Isolation
+**Goal**: Cada usuario ve exclusivamente seus proprios dados, alertas vao para o email correto e o consumo de SerpAPI e visivel
+**Depends on**: Phase 11
+**Requirements**: MULTI-01, MULTI-02, MULTI-03, MULTI-04
+**Success Criteria** (what must be TRUE):
+  1. Usuario A nao consegue ver grupos, snapshots ou sinais do Usuario B por nenhuma rota da aplicacao (isolamento completo verificado por teste automatizado de dois usuarios)
+  2. Alertas por email sao enviados para o email do Google do dono do grupo (nao mais para um email fixo em .env)
+  3. Dashboard exibe indicador de buscas SerpAPI restantes no mes, visivel para todos os usuarios (budget compartilhado global)
+  4. Usuario pode acessar pagina "Meus alertas" com historico de todos os sinais detectados para seus grupos
+**Plans**: TBD
+
+### Phase 13: Landing Page
+**Goal**: Visitante nao logado ve uma landing page publica que explica o produto e convida a entrar com Google
+**Depends on**: Phase 11
+**Requirements**: LAND-01, LAND-02, LAND-03, LAND-04
+**Success Criteria** (what must be TRUE):
+  1. Visitante nao logado que acessa a URL raiz ve landing page publica com hero section e descricao do produto (nao e redirecionado para login)
+  2. Landing page contem secao "Por que somos diferentes" comparando Flight Monitor com Google Flights e Skyscanner
+  3. Botao "Entrar com Google" aparece como CTA principal e inicia o fluxo OAuth ao ser clicado
+  4. Landing page e responsiva e utilizavel em telas mobile (layout mobile-first)
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
-**Execution Order:** Phase 9 (single phase milestone)
+**Execution Order:** Phase 10 -> 11 -> 12 -> 13
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -194,4 +251,8 @@ Plans:
 | 6. Quality & Feedback | v1.1 | 2/2 | Complete | 2026-03-26 |
 | 7. Consolidated Email | v1.1 | 2/2 | Complete | 2026-03-26 |
 | 8. Dashboard Redesign | v1.1 | 2/2 | Complete | 2026-03-26 |
-| 9. Visual Polish | v1.2 | 0/2 | In progress | - |
+| 9. Visual Polish | v1.2 | 2/2 | Complete | 2026-03-28 |
+| 10. PostgreSQL Foundation | v2.0 | 0/? | Not started | - |
+| 11. Google OAuth | v2.0 | 0/? | Not started | - |
+| 12. Data Isolation | v2.0 | 0/? | Not started | - |
+| 13. Landing Page | v2.0 | 0/? | Not started | - |
