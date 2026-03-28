@@ -1,9 +1,14 @@
+import base64
+import json
+
 import pytest
 from fastapi.testclient import TestClient
+from itsdangerous import TimestampSigner
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.config import settings
 from app.database import Base, get_db
 from app.models import User
 from main import app
@@ -17,6 +22,13 @@ engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+def _make_session_cookie(data: dict) -> str:
+    """Cria um cookie de sessao assinado compativel com SessionMiddleware."""
+    payload = base64.b64encode(json.dumps(data).encode("utf-8"))
+    signer = TimestampSigner(settings.session_secret_key)
+    return signer.sign(payload).decode("utf-8")
+
+
 @pytest.fixture(name="db")
 def db_fixture():
     Base.metadata.create_all(bind=engine)
@@ -26,20 +38,6 @@ def db_fixture():
     finally:
         db.close()
         Base.metadata.drop_all(bind=engine)
-
-
-@pytest.fixture(name="client")
-def client_fixture(db):
-    def override_get_db():
-        try:
-            yield db
-        finally:
-            pass
-
-    app.dependency_overrides[get_db] = override_get_db
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
 
 
 @pytest.fixture(name="test_user")
@@ -54,6 +52,38 @@ def test_user_fixture(db):
     db.commit()
     db.refresh(user)
     return user
+
+
+@pytest.fixture(name="unauthenticated_client")
+def unauthenticated_client_fixture(db):
+    """Client sem sessao - para testar middleware de protecao."""
+    def override_get_db():
+        try:
+            yield db
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture(name="client")
+def client_fixture(db, test_user):
+    """Client autenticado por padrao - sessao com user_id do test_user."""
+    def override_get_db():
+        try:
+            yield db
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+    client = TestClient(app)
+    cookie_value = _make_session_cookie({"user_id": test_user.id})
+    client.cookies.set("session", cookie_value)
+    yield client
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture(name="authenticated_client")
