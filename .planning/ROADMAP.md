@@ -216,7 +216,12 @@ Plans:
   3. Botao de logout aparece em todas as paginas autenticadas e ao clicar limpa a sessao e redireciona para a landing page
   4. Header de todas as paginas autenticadas exibe nome e foto do usuario (vindos do perfil Google)
   5. Se o login falhar (usuario cancelou, erro do Google), landing page exibe mensagem de erro clara sem mostrar stacktrace
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — User model + Authlib + config + Alembic migration + test fixtures (AUTH-01, AUTH-02)
+- [ ] 11-02-PLAN.md — OAuth routes + SessionMiddleware + AuthMiddleware + testes (AUTH-01, AUTH-02, AUTH-03, AUTH-05)
+- [ ] 11-03-PLAN.md — Header UI (avatar/nome/logout) + render.yaml + checkpoint visual (AUTH-04, AUTH-05)
 
 ### Phase 12: Data Isolation
 **Goal**: Cada usuario ve exclusivamente seus proprios dados, alertas vao para o email correto e o consumo de SerpAPI e visivel
@@ -257,6 +262,6 @@ Plans:
 | 8. Dashboard Redesign | v1.1 | 2/2 | Complete | 2026-03-26 |
 | 9. Visual Polish | v1.2 | 2/2 | Complete | 2026-03-28 |
 | 10. PostgreSQL Foundation | v2.0 | 2/2 | Complete    | 2026-03-28 |
-| 11. Google OAuth | v2.0 | 0/? | Not started | - |
+| 11. Google OAuth | v2.0 | 0/3 | Planned | - |
 | 12. Data Isolation | v2.0 | 0/? | Not started | - |
 | 13. Landing Page | v2.0 | 0/? | Not started | - |
