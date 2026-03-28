@@ -10,8 +10,9 @@ from sqlalchemy.orm import Session
 
 from fastapi.responses import JSONResponse
 
+from app.auth.dependencies import get_current_user
 from app.database import get_db
-from app.models import RouteGroup
+from app.models import RouteGroup, User
 from app.services.dashboard_service import (
     get_groups_with_summary,
     get_dashboard_summary,
@@ -98,7 +99,12 @@ FLASH_MESSAGES = {
 
 
 @router.get("/", response_class=HTMLResponse)
-def dashboard_index(request: Request, msg: str | None = None, db: Session = Depends(get_db)):
+def dashboard_index(
+    request: Request,
+    msg: str | None = None,
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_current_user),
+):
     groups = get_groups_with_summary(db)
     summary = get_dashboard_summary(db)
     activity = get_recent_activity(db)
@@ -114,6 +120,7 @@ def dashboard_index(request: Request, msg: str | None = None, db: Session = Depe
             "format_date_br": format_date_br,
             "booking_urls": booking_urls,
             "flash_message": flash_message,
+            "user": user,
         },
     )
 
@@ -128,12 +135,15 @@ def api_search_airports(q: str = ""):
 
 
 @router.get("/groups/create", response_class=HTMLResponse)
-def create_group_page(request: Request):
+def create_group_page(
+    request: Request,
+    user: User | None = Depends(get_current_user),
+):
     airports = get_all_airports()
     return templates.TemplateResponse(
         request=request,
         name="dashboard/create.html",
-        context={"airports": airports},
+        context={"airports": airports, "user": user},
     )
 
 
@@ -151,6 +161,7 @@ def create_group_form(
     max_stops: str = Form(""),
     target_price: str = Form(""),
     db: Session = Depends(get_db),
+    user: User | None = Depends(get_current_user),
 ):
     parsed_origins, parsed_destinations, error = _validate_form(
         name, origins, destinations, duration_days
@@ -184,7 +195,7 @@ def create_group_form(
         return templates.TemplateResponse(
             request=request,
             name="dashboard/create.html",
-            context={"error": error, "form_data": form_data, "airports": get_all_airports()},
+            context={"error": error, "form_data": form_data, "airports": get_all_airports(), "user": user},
         )
 
     tp = float(target_price) if target_price.strip() else None
@@ -210,7 +221,12 @@ def create_group_form(
 
 
 @router.get("/groups/{group_id}", response_class=HTMLResponse)
-def dashboard_detail(request: Request, group_id: int, db: Session = Depends(get_db)):
+def dashboard_detail(
+    request: Request,
+    group_id: int,
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_current_user),
+):
     group = db.query(RouteGroup).filter(RouteGroup.id == group_id).first()
     if group is None:
         raise HTTPException(status_code=404, detail="Grupo nao encontrado")
@@ -219,13 +235,16 @@ def dashboard_detail(request: Request, group_id: int, db: Session = Depends(get_
     return templates.TemplateResponse(
         request=request,
         name="dashboard/detail.html",
-        context={"group": group, "chart_data": chart_data, "format_date_br": format_date_br},
+        context={"group": group, "chart_data": chart_data, "format_date_br": format_date_br, "user": user},
     )
 
 
 @router.get("/groups/{group_id}/edit", response_class=HTMLResponse)
 def edit_group_page(
-    request: Request, group_id: int, db: Session = Depends(get_db)
+    request: Request,
+    group_id: int,
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_current_user),
 ):
     group = db.query(RouteGroup).filter(RouteGroup.id == group_id).first()
     if group is None:
@@ -233,7 +252,7 @@ def edit_group_page(
     return templates.TemplateResponse(
         request=request,
         name="dashboard/edit.html",
-        context={"group": group, "airports": get_all_airports()},
+        context={"group": group, "airports": get_all_airports(), "user": user},
     )
 
 
@@ -252,6 +271,7 @@ def edit_group_form(
     max_stops: str = Form(""),
     target_price: str = Form(""),
     db: Session = Depends(get_db),
+    user: User | None = Depends(get_current_user),
 ):
     group = db.query(RouteGroup).filter(RouteGroup.id == group_id).first()
     if group is None:
@@ -284,7 +304,7 @@ def edit_group_form(
         return templates.TemplateResponse(
             request=request,
             name="dashboard/edit.html",
-            context={"group": group, "error": error, "form_data": form_data, "airports": get_all_airports()},
+            context={"group": group, "error": error, "form_data": form_data, "airports": get_all_airports(), "user": user},
         )
 
     tp = float(target_price) if target_price.strip() else None

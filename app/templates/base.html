@@ -69,6 +69,43 @@
         .btn-success { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2); color: #34d399; }
         .btn-success:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.35); }
 
+        /* User menu */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .avatar-initials {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .user-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+        .btn-sm {
+            padding: 4px 12px;
+            min-height: 28px;
+            font-size: 12px;
+        }
+
         /* Container */
         .container { max-width: 960px; margin: 0 auto; padding: 24px 24px 48px; }
 
@@ -119,6 +156,8 @@
             header { padding: 0 16px; height: 52px; }
             .container { padding: 16px 16px 32px; }
             .logo span { font-size: 14px; }
+            .user-name { display: none; }
+            .user-menu { gap: 6px; }
         }
     </style>
     {% block head %}{% endblock %}
@@ -133,7 +172,19 @@
         </a>
         <div class="header-actions">
             {% block header_actions %}
-            <a href="/groups/create" class="btn btn-primary">+ Novo Grupo</a>
+            {% if user %}
+                <div class="user-menu">
+                    {% if user.picture_url %}
+                        <img src="{{ user.picture_url }}" alt="" class="avatar" width="32" height="32" referrerpolicy="no-referrer">
+                    {% else %}
+                        <div class="avatar-initials">{{ user.name[:1].upper() }}{{ user.name.split(' ')[-1][:1].upper() if ' ' in user.name else '' }}</div>
+                    {% endif %}
+                    <span class="user-name">{{ user.name.split(' ')[0] }}</span>
+                    <a href="/auth/logout" class="btn btn-ghost btn-sm">Sair</a>
+                </div>
+            {% else %}
+                <a href="/auth/login" class="btn btn-primary">Entrar com Google</a>
+            {% endif %}
             {% endblock %}
         </div>
     </header>
