@@ -186,7 +186,7 @@ Plans:
 
 - [x] **Phase 10: PostgreSQL Foundation** - Migrar banco para PostgreSQL com Alembic, mantendo todos os testes passando (completed 2026-03-28)
 - [x] **Phase 11: Google OAuth** - Login com Google, sessoes persistentes e infraestrutura de autenticacao (completed 2026-03-28)
-- [ ] **Phase 12: Data Isolation** - Isolamento completo de dados por usuario, alertas por email do dono e controle de quota SerpAPI
+- [x] **Phase 12: Data Isolation** - Isolamento completo de dados por usuario, alertas por email do dono e controle de quota SerpAPI (completed 2026-03-29)
 - [ ] **Phase 13: Landing Page** - Pagina publica com hero, proposta de valor e CTA de login
 
 ## Phase Details
@@ -236,7 +236,7 @@ Plans:
 
 Plans:
 - [x] 12-01-PLAN.md - user_id FK + migration + isolamento completo de services e routes (MULTI-01)
-- [ ] 12-02-PLAN.md - Email alertas para dono do grupo + pagina Meus Alertas (MULTI-02, MULTI-04)
+- [x] 12-02-PLAN.md - Email alertas para dono do grupo + pagina Meus Alertas (MULTI-02, MULTI-04)
 - [x] 12-03-PLAN.md - Contador SerpAPI global + indicador no dashboard (MULTI-03)
 
 ### Phase 13: Landing Page
@@ -268,5 +268,5 @@ Plans:
 | 9. Visual Polish | v1.2 | 2/2 | Complete | 2026-03-28 |
 | 10. PostgreSQL Foundation | v2.0 | 2/2 | Complete    | 2026-03-28 |
 | 11. Google OAuth | v2.0 | 3/3 | Complete    | 2026-03-28 |
-| 12. Data Isolation | v2.0 | 2/3 | In Progress|  |
+| 12. Data Isolation | v2.0 | 3/3 | Complete   | 2026-03-29 |
 | 13. Landing Page | v2.0 | 0/? | Not started | - |

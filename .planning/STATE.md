@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Multi-usuario
-status: Ready to execute
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-03-29T02:41:18.969Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-03-29T02:47:20.256Z"
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -60,6 +60,7 @@ Plan: 3 of 3
 | Phase 11-google-oauth P03 | 4min | 3 tasks | 5 files |
 | Phase 12 P03 | 4min | 2 tasks | 7 files |
 | Phase 12 P01 | 6min | 2 tasks | 8 files |
+| Phase 12 P02 | 4min | 1 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,8 @@ Recent decisions affecting current work:
 - [Phase 12]: Global SerpAPI counter per year_month string with unique constraint, no per-user split
 - [Phase 12]: Quota check at polling cycle start, increment after each SerpAPI call
 - [Phase 12]: user_id nullable on route_groups for backward compat; ownership returns 404 not 403
+- [Phase 12]: recipient_email as optional param with gmail_recipient fallback for backward compat
+- [Phase 12]: joinedload(RouteGroup.user) in polling to avoid N+1 queries
 
 ### Pending Todos
 
@@ -100,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T02:41:18.951Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-03-29T02:47:20.251Z
+Stopped at: Completed 12-02-PLAN.md
 Resume file: None
