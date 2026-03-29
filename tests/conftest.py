@@ -54,6 +54,20 @@ def test_user_fixture(db):
     return user
 
 
+@pytest.fixture(name="second_user")
+def second_user_fixture(db):
+    user = User(
+        google_id="google-test-456",
+        email="other@gmail.com",
+        name="Other User",
+        picture_url=None,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 @pytest.fixture(name="unauthenticated_client")
 def unauthenticated_client_fixture(db):
     """Client sem sessao - para testar middleware de protecao."""

@@ -17,11 +17,19 @@ class User(Base):
         DateTime, server_default=func.now()
     )
 
+    route_groups: Mapped[list["RouteGroup"]] = relationship(
+        "RouteGroup", back_populates="user"
+    )
+
 
 class RouteGroup(Base):
     __tablename__ = "route_groups"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), index=True, nullable=True
+    )
+    user: Mapped["User | None"] = relationship("User", back_populates="route_groups")
     name: Mapped[str] = mapped_column(String(100))
     origins: Mapped[list] = mapped_column(JSON)
     destinations: Mapped[list] = mapped_column(JSON)
@@ -113,3 +121,14 @@ Index(
     DetectedSignal.return_date,
     DetectedSignal.signal_type,
 )
+
+
+class ApiUsage(Base):
+    __tablename__ = "api_usage"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    year_month: Mapped[str] = mapped_column(String(7), unique=True, index=True)
+    search_count: Mapped[int] = mapped_column(Integer, default=0)
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
