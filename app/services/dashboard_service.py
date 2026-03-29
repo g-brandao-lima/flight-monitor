@@ -5,11 +5,18 @@ from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.models import RouteGroup, FlightSnapshot, DetectedSignal
+from app.services.quota_service import get_monthly_usage, get_remaining_quota, MONTHLY_QUOTA
 
 
-def get_groups_with_summary(db: Session) -> list[dict]:
-    """Return all route groups with cheapest snapshot and most urgent recent signal."""
-    groups = db.query(RouteGroup).all()
+def get_groups_with_summary(db: Session, user_id: int | None = None) -> list[dict]:
+    """Return route groups with cheapest snapshot and most urgent recent signal.
+
+    When user_id is provided, only returns groups belonging to that user.
+    """
+    query = db.query(RouteGroup)
+    if user_id is not None:
+        query = query.filter(RouteGroup.user_id == user_id)
+    groups = query.all()
     result = []
 
     for group in groups:
@@ -187,11 +194,17 @@ def get_groups_with_summary(db: Session) -> list[dict]:
     return result
 
 
-def get_price_history(db: Session, group_id: int, days: int = 14) -> dict:
-    """Return price history labels and prices for the cheapest route of a group."""
+def get_price_history(db: Session, group_id: int, user_id: int | None = None, days: int = 14) -> dict:
+    """Return price history labels and prices for the cheapest route of a group.
+
+    When user_id is provided, verifies the group belongs to that user.
+    """
     cutoff = datetime.datetime.utcnow() - timedelta(days=days)
 
-    group = db.query(RouteGroup).filter(RouteGroup.id == group_id).first()
+    query = db.query(RouteGroup).filter(RouteGroup.id == group_id)
+    if user_id is not None:
+        query = query.filter(RouteGroup.user_id == user_id)
+    group = query.first()
     if group is None:
         return {"labels": [], "prices": [], "route": ""}
 
@@ -236,18 +249,26 @@ def get_price_history(db: Session, group_id: int, days: int = 14) -> dict:
     }
 
 
-def get_dashboard_summary(db: Session) -> dict:
-    """Return summary metrics for the dashboard: active count, cheapest price, next polling."""
-    active_count = (
+def get_dashboard_summary(db: Session, user_id: int | None = None) -> dict:
+    """Return summary metrics for the dashboard: active count, cheapest price, next polling.
+
+    When user_id is provided, counts and prices are scoped to that user.
+    """
+    count_query = (
         db.query(func.count())
         .select_from(RouteGroup)
         .where(RouteGroup.is_active == True)  # noqa: E712
-        .scalar()
     )
+    if user_id is not None:
+        count_query = count_query.where(RouteGroup.user_id == user_id)
+    active_count = count_query.scalar()
 
     # Find cheapest price across all active groups' latest snapshots
     cheapest_price = None
-    active_groups = db.query(RouteGroup).filter(RouteGroup.is_active == True).all()  # noqa: E712
+    groups_query = db.query(RouteGroup).filter(RouteGroup.is_active == True)  # noqa: E712
+    if user_id is not None:
+        groups_query = groups_query.filter(RouteGroup.user_id == user_id)
+    active_groups = groups_query.all()
     for group in active_groups:
         latest_collected = (
             db.query(func.max(FlightSnapshot.collected_at))
@@ -300,18 +321,31 @@ def get_dashboard_summary(db: Session) -> dict:
         "cheapest_price": cheapest_price,
         "next_polling": next_polling,
         "last_collection": last_collection_str,
+        "api_usage": get_monthly_usage(db),
+        "api_remaining": get_remaining_quota(db),
+        "api_quota": MONTHLY_QUOTA,
     }
 
 
-def get_recent_activity(db: Session, limit: int = 8) -> list[dict]:
-    """Return recent signals and snapshots as activity feed items."""
+def get_recent_activity(db: Session, user_id: int | None = None, limit: int = 8) -> list[dict]:
+    """Return recent signals and snapshots as activity feed items.
+
+    When user_id is provided, only returns activity for that user's groups.
+    """
     items = []
 
     # Recent signals (last 48h)
     cutoff = datetime.datetime.utcnow() - timedelta(hours=48)
-    signals = (
+    signals_query = (
         db.query(DetectedSignal)
         .filter(DetectedSignal.detected_at >= cutoff)
+    )
+    if user_id is not None:
+        signals_query = signals_query.join(
+            RouteGroup, DetectedSignal.route_group_id == RouteGroup.id
+        ).filter(RouteGroup.user_id == user_id)
+    signals = (
+        signals_query
         .order_by(DetectedSignal.detected_at.desc())
         .limit(limit)
         .all()
@@ -329,7 +363,10 @@ def get_recent_activity(db: Session, limit: int = 8) -> list[dict]:
         })
 
     # Latest polling snapshot count per group
-    groups = db.query(RouteGroup).filter(RouteGroup.is_active == True).all()
+    activity_groups_query = db.query(RouteGroup).filter(RouteGroup.is_active == True)
+    if user_id is not None:
+        activity_groups_query = activity_groups_query.filter(RouteGroup.user_id == user_id)
+    groups = activity_groups_query.all()
     for group in groups:
         latest = (
             db.query(func.max(FlightSnapshot.collected_at))

@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from app.database import SessionLocal
 from app.models import RouteGroup
 from app.services.alert_service import compose_consolidated_email, send_email, should_alert
+from app.services.quota_service import increment_usage, get_remaining_quota, MONTHLY_QUOTA
 from app.services.serpapi_client import SerpApiClient, classify_price
 from app.services.signal_service import detect_signals
 from app.services.snapshot_service import is_duplicate_snapshot, save_flight_snapshot
@@ -22,6 +23,14 @@ def run_polling_cycle():
 
     db = SessionLocal()
     try:
+        remaining = get_remaining_quota(db)
+        if remaining <= 0:
+            logger.warning(
+                f"SerpAPI monthly quota exhausted ({MONTHLY_QUOTA} searches). "
+                "Skipping polling cycle."
+            )
+            return
+
         groups = db.query(RouteGroup).filter(RouteGroup.is_active == True).all()
         logger.info(f"Polling {len(groups)} active groups")
         for group in groups:
@@ -88,6 +97,8 @@ def _poll_group(db, client: SerpApiClient, group: RouteGroup):
                         f"No flights found for {origin}->{destination} {dep_date}: {e}"
                     )
                     continue
+
+                increment_usage(db)
 
                 if not flights:
                     logger.info(f"No flights available for {origin}->{destination} {dep_date}")

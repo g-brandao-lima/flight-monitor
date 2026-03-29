@@ -255,6 +255,10 @@
             <span class="metric-label">Próxima busca:</span>
             <span class="metric-value">{{ summary.next_polling }}</span>
         </div>
+        <div class="metric">
+            <span class="metric-label">Buscas restantes:</span>
+            <span class="metric-value{% if summary.api_remaining is defined and summary.api_remaining <= 10 %}" style="color: #ef4444{% elif summary.api_remaining is defined and summary.api_remaining <= 50 %}" style="color: #f59e0b{% endif %}">{{ summary.api_remaining if summary.api_remaining is defined else "—" }}/{{ summary.api_quota if summary.api_quota is defined else 250 }}</span>
+        </div>
     </div>
     <form method="POST" action="/polling/manual" style="margin:0;" id="polling-form">
         <button type="submit" class="btn btn-success" id="polling-btn">
