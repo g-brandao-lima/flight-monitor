@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 
 from app.auth.dependencies import get_current_user
 from app.database import get_db
-from app.models import RouteGroup, User
+from app.models import DetectedSignal, RouteGroup, User
 from app.services.dashboard_service import (
     get_groups_with_summary,
     get_dashboard_summary,
@@ -124,6 +124,35 @@ def dashboard_index(
             "booking_urls": booking_urls,
             "flash_message": flash_message,
             "user": user,
+        },
+    )
+
+
+@router.get("/alerts", response_class=HTMLResponse)
+def alerts_page(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_current_user),
+):
+    """Pagina Meus Alertas: historico de sinais filtrado por usuario."""
+    if user is None:
+        return RedirectResponse(url="/?msg=login_required", status_code=303)
+    signals = (
+        db.query(DetectedSignal)
+        .join(RouteGroup, DetectedSignal.route_group_id == RouteGroup.id)
+        .filter(RouteGroup.user_id == user.id)
+        .order_by(DetectedSignal.detected_at.desc())
+        .limit(100)
+        .all()
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard/alerts.html",
+        context={
+            "signals": signals,
+            "user": user,
+            "format_date_br": format_date_br,
+            "format_price_brl": format_price_brl,
         },
     )
 

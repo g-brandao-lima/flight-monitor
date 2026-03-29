@@ -17,15 +17,18 @@ _URGENCY_COLORS = {
 }
 
 
-def compose_alert_email(signal: DetectedSignal, group: RouteGroup) -> MIMEMultipart:
+def compose_alert_email(
+    signal: DetectedSignal, group: RouteGroup, recipient_email: str | None = None
+) -> MIMEMultipart:
     """Compoe email de alerta a partir de um sinal detectado.
 
     Retorna MIMEMultipart com partes text/plain e text/html.
+    recipient_email: email do dono do grupo. Fallback para settings.gmail_recipient.
     """
     msg = MIMEMultipart("alternative")
     msg["Subject"] = f"[{signal.urgency}] {signal.signal_type} - {group.name}"
     msg["From"] = settings.gmail_sender
-    msg["To"] = settings.gmail_recipient
+    msg["To"] = recipient_email or settings.gmail_recipient
 
     token = generate_silence_token(group.id)
     silence_url = (
@@ -132,10 +135,12 @@ def compose_consolidated_email(
     signals: list[DetectedSignal],
     snapshots: list[FlightSnapshot],
     group: RouteGroup,
+    recipient_email: str | None = None,
 ) -> MIMEMultipart:
     """Compoe email consolidado com rota mais barata, top 3 datas e resumo.
 
     Retorna MIMEMultipart com partes text/plain e text/html.
+    recipient_email: email do dono do grupo. Fallback para settings.gmail_recipient.
     """
     sorted_snaps = sorted(snapshots, key=lambda s: s.price)
     cheapest = sorted_snaps[0]
@@ -160,7 +165,7 @@ def compose_consolidated_email(
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = settings.gmail_sender
-    msg["To"] = settings.gmail_recipient
+    msg["To"] = recipient_email or settings.gmail_recipient
 
     msg.attach(MIMEText(plain, "plain", "utf-8"))
     msg.attach(MIMEText(html, "html", "utf-8"))

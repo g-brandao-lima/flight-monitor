@@ -1,6 +1,9 @@
 import logging
 from datetime import date, timedelta
 
+from sqlalchemy.orm import joinedload
+
+from app.config import settings
 from app.database import SessionLocal
 from app.models import RouteGroup
 from app.services.alert_service import compose_consolidated_email, send_email, should_alert
@@ -31,7 +34,12 @@ def run_polling_cycle():
             )
             return
 
-        groups = db.query(RouteGroup).filter(RouteGroup.is_active == True).all()
+        groups = (
+            db.query(RouteGroup)
+            .options(joinedload(RouteGroup.user))
+            .filter(RouteGroup.is_active == True)
+            .all()
+        )
         logger.info(f"Polling {len(groups)} active groups")
         for group in groups:
             try:
@@ -118,7 +126,10 @@ def _poll_group(db, client: SerpApiClient, group: RouteGroup):
     # Enviar email consolidado se houver sinais e grupo nao silenciado
     if accumulated_signals and should_alert(group):
         try:
-            msg = compose_consolidated_email(accumulated_signals, accumulated_snapshots, group)
+            recipient = group.user.email if group.user else settings.gmail_recipient
+            msg = compose_consolidated_email(
+                accumulated_signals, accumulated_snapshots, group, recipient_email=recipient
+            )
             send_email(msg)
             logger.info(
                 f"Consolidated email sent for group {group.name}: "

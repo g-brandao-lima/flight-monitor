@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Meus Alertas - Flight Monitor{% endblock %}
+
+{% block head %}
+<style>
+    .alerts-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+    }
+    .alerts-header h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #e2e8f0;
+    }
+    .alerts-header .subtitle {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: 4px;
+    }
+
+    .alerts-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    .alerts-table th {
+        text-align: left;
+        padding: 10px 12px;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .alerts-table td {
+        padding: 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        color: #cbd5e1;
+    }
+    .alerts-table tr:hover td {
+        background: rgba(255,255,255,0.02);
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+    }
+    .badge-maxima { background: rgba(220,38,38,0.15); color: #ef4444; border: 1px solid rgba(220,38,38,0.3); }
+    .badge-alta { background: rgba(234,88,12,0.15); color: #f97316; border: 1px solid rgba(234,88,12,0.3); }
+    .badge-media { background: rgba(202,138,4,0.15); color: #eab308; border: 1px solid rgba(202,138,4,0.3); }
+    .badge-baixa { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+
+    .signal-type {
+        font-weight: 600;
+        color: #e2e8f0;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #64748b;
+    }
+    .empty-state svg {
+        margin-bottom: 16px;
+        opacity: 0.4;
+    }
+    .empty-state p {
+        font-size: 14px;
+        max-width: 400px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+        .alerts-table th:nth-child(5),
+        .alerts-table td:nth-child(5) {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="alerts-header">
+    <div>
+        <h1>Meus Alertas</h1>
+        <div class="subtitle">Historico de sinais detectados nos seus grupos de rotas</div>
+    </div>
+    <a href="/" class="btn btn-ghost">Voltar ao Dashboard</a>
+</div>
+
+{% if signals %}
+<table class="alerts-table">
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Urgencia</th>
+            <th>Rota</th>
+            <th>Preco</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for signal in signals %}
+        <tr>
+            <td>{{ signal.detected_at.strftime('%d/%m/%Y %H:%M') if signal.detected_at else '-' }}</td>
+            <td class="signal-type">{{ signal.signal_type }}</td>
+            <td>
+                {% if signal.urgency == 'MAXIMA' %}
+                    <span class="badge badge-maxima">MAXIMA</span>
+                {% elif signal.urgency == 'ALTA' %}
+                    <span class="badge badge-alta">ALTA</span>
+                {% elif signal.urgency == 'MEDIA' %}
+                    <span class="badge badge-media">MEDIA</span>
+                {% else %}
+                    <span class="badge badge-baixa">{{ signal.urgency }}</span>
+                {% endif %}
+            </td>
+            <td>{{ signal.origin }} &rarr; {{ signal.destination }}</td>
+            <td>{{ format_price_brl(signal.price_at_detection) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+    </svg>
+    <p>Nenhum alerta detectado ainda. Configure grupos de rotas para comecar a receber alertas.</p>
+</div>
+{% endif %}
+{% endblock %}
