@@ -211,7 +211,7 @@
 | VIS-04 | Phase 9 | Complete |
 | VIS-05 | Phase 9 | Complete |
 | VIS-06 | Phase 9 | Complete |
-| DB-01 | Phase 10 | Complete |
+| DB-01 | Phase 14 | Pending |
 | DB-02 | Phase 10 | Complete |
 | DB-03 | Phase 10 | Complete |
 | AUTH-01 | Phase 11 | Complete |
@@ -219,9 +219,9 @@
 | AUTH-03 | Phase 11 | Complete |
 | AUTH-04 | Phase 11 | Complete |
 | AUTH-05 | Phase 11 | Complete |
-| MULTI-01 | Phase 12 | Complete |
-| MULTI-02 | Phase 12 | Complete |
-| MULTI-03 | Phase 12 | Complete |
+| MULTI-01 | Phase 14 | Pending |
+| MULTI-02 | Phase 14 | Pending |
+| MULTI-03 | Phase 14 | Pending |
 | MULTI-04 | Phase 12 | Complete |
 | LAND-01 | Phase 13 | Complete |
 | LAND-02 | Phase 13 | Complete |
@@ -236,4 +236,4 @@
 
 ---
 *Requirements defined: 2026-03-24*
-*Last updated: 2026-03-28 after v2.0 roadmap creation*
+*Last updated: 2026-03-30 after gap closure phase 14 added*

@@ -188,6 +188,7 @@ Plans:
 - [x] **Phase 11: Google OAuth** - Login com Google, sessoes persistentes e infraestrutura de autenticacao (completed 2026-03-28)
 - [x] **Phase 12: Data Isolation** - Isolamento completo de dados por usuario, alertas por email do dono e controle de quota SerpAPI (completed 2026-03-29)
 - [x] **Phase 13: Landing Page** - Pagina publica com hero, proposta de valor e CTA de login (completed 2026-03-30)
+- [ ] **Phase 14: Production Fixes** - Corrigir func.strftime SQLite-only e adicionar APP_BASE_URL ao render.yaml
 
 ## Phase Details
 
@@ -254,9 +255,21 @@ Plans:
 - [x] 13-01-PLAN.md - Landing page template + rota condicional + checkpoint visual (LAND-01, LAND-02, LAND-03, LAND-04)
 **UI hint**: yes
 
+### Phase 14: Production Fixes
+**Goal**: Corrigir funcoes SQL SQLite-only que crasham em PostgreSQL e adicionar APP_BASE_URL ao deploy config
+**Depends on**: Phase 12
+**Requirements**: DB-01, MULTI-01, MULTI-02, MULTI-03
+**Gap Closure**: Closes gaps from v2.0 milestone audit
+**Success Criteria** (what must be TRUE):
+  1. Dashboard funciona em PostgreSQL sem erros (func.strftime substituido por funcoes dialect-agnostic)
+  2. APP_BASE_URL declarado no render.yaml como env var sync:false
+  3. Link de silenciar alerta no email aponta para URL de producao (nao localhost)
+  4. Todos os 218+ testes continuam passando
+**Plans**: TBD
+
 ## Progress
 
-**Execution Order:** Phase 10 -> 11 -> 12 -> 13
+**Execution Order:** Phase 10 -> 11 -> 12 -> 13 -> 14
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -273,3 +286,4 @@ Plans:
 | 11. Google OAuth | v2.0 | 3/3 | Complete    | 2026-03-28 |
 | 12. Data Isolation | v2.0 | 3/3 | Complete    | 2026-03-29 |
 | 13. Landing Page | v2.0 | 1/1 | Complete    | 2026-03-30 |
+| 14. Production Fixes | v2.0 | 0/? | Not started | - |
