@@ -107,7 +107,15 @@ def dashboard_index(
     db: Session = Depends(get_db),
     user: User | None = Depends(get_current_user),
 ):
-    user_id = user.id if user else None
+    if user is None:
+        flash_message = FLASH_MESSAGES.get(msg) if msg else None
+        return templates.TemplateResponse(
+            request=request,
+            name="landing.html",
+            context={"user": None, "flash_message": flash_message},
+        )
+
+    user_id = user.id
     groups = get_groups_with_summary(db, user_id=user_id)
     summary = get_dashboard_summary(db, user_id=user_id)
     activity = get_recent_activity(db, user_id=user_id)
