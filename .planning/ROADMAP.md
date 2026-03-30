@@ -272,4 +272,4 @@ Plans:
 | 10. PostgreSQL Foundation | v2.0 | 2/2 | Complete    | 2026-03-28 |
 | 11. Google OAuth | v2.0 | 3/3 | Complete    | 2026-03-28 |
 | 12. Data Isolation | v2.0 | 3/3 | Complete    | 2026-03-29 |
-| 13. Landing Page | v2.0 | 1/1 | Complete   | 2026-03-30 |
+| 13. Landing Page | v2.0 | 1/1 | Complete    | 2026-03-30 |
