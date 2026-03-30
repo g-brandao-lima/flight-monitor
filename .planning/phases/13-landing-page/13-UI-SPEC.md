@@ -21,7 +21,7 @@ created: 2026-03-29
 | Preset | not applicable |
 | Component library | none (inline CSS in Jinja2 templates) |
 | Icon library | Inline SVG (hand-drawn, no external dependency) |
-| Font | Inter 400/500/600/700 via Google Fonts (already in base.html) |
+| Font | Inter 400/700 via Google Fonts (already in base.html) |
 
 ---
 
@@ -37,11 +37,9 @@ Declared values (must be multiples of 4):
 | lg | 24px | Section internal padding, card padding |
 | xl | 32px | Gap between feature cards, section padding sides |
 | 2xl | 48px | Gap between landing sections (mobile) |
-| 3xl | 64px | Gap between landing sections (desktop), hero vertical padding |
-| 4xl | 80px | Hero top padding on desktop |
+| 3xl | 64px | Gap between landing sections (desktop), hero vertical padding, hero top padding desktop |
 
 Exceptions:
-- Hero section uses 80px top padding on desktop (5rem) to create visual breathing room below the sticky header.
 - CTA buttons use min-height 44px for touch target compliance on mobile.
 
 ---
@@ -50,17 +48,17 @@ Exceptions:
 
 | Role | Size | Weight | Line Height | Font |
 |------|------|--------|-------------|------|
-| Body | 16px (1rem) | 400 | 1.6 | Inter |
+| Body / Hero subtitle | 16px (1rem) | 400 | 1.6 | Inter |
 | Label / Step number | 13px (0.8125rem) | 700 | 1.4 | Inter |
 | Section heading | 24px (1.5rem) | 700 | 1.2 | Inter |
 | Hero headline | 40px (2.5rem) | 700 | 1.1 | Inter |
-| Hero subtitle | 18px (1.125rem) | 400 | 1.5 | Inter |
 
 Notes:
 - Landing page uses slightly larger sizes than dashboard to create marketing-appropriate visual impact.
 - Hero headline scales down to 28px on mobile (<768px).
 - Section headings scale down to 20px on mobile (<768px).
 - Body text on landing is 16px (larger than dashboard 14px) for readability on longer marketing copy.
+- Hero subtitle uses the Body row (16px, weight 400) on both desktop and mobile.
 
 ---
 
@@ -107,7 +105,7 @@ Accent reserved for: Hero CTA button, final CTA button, step number circles, "En
 
 | Property | Value |
 |----------|-------|
-| Padding top | 80px (desktop) / 48px (mobile) |
+| Padding top | 64px (desktop) / 48px (mobile) |
 | Padding bottom | 64px |
 | Text align | center |
 | Max width (content) | 720px |
@@ -115,7 +113,7 @@ Accent reserved for: Hero CTA button, final CTA button, step number circles, "En
 | Icon color | #0ea5e9 |
 | Icon margin bottom | 24px |
 | Headline font | 40px (desktop) / 28px (mobile), weight 700, color #e2e8f0, line-height 1.1 |
-| Subtitle font | 18px (desktop) / 16px (mobile), weight 400, color #94a3b8, line-height 1.5 |
+| Subtitle font | 16px, weight 400, color #94a3b8, line-height 1.6 |
 | Subtitle max-width | 520px, centered |
 | Subtitle margin top | 16px |
 | CTA margin top | 32px |
@@ -130,8 +128,8 @@ Accent reserved for: Hero CTA button, final CTA button, step number circles, "En
 |----------|-------|
 | Background | linear-gradient(135deg, #0ea5e9, #3b82f6) |
 | Hover background | #0284c7 (solid) |
-| Text | white, 15px, weight 600 |
-| Padding | 14px 32px |
+| Text | white, 16px, weight 700 |
+| Padding | 16px 32px |
 | Min height | 44px |
 | Border radius | 10px |
 | Box shadow (resting) | 0 2px 12px rgba(14, 165, 233, 0.25) |
@@ -175,14 +173,14 @@ Same styles as above but with Google "G" icon (18x18 inline SVG) to the left of 
 | Background | #111827 |
 | Border | 1px solid #1e293b |
 | Border radius | 12px |
-| Padding | 28px 24px |
+| Padding | 24px |
 | Number circle size | 32x32 |
 | Number circle bg | #0ea5e9 |
-| Number circle text | white, 14px, weight 700 |
+| Number circle text | white, 13px, weight 700 |
 | Number circle margin bottom | 16px |
-| Step title | 16px, weight 600, color #e2e8f0 |
+| Step title | 16px, weight 700, color #e2e8f0 |
 | Step title margin bottom | 8px |
-| Step description | 14px, weight 400, color #94a3b8, line-height 1.5 |
+| Step description | 13px, weight 400, color #94a3b8, line-height 1.5 |
 
 ### Step Content
 
@@ -224,16 +222,16 @@ Same styles as above but with Google "G" icon (18x18 inline SVG) to the left of 
 | Background | #111827 |
 | Border | 1px solid #1e293b |
 | Border radius | 12px |
-| Padding | 28px 24px |
+| Padding | 24px |
 | Icon container size | 48x48 |
 | Icon container bg | rgba(14, 165, 233, 0.1) |
 | Icon container border-radius | 12px |
 | Icon size | 24x24 |
 | Icon stroke | #0ea5e9, stroke-width 1.5 |
 | Icon margin bottom | 16px |
-| Card title | 16px, weight 600, color #e2e8f0 |
+| Card title | 16px, weight 700, color #e2e8f0 |
 | Card title margin bottom | 8px |
-| Card description | 14px, weight 400, color #94a3b8, line-height 1.5 |
+| Card description | 13px, weight 400, color #94a3b8, line-height 1.5 |
 
 ### Feature Card Content
 
@@ -339,12 +337,12 @@ No destructive actions in this phase.
 | Element | Desktop | Mobile |
 |---------|---------|--------|
 | Hero headline | 40px | 28px |
-| Hero padding top | 80px | 48px |
+| Hero padding top | 64px | 48px |
 | Section headings | 24px | 20px |
 | Section gap | 64px | 48px |
 | Grid columns | 3 | 1 |
-| Card padding | 28px 24px | 24px 20px |
-| CTA button padding | 14px 32px | 14px 24px |
+| Card padding | 24px | 24px 16px |
+| CTA button padding | 16px 32px | 16px 24px |
 
 ---
 
