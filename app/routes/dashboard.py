@@ -408,16 +408,3 @@ def manual_polling():
         return RedirectResponse(url="/?msg=polling_ok", status_code=303)
     except Exception:
         return RedirectResponse(url="/?msg=polling_erro", status_code=303)
-
-
-@router.get("/polling/debug")
-def polling_debug():
-    """Endpoint temporario de debug — remove apos investigacao."""
-    import traceback
-    from fastapi.responses import PlainTextResponse
-    try:
-        from app.services.polling_service import run_polling_cycle
-        run_polling_cycle()
-        return PlainTextResponse("OK — polling concluido sem excecao")
-    except Exception as e:
-        return PlainTextResponse(f"ERRO:\n{traceback.format_exc()}", status_code=500)

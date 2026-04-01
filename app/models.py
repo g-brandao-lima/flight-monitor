@@ -63,7 +63,7 @@ class FlightSnapshot(Base):
     return_date: Mapped[datetime.date] = mapped_column(Date)
     price: Mapped[float] = mapped_column(Float)
     currency: Mapped[str] = mapped_column(String(3), default="BRL")
-    airline: Mapped[str] = mapped_column(String(2))
+    airline: Mapped[str] = mapped_column(String(100))
     price_min: Mapped[float | None] = mapped_column(Float, nullable=True)
     price_first_quartile: Mapped[float | None] = mapped_column(Float, nullable=True)
     price_median: Mapped[float | None] = mapped_column(Float, nullable=True)
