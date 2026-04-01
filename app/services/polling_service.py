@@ -147,6 +147,9 @@ def _process_flight(db, group, origin, destination, dep_date, ret_date, flight, 
     Retorna tupla (snapshot, list[DetectedSignal]) ou None se duplicata.
     """
     price = float(flight["price"])
+    if price <= 0:
+        logger.debug("Skipping flight with invalid price %s", price)
+        return None
     airline = flight.get("airline", "??")
 
     typical_range = None

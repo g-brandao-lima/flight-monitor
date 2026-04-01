@@ -38,6 +38,7 @@ def get_groups_with_summary(db: Session, user_id: int | None = None) -> list[dic
                     FlightSnapshot.collected_at >= cycle_start,
                     FlightSnapshot.origin.in_(group.origins),
                     FlightSnapshot.destination.in_(group.destinations),
+                    FlightSnapshot.price > 0,
                 )
                 .order_by(FlightSnapshot.price.asc())
                 .first()
@@ -291,6 +292,7 @@ def get_dashboard_summary(db: Session, user_id: int | None = None) -> dict:
                     FlightSnapshot.collected_at >= cycle_start,
                     FlightSnapshot.origin.in_(group.origins),
                     FlightSnapshot.destination.in_(group.destinations),
+                    FlightSnapshot.price > 0,
                 )
                 .scalar()
             )
