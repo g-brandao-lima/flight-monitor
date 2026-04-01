@@ -4,6 +4,36 @@ from sqlalchemy.orm import Session
 from app.models import FlightSnapshot, BookingClassSnapshot
 
 
+def get_historical_price_range(
+    db: Session,
+    origin: str,
+    destination: str,
+    min_samples: int = 5,
+    n_snapshots: int = 30,
+) -> list[float] | None:
+    """Calcula o intervalo tipico de precos [p25, p75] com base no historico salvo.
+
+    Retorna None se houver menos de min_samples snapshots para a rota.
+    """
+    rows = (
+        db.query(FlightSnapshot.price)
+        .filter(
+            FlightSnapshot.origin == origin,
+            FlightSnapshot.destination == destination,
+        )
+        .order_by(FlightSnapshot.collected_at.desc())
+        .limit(n_snapshots)
+        .all()
+    )
+    values = sorted(row[0] for row in rows)
+    if len(values) < min_samples:
+        return None
+
+    p25_idx = int(len(values) * 0.25)
+    p75_idx = min(int(len(values) * 0.75), len(values) - 1)
+    return [values[p25_idx], values[p75_idx]]
+
+
 def is_duplicate_snapshot(
     db: Session,
     route_group_id: int,

@@ -7,10 +7,15 @@ from app.config import settings
 from app.database import SessionLocal
 from app.models import RouteGroup
 from app.services.alert_service import compose_consolidated_email, send_email, should_alert
+from app.services.flight_search import search_flights
 from app.services.quota_service import increment_usage, get_remaining_quota, MONTHLY_QUOTA
-from app.services.serpapi_client import SerpApiClient, classify_price
+from app.services.serpapi_client import classify_price
 from app.services.signal_service import detect_signals
-from app.services.snapshot_service import is_duplicate_snapshot, save_flight_snapshot
+from app.services.snapshot_service import (
+    get_historical_price_range,
+    is_duplicate_snapshot,
+    save_flight_snapshot,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -19,20 +24,15 @@ DATE_STEP_DAYS = 7
 
 def run_polling_cycle():
     """Executa um ciclo de polling para todos os grupos ativos."""
-    client = SerpApiClient()
-    if not client.is_configured:
-        logger.warning("SerpAPI not configured. Skipping polling cycle.")
-        return
-
     db = SessionLocal()
     try:
         remaining = get_remaining_quota(db)
         if remaining <= 0:
             logger.warning(
-                f"SerpAPI monthly quota exhausted ({MONTHLY_QUOTA} searches). "
-                "Skipping polling cycle."
+                "SerpAPI monthly quota exhausted (%d searches). "
+                "Tentando via fast-flights.",
+                MONTHLY_QUOTA,
             )
-            return
 
         groups = (
             db.query(RouteGroup)
@@ -43,7 +43,7 @@ def run_polling_cycle():
         logger.info(f"Polling {len(groups)} active groups")
         for group in groups:
             try:
-                _poll_group(db, client, group)
+                _poll_group(db, group)
             except Exception as e:
                 logger.error(
                     f"Polling failed for group {group.id} ({group.name}): {e}"
@@ -74,9 +74,10 @@ def _generate_date_pairs(
     return pairs
 
 
-def _poll_group(db, client: SerpApiClient, group: RouteGroup):
-    """Polling de um grupo: gera combinacoes, busca voos via SerpAPI (1 call por combinacao).
+def _poll_group(db, group: RouteGroup):
+    """Polling de um grupo: gera combinacoes e busca voos com fallback automatico.
 
+    Tenta fast-flights primeiro; fallback para SerpAPI se falhar.
     Acumula todos os sinais e snapshots do ciclo e envia 1 email consolidado ao final.
     """
     origins = group.origins
@@ -92,7 +93,7 @@ def _poll_group(db, client: SerpApiClient, group: RouteGroup):
         for destination in destinations:
             for dep_date, ret_date in date_pairs:
                 try:
-                    flights, insights = client.search_flights_with_insights(
+                    flights, insights, source = search_flights(
                         origin=origin,
                         destination=destination,
                         departure_date=dep_date.isoformat(),
@@ -106,7 +107,8 @@ def _poll_group(db, client: SerpApiClient, group: RouteGroup):
                     )
                     continue
 
-                increment_usage(db)
+                if source == "serpapi":
+                    increment_usage(db)
 
                 if not flights:
                     logger.info(f"No flights available for {origin}->{destination} {dep_date}")
@@ -161,6 +163,17 @@ def _process_flight(db, group, origin, destination, dep_date, ret_date, flight, 
                 "price_first_quartile": typical_range[0],
                 "price_median": (typical_range[0] + typical_range[1]) / 2,
                 "price_third_quartile": typical_range[1],
+                "price_max": None,
+            }
+    else:
+        historical_range = get_historical_price_range(db, origin, destination)
+        if historical_range:
+            classification = classify_price(price, historical_range)
+            price_metrics = {
+                "price_first_quartile": historical_range[0],
+                "price_third_quartile": historical_range[1],
+                "price_median": (historical_range[0] + historical_range[1]) / 2,
+                "price_min": None,
                 "price_max": None,
             }
 

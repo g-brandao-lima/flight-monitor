@@ -180,6 +180,80 @@ def test_save_flight_snapshot_function(db):
     assert len(from_db.booking_classes) == 3
 
 
+# ---------------------------------------------------------------------------
+# get_historical_price_range
+# ---------------------------------------------------------------------------
+
+
+def _add_snapshots(db, rg, origin, destination, prices):
+    """Helper: insere snapshots com precos variados para uma rota."""
+    for i, price in enumerate(prices):
+        snap = FlightSnapshot(
+            route_group_id=rg.id,
+            origin=origin,
+            destination=destination,
+            departure_date=date(2026, 5, 1 + i),
+            return_date=date(2026, 5, 8 + i),
+            price=price,
+            currency="BRL",
+            airline="LA",
+        )
+        db.add(snap)
+    db.commit()
+
+
+def test_historical_price_range_with_enough_data(db):
+    """Com dados suficientes, retorna [p25, p75]."""
+    from app.services.snapshot_service import get_historical_price_range
+
+    rg = _create_route_group(db)
+    prices = [400, 450, 500, 550, 600, 650, 700, 750, 800, 850]
+    _add_snapshots(db, rg, "GRU", "GIG", prices)
+
+    result = get_historical_price_range(db, "GRU", "GIG")
+
+    assert result is not None
+    assert len(result) == 2
+    assert result[0] <= result[1]
+    assert result[0] >= 400
+    assert result[1] <= 850
+
+
+def test_historical_price_range_returns_none_with_no_data(db):
+    """Sem snapshots, retorna None."""
+    from app.services.snapshot_service import get_historical_price_range
+
+    result = get_historical_price_range(db, "GRU", "SDU")
+
+    assert result is None
+
+
+def test_historical_price_range_returns_none_below_min_samples(db):
+    """Com menos de min_samples snapshots, retorna None."""
+    from app.services.snapshot_service import get_historical_price_range
+
+    rg = _create_route_group(db)
+    _add_snapshots(db, rg, "GRU", "GIG", [500, 600, 700])  # apenas 3
+
+    result = get_historical_price_range(db, "GRU", "GIG", min_samples=5)
+
+    assert result is None
+
+
+def test_historical_price_range_filters_by_route(db):
+    """Range calculado apenas para a rota especificada, ignora outras."""
+    from app.services.snapshot_service import get_historical_price_range
+
+    rg = _create_route_group(db)
+    _add_snapshots(db, rg, "GRU", "GIG", [400, 450, 500, 550, 600])
+    _add_snapshots(db, rg, "GRU", "CNF", [2000, 2100, 2200, 2300, 2400])
+
+    result = get_historical_price_range(db, "GRU", "GIG")
+
+    assert result is not None
+    assert result[1] < 1000  # nao contaminou com precos GRU→CNF
+
+
 def test_config_has_gmail_fields():
     """Settings tem gmail_* e NAO tem telegram_*."""
     from app.config import Settings
