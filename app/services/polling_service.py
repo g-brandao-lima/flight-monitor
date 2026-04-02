@@ -136,6 +136,10 @@ def _poll_group(db, group: RouteGroup):
     if accumulated_signals and should_alert(group):
         try:
             recipient = group.user.email if group.user else settings.gmail_recipient
+            allowed = {settings.gmail_sender, settings.gmail_recipient}
+            if recipient not in allowed:
+                logger.info("Skipping alert email for group %s: recipient %s not in allowed list", group.name, recipient)
+                return
             msg = compose_consolidated_email(
                 accumulated_signals, accumulated_snapshots, group, recipient_email=recipient
             )
