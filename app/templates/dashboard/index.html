@@ -249,7 +249,7 @@
         </div>
         <div class="metric">
             <span class="metric-label">Menor preço:</span>
-            <span class="metric-value green">{{ format_price_brl(summary.cheapest_price) if summary.cheapest_price else "—" }}</span>
+            <span class="metric-value green">{{ format_price_brl(summary.cheapest_price) + " (" + summary.cheapest_group_name + ")" if summary.cheapest_price else "—" }}</span>
         </div>
         <div class="metric">
             <span class="metric-label">Próxima busca:</span>

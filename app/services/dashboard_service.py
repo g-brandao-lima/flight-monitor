@@ -273,6 +273,7 @@ def get_dashboard_summary(db: Session, user_id: int | None = None) -> dict:
 
     # Find cheapest price across all active groups' latest snapshots
     cheapest_price = None
+    cheapest_group_name = None
     groups_query = db.query(RouteGroup).filter(RouteGroup.is_active == True)  # noqa: E712
     if user_id is not None:
         groups_query = groups_query.filter(RouteGroup.user_id == user_id)
@@ -299,6 +300,7 @@ def get_dashboard_summary(db: Session, user_id: int | None = None) -> dict:
             if min_price is not None:
                 if cheapest_price is None or min_price < cheapest_price:
                     cheapest_price = min_price
+                    cheapest_group_name = group.name
 
     # BRT timezone (UTC-3, João Pessoa / Brasília)
     brt_offset = timedelta(hours=-3)
@@ -328,6 +330,7 @@ def get_dashboard_summary(db: Session, user_id: int | None = None) -> dict:
     return {
         "active_count": active_count,
         "cheapest_price": cheapest_price,
+        "cheapest_group_name": cheapest_group_name,
         "next_polling": next_polling,
         "last_collection": last_collection_str,
         "api_usage": get_monthly_usage(db),
