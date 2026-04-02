@@ -194,7 +194,7 @@
     </header>
     <div class="container">
         {% if flash_message %}
-        <div class="flash-message" role="status">{{ flash_message }}</div>
+        <div class="flash-message" id="flash-msg" role="status">{{ flash_message }}</div>
         {% endif %}
         {% block content %}{% endblock %}
     </div>
@@ -214,22 +214,47 @@
         if (!form) return;
         var msgs = [
             {at:0,t:'Iniciando busca...',s:'Conectando com Google Flights'},
-            {at:10,t:'Buscando voos...',s:'Verificando rotas configuradas'},
-            {at:25,t:'Buscando voos...',s:'Comparando preços entre companhias'},
-            {at:45,t:'Analisando preços...',s:'Calculando histórico e tendências'},
-            {at:65,t:'Detectando sinais...',s:'Verificando oportunidades de compra'},
-            {at:80,t:'Quase lá...',s:'Salvando dados coletados'},
-            {at:90,t:'Finalizando...',s:'Preparando resultados'}
+            {at:15,t:'Buscando voos...',s:'Verificando rotas configuradas'},
+            {at:30,t:'Buscando voos...',s:'Comparando preços entre companhias'},
+            {at:50,t:'Analisando preços...',s:'Calculando histórico e tendências'},
+            {at:70,t:'Detectando sinais...',s:'Verificando oportunidades de compra'},
+            {at:85,t:'Quase lá...',s:'Salvando dados coletados'},
+            {at:95,t:'Finalizando...',s:'Preparando resultados'}
         ];
-        form.addEventListener('submit', function() {
+        var DURATION_MS = 25000;
+        var INTERVAL_MS = 300;
+
+        function animateBar() {
             var o=document.getElementById('loading-overlay'),b=document.getElementById('loading-bar'),
                 t=document.getElementById('loading-text'),s=document.getElementById('loading-sub');
             o.classList.add('active');
-            var p=0;
-            setInterval(function(){
-                p+=Math.random()*3+0.5; if(p>95)p=95; b.style.width=p+'%';
+            var start = Date.now();
+            var iv = setInterval(function(){
+                var elapsed = Date.now() - start;
+                var p = Math.min((elapsed / DURATION_MS) * 100, 100);
+                b.style.width = p+'%';
                 for(var i=msgs.length-1;i>=0;i--){if(p>=msgs[i].at){t.textContent=msgs[i].t;s.textContent=msgs[i].s;break;}}
-            },300);
+                if(p >= 100) {
+                    clearInterval(iv);
+                    window.location.href = '/';
+                }
+            }, INTERVAL_MS);
+        }
+
+        /* After redirect with ?msg=polling_ok, show overlay and auto-refresh */
+        if (window.location.search.indexOf('msg=polling_ok') !== -1) {
+            var flash = document.getElementById('flash-msg');
+            if (flash) flash.style.display = 'none';
+            animateBar();
+        }
+
+        /* On form submit, just let it POST normally (redirect is instant) */
+        form.addEventListener('submit', function() {
+            var o=document.getElementById('loading-overlay');
+            o.classList.add('active');
+            document.getElementById('loading-text').textContent = 'Enviando...';
+            document.getElementById('loading-sub').textContent = 'Iniciando busca';
+            document.getElementById('loading-bar').style.width = '5%';
         });
     })();
     </script>

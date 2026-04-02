@@ -399,13 +399,23 @@ FLASH_MESSAGES["polling_ok"] = "Busca iniciada em segundo plano. Atualize a pág
 FLASH_MESSAGES["polling_erro"] = "Erro na busca. Tente novamente."
 
 
-def _run_polling_background() -> None:
-    from app.services.polling_service import run_polling_cycle
-    run_polling_cycle()
+def _run_polling_background(user_id: int | None = None) -> None:
+    import logging
+    _logger = logging.getLogger(__name__)
+    try:
+        from app.services.polling_service import run_polling_cycle
+        run_polling_cycle(user_id=user_id)
+        _logger.info("Background polling completed (user_id=%s)", user_id)
+    except Exception as e:
+        _logger.error("Background polling failed (user_id=%s): %s", user_id, e, exc_info=True)
 
 
 @router.post("/polling/manual")
-def manual_polling(background_tasks: BackgroundTasks):
-    """Dispara o ciclo de polling em background e redireciona imediatamente."""
-    background_tasks.add_task(_run_polling_background)
+def manual_polling(
+    background_tasks: BackgroundTasks,
+    user: User | None = Depends(get_current_user),
+):
+    """Dispara o ciclo de polling para os grupos do usuario em background."""
+    uid = user.id if user else None
+    background_tasks.add_task(_run_polling_background, uid)
     return RedirectResponse(url="/?msg=polling_ok", status_code=303)

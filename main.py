@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.exceptions import HTTPException
+from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -60,10 +60,56 @@ async def health_check():
     return HTMLResponse(content="", status_code=200)
 
 
+FIELD_LABELS = {
+    "name": "Nome do grupo",
+    "origins": "Origens",
+    "destinations": "Destinos",
+    "duration_days": "Duração (dias)",
+    "travel_start": "Data de início",
+    "travel_end": "Data de fim",
+    "passengers": "Passageiros",
+    "max_stops": "Paradas máximas",
+    "target_price": "Preço alvo",
+    "mode": "Modo",
+}
+
 ERROR_MESSAGES = {
     404: ("Página não encontrada.", "O endereço que você acessou não existe."),
 }
 DEFAULT_ERROR = ("Algo deu errado no servidor.", "Tente novamente em alguns instantes.")
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Convert FastAPI 422 JSON into a user-friendly redirect with error message."""
+    errors = exc.errors()
+    field_msgs = []
+    for err in errors:
+        loc = err.get("loc", [])
+        field = loc[-1] if loc else "campo"
+        label = FIELD_LABELS.get(field, field)
+        field_msgs.append(f"{label}: valor inválido")
+    error_text = "; ".join(field_msgs) if field_msgs else "Preencha todos os campos corretamente."
+
+    referer = request.headers.get("referer", "/")
+    if "/groups/create" in str(request.url) or "/groups/create" in referer:
+        from app.routes.dashboard import get_all_airports
+        return HTMLResponse(
+            content=_templates.get_template("dashboard/create.html").render(
+                request=request,
+                error=error_text,
+                form_data={},
+                airports=get_all_airports(),
+                user=None,
+            ),
+            status_code=422,
+        )
+    return HTMLResponse(
+        content=_templates.get_template("error.html").render(
+            request=request, message="Dados inválidos", detail=error_text
+        ),
+        status_code=422,
+    )
 
 
 @app.exception_handler(HTTPException)

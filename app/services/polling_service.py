@@ -22,8 +22,12 @@ logger = logging.getLogger(__name__)
 DATE_STEP_DAYS = 7
 
 
-def run_polling_cycle():
-    """Executa um ciclo de polling para todos os grupos ativos."""
+def run_polling_cycle(user_id: int | None = None):
+    """Executa um ciclo de polling.
+
+    Se user_id for informado, processa apenas os grupos daquele usuario.
+    Caso contrario, processa todos os grupos ativos (usado pelo scheduler).
+    """
     db = SessionLocal()
     try:
         remaining = get_remaining_quota(db)
@@ -34,13 +38,16 @@ def run_polling_cycle():
                 MONTHLY_QUOTA,
             )
 
-        groups = (
+        query = (
             db.query(RouteGroup)
             .options(joinedload(RouteGroup.user))
             .filter(RouteGroup.is_active == True)
-            .all()
         )
-        logger.info(f"Polling {len(groups)} active groups")
+        if user_id is not None:
+            query = query.filter(RouteGroup.user_id == user_id)
+        groups = query.all()
+
+        logger.info(f"Polling {len(groups)} active groups (user_id={user_id})")
         for group in groups:
             try:
                 _poll_group(db, group)
