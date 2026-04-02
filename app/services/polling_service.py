@@ -67,6 +67,8 @@ def _generate_date_pairs(
 
     Normal: a cada 7 dias (busca precisa)
     Exploração: a cada 30 dias (varredura ampla, economiza API)
+
+    Sempre inclui o último par possível para não perder datas no final.
     """
     step = 30 if mode == "exploracao" else DATE_STEP_DAYS
     pairs = []
@@ -74,10 +76,18 @@ def _generate_date_pairs(
     while current + timedelta(days=duration_days) <= travel_end:
         pairs.append((current, current + timedelta(days=duration_days)))
         current += timedelta(days=step)
-    if not pairs and travel_start + timedelta(days=duration_days) <= travel_end + timedelta(
-        days=duration_days
-    ):
-        pairs.append((travel_start, travel_start + timedelta(days=duration_days)))
+
+    if not pairs:
+        if travel_start + timedelta(days=duration_days) <= travel_end + timedelta(days=duration_days):
+            pairs.append((travel_start, travel_start + timedelta(days=duration_days)))
+    else:
+        # Garantir cobertura do final: se o último par não cobre o fim do período,
+        # adicionar um par final ancorado no travel_end
+        last_dep = pairs[-1][0]
+        last_possible_dep = travel_end - timedelta(days=duration_days)
+        if last_dep < last_possible_dep:
+            pairs.append((last_possible_dep, travel_end))
+
     return pairs
 
 

@@ -30,7 +30,7 @@ def get_groups_with_summary(db: Session, user_id: int | None = None) -> list[dic
 
         cheapest_snapshot = None
         if latest_collected is not None:
-            cycle_start = latest_collected - timedelta(hours=2)
+            cycle_start = latest_collected - timedelta(hours=6)
             cheapest_snapshot = (
                 db.query(FlightSnapshot)
                 .filter(
@@ -117,7 +117,7 @@ def get_groups_with_summary(db: Session, user_id: int | None = None) -> list[dic
         # Direct vs connection price comparison
         price_comparison = None
         if latest_collected is not None:
-            cycle_start_comp = latest_collected - timedelta(hours=2)
+            cycle_start_comp = latest_collected - timedelta(hours=6)
             direct_price = (
                 db.query(func.min(FlightSnapshot.price))
                 .filter(
@@ -285,7 +285,7 @@ def get_dashboard_summary(db: Session, user_id: int | None = None) -> dict:
             .scalar()
         )
         if latest_collected is not None:
-            cycle_start = latest_collected - timedelta(hours=2)
+            cycle_start = latest_collected - timedelta(hours=6)
             min_price = (
                 db.query(func.min(FlightSnapshot.price))
                 .filter(
@@ -386,7 +386,7 @@ def get_recent_activity(db: Session, user_id: int | None = None, limit: int = 8)
             .scalar()
         )
         if latest and latest >= cutoff:
-            cycle_start = latest - timedelta(hours=2)
+            cycle_start = latest - timedelta(hours=6)
             count = (
                 db.query(func.count())
                 .select_from(FlightSnapshot)

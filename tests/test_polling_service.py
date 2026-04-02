@@ -191,14 +191,15 @@ class TestPollGroupCombinations:
         with patch("app.services.polling_service.SessionLocal", return_value=db):
             run_polling_cycle()
 
-        # May 1,8,15,22 → 4 pares
-        assert mock_search.call_count == 4
+        # May 1,8,15,22 + 24 (ultimo par para cobrir final do periodo) → 5 pares
+        assert mock_search.call_count == 5
 
         dep_dates = [c.kwargs.get("departure_date") for c in mock_search.call_args_list]
         assert "2026-05-01" in dep_dates
         assert "2026-05-08" in dep_dates
         assert "2026-05-15" in dep_dates
         assert "2026-05-22" in dep_dates
+        assert "2026-05-24" in dep_dates
 
 
 # ---------------------------------------------------------------------------
