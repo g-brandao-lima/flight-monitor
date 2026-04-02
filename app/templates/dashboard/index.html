@@ -249,7 +249,7 @@
         </div>
         <div class="metric">
             <span class="metric-label">Menor preço:</span>
-            <span class="metric-value green">{{ format_price_brl(summary.cheapest_price) + " /pessoa" if summary.cheapest_price else "—" }}</span>
+            <span class="metric-value green">{{ format_price_brl(summary.cheapest_price) if summary.cheapest_price else "—" }}</span>
         </div>
         <div class="metric">
             <span class="metric-label">Próxima busca:</span>
@@ -316,8 +316,10 @@
                 <div class="card-price {% if cls == 'LOW' %}price-low{% elif cls == 'MEDIUM' %}price-medium{% elif cls == 'HIGH' %}price-high{% else %}price-none{% endif %}">
                     {{ format_price_brl(snap.price) }}
                 </div>
+                {% if pax > 1 %}
                 <div class="card-price-sub">/ pessoa</div>
-                {% if pax > 1 %}<div class="card-price-sub">Total: {{ format_price_brl(snap.price * pax) }}</div>{% endif %}
+                <div class="card-price-sub">Total {{ pax }} passageiros: {{ format_price_brl(snap.price * pax) }}</div>
+                {% endif %}
                 {% if item.sparkline and item.sparkline|length > 1 %}
                 <div class="sparkline" title="Tendência dos últimos dias">
                     {% set spark_max = item.sparkline|max %}
