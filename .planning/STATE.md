@@ -1,30 +1,32 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Multi-usuario
-status: v2.0 milestone complete
-stopped_at: Completed 14-01-PLAN.md
-last_updated: "2026-03-30T19:41:49.167Z"
+milestone: v2.1
+milestone_name: Clareza de Preco e Robustez
+status: defining requirements
+stopped_at: null
+last_updated: "2026-04-03T00:00:00.000Z"
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 10
-  completed_plans: 10
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-28)
+See: .planning/PROJECT.md (updated 2026-04-03)
 
-**Core value:** Detectar o momento certo de comprar uma passagem antes que o preco suba, usando dados de inventario reais que nenhum sistema consumer expoe.
-**Current focus:** Phase 14 — production-fixes
+**Core value:** Detectar o momento certo de comprar uma passagem antes que o preco suba, apresentando o preco de forma clara e imediata para o usuario tomar decisao rapida.
+**Current focus:** Defining requirements for v2.1
 
 ## Current Position
 
-Phase: 14 (production-fixes) — EXECUTING
-Plan: 1 of 1
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-03 — Milestone v2.1 started
 
 ## Performance Metrics
 

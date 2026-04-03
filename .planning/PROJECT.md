@@ -2,11 +2,11 @@
 
 ## What This Is
 
-Sistema de monitoramento de passagens aereas que rastreia precos e sinais de oportunidade de compra usando dados de inventario (booking classes) e price insights. Multi-usuario com login via Google OAuth, deploy no Render com PostgreSQL persistente.
+Sistema multi-usuario de monitoramento de passagens aereas que rastreia precos via SerpAPI/fast-flights e detecta sinais de oportunidade de compra (preco abaixo do historico, janela otima de reserva). Login via Google OAuth, dashboard com cards coloridos por classificacao de preco, alertas consolidados por e-mail e deploy automatico no Render com PostgreSQL (Neon.tech).
 
 ## Core Value
 
-Detectar o momento certo de comprar uma passagem antes que o preço suba, usando dados de inventário reais (booking classes via Amadeus API) que nenhum sistema consumer expõe ao usuário.
+Detectar o momento certo de comprar uma passagem antes que o preco suba, apresentando o preco de forma clara e imediata para o usuario tomar decisao rapida.
 
 ## Requirements
 
@@ -111,11 +111,12 @@ Sistemas consumer (Google Flights, Kayak) são reativos: alertam quando o preço
 
 ## Constraints
 
-- **API**: SerpAPI free tier (250 buscas/mes) compartilhada entre usuarios
+- **API**: SerpAPI free tier (250 buscas/mes) compartilhada entre usuarios — otimizacao de cota e prioridade neste milestone
 - **Stack**: Python, FastAPI, PostgreSQL, APScheduler, Jinja2 — sem JS framework no frontend
-- **Infra**: Render (web) + Neon.tech (PostgreSQL) — ambos free tier
-- **Auth**: Google OAuth exclusivo (Google Cloud Console)
+- **Infra**: Render (web, autodeploy via GitHub) + Neon.tech (PostgreSQL) — ambos free tier
+- **Auth**: Google OAuth exclusivo (Google Cloud Console) — migrando para JWT stateless neste milestone
 - **Scope**: Roundtrip only; voos GDS (nao LCC direto)
+- **Deploy**: Push na main dispara deploy automatico no Render — CI obrigatorio antes
 
 ## Key Decisions
 
@@ -131,16 +132,19 @@ Sistemas consumer (Google Flights, Kayak) são reativos: alertam quando o preço
 | Google OAuth exclusivo (v2.0) | Sem gerenciar senhas, setup mais simples, usuarios ja tem Google | — Pending |
 | PostgreSQL via Neon.tech (v2.0) | Persistencia entre deploys, multi-usuario, free tier generoso | — Pending |
 
-## Current Milestone: v2.0 Multi-usuario
+## Current Milestone: v2.1 Clareza de Preco e Robustez
 
-**Goal:** Transformar o Flight Monitor de ferramenta pessoal em produto multi-usuario com landing page publica, login via Google OAuth e banco PostgreSQL persistente.
+**Goal:** Tornar o preco das passagens imediatamente compreensivel para o usuario e fortalecer a infraestrutura do projeto (CI, rate limiting, otimizacao de cota, limpeza de legado).
 
 **Target features:**
-- Landing page minimalista (about + diferencial vs Google Flights/Skyscanner)
-- Login exclusivo via Google OAuth
-- Migracao SQLite para PostgreSQL (Neon.tech free tier)
-- Multi-usuario com isolamento de dados por usuario
-- Redesign das telas autenticadas
+- Rotulo fixo "por pessoa, ida e volta" em todos os pontos de exibicao de preco (dashboard, email, grafico, alertas)
+- Calculo total para multiplos passageiros visivel em todos os contextos
+- Correcao do bug de passengers hardcoded no fast-flights
+- CI com testes no GitHub Actions (rede de seguranca antes do autodeploy)
+- Rate limiting nos endpoints (slowapi)
+- Otimizacao do uso de cota SerpAPI (fast-flights primario, cache, polling adaptativo)
+- Remocao do BookingClassSnapshot (legado Amadeus)
+- JWT stateless para sessoes (escalabilidade horizontal)
 
 ## Evolution
 
@@ -160,4 +164,4 @@ Este documento evolui a cada transição de fase e milestone.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after Phase 13 completion — Milestone v2.0 complete*
+*Last updated: 2026-04-03 after milestone v2.1 start*
