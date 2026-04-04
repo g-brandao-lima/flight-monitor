@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Clareza de Preco e Robustez
-status: defining requirements
+status: roadmap created
 stopped_at: null
 last_updated: "2026-04-03T00:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 7
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -19,52 +19,29 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-03)
 
 **Core value:** Detectar o momento certo de comprar uma passagem antes que o preco suba, apresentando o preco de forma clara e imediata para o usuario tomar decisao rapida.
-**Current focus:** Defining requirements for v2.1
+**Current focus:** v2.1 roadmap created, ready to plan Phase 15
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-04-03 — Milestone v2.1 started
+Phase: 15 (CI Pipeline) - first of 7 v2.1 phases (15-21)
+Plan: Not yet planned
+Status: Ready to plan
+Last activity: 2026-04-03 — Roadmap v2.1 created with 7 phases, 14 requirements mapped
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 22
+- Total plans completed: 32
 - Average duration: ~3min
-- Total execution time: ~65min
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01-foundation | 3 | 8min | 2.7min |
-| 02-data-collection | 3 | 8min | 2.7min |
-| 03-signal-detection | 3 | 10min | 3.3min |
-| 04-gmail-alerts | 3 | 19min | 6.3min |
-| 05-web-dashboard | 3 | 8min | 2.7min |
-| 06-quality-feedback | 2 | 6min | 3.0min |
-| 07-consolidated-email | 2 | 6min | 3.0min |
-| 08-dashboard-redesign | 2 | 4min | 2.0min |
-| 09-visual-polish | 2 | 4min | 2.0min |
+- Total execution time: ~100min
 
 **Recent Trend:**
 
-- Last 5 plans: 3min, 3min, 3min, 2min, 2min
+- Last 5 plans: 4min, 6min, 4min, 2min, 3min
 - Trend: Stable
-
-| Phase 10 P01 | 3min | 2 tasks | 7 files |
-| Phase 10 P02 | 1min | 2 tasks | 2 files |
-| Phase 11 P01 | 3min | 2 tasks | 8 files |
-| Phase 11 P02 | 3min | 1 tasks | 7 files |
-| Phase 11-google-oauth P03 | 4min | 3 tasks | 5 files |
-| Phase 12 P03 | 4min | 2 tasks | 7 files |
-| Phase 12 P01 | 6min | 2 tasks | 8 files |
-| Phase 12 P02 | 4min | 1 tasks | 7 files |
-| Phase 13 P01 | 2min | 3 tasks | 2 files |
-| Phase 14 P01 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -73,26 +50,10 @@ Last activity: 2026-04-03 — Milestone v2.1 started
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [v2.0]: PostgreSQL via Neon.tech (free tier, no expiration, pooled connections)
-- [v2.0]: Google OAuth via Authlib (not fastapi-users, not JWT)
-- [v2.0]: user_id only on route_groups (child tables inherit via FK)
-- [v2.0]: Alembic replaces Base.metadata.create_all() in production
-- [v2.0]: Tests keep SQLite in-memory (no PostgreSQL dependency)
-- [Phase 10]: Alembic autogenerate para baseline migration (4 tabelas + indice detectados automaticamente)
-- [Phase 10]: env.py usa create_engine direto com get_url() ao inves de engine_from_config
-- [Phase 10]: DATABASE_URL as sync:false in render.yaml (secret configured in Render dashboard)
-- [Phase 11]: Fixtures test_user e authenticated_client criadas ANTES de middleware para nao quebrar 188 testes
-- [Phase 11]: client fixture autenticado por padrao via session cookie assinado para nao quebrar testes existentes
-- [Phase 11-google-oauth]: Avatar initials use accent blue #3b82f6 per design system
-- [Phase 11-google-oauth]: Gunicorn --forwarded-allow-ips=* for Render proxy HTTPS redirect_uri
-- [Phase 12]: Global SerpAPI counter per year_month string with unique constraint, no per-user split
-- [Phase 12]: Quota check at polling cycle start, increment after each SerpAPI call
-- [Phase 12]: user_id nullable on route_groups for backward compat; ownership returns 404 not 403
-- [Phase 12]: recipient_email as optional param with gmail_recipient fallback for backward compat
-- [Phase 12]: joinedload(RouteGroup.user) in polling to avoid N+1 queries
-- [Phase 13]: Rota unica / com condicional user is None, sem rota /landing separada
-- [Phase 13]: CSS inline no template landing via block head, sem arquivo CSS separado
-- [Phase 14]: Python-side weekday() grouping for dialect-agnostic best_day query
+- [v2.1]: CI Pipeline first — safety net before JWT refactoring (research recommendation)
+- [v2.1]: Passengers fix before cache — cache key needs correct passengers count
+- [v2.1]: JWT before rate limiting — request.state.user_id improves slowapi key_func
+- [v2.1]: Legacy removal last — blocks nothing, not blocked by anything
 
 ### Pending Todos
 
@@ -100,16 +61,12 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 10]: check_same_thread removal needed (conditional connect_args by DB type)
-- [Phase 10]: JSON mutation tracking bug on PostgreSQL (assign new lists, never mutate)
-- [Phase 10]: Neon PgBouncer may need statement_cache_size=0
-- [Phase 11]: 188 existing tests need auth fixtures BEFORE adding middleware
-- [Phase 11]: Google OAuth consent screen must be published to Production mode
-- [Phase 12]: SerpAPI quota counter schema undecided
-- [Phase 12]: Scheduler fairness policy undecided
+- [Phase 18]: JWT migration touches conftest.py (base of 218+ tests) — CI must be active before this phase
+- [Phase 18]: OAuth flow needs manual testing after JWT change (Google callback)
+- [Phase 21]: Verify no tests or services reference booking_classes before removing
 
 ## Session Continuity
 
-Last session: 2026-03-30T15:44:07.711Z
-Stopped at: Completed 14-01-PLAN.md
+Last session: 2026-04-03
+Stopped at: Roadmap v2.1 created
 Resume file: None

@@ -5,7 +5,8 @@
 - ✅ **v1.0 MVP** - Phases 1-5 (shipped 2026-03-25)
 - ✅ **v1.1 Polish & UX** - Phases 6-8 (shipped 2026-03-26)
 - ✅ **v1.2 Visual Polish** - Phase 9 (shipped 2026-03-28)
-- 🚧 **v2.0 Multi-usuario** - Phases 10-13 (in progress)
+- ✅ **v2.0 Multi-usuario** - Phases 10-14 (shipped 2026-03-30)
+- 🚧 **v2.1 Clareza de Preco e Robustez** - Phases 15-21 (in progress)
 
 ## Phases
 
@@ -180,17 +181,14 @@ Plans:
 
 </details>
 
-### v2.0 Multi-usuario (In Progress)
+<details>
+<summary>v2.0 Multi-usuario (Phases 10-14) - SHIPPED 2026-03-30</summary>
 
-**Milestone Goal:** Transformar o Flight Monitor de ferramenta pessoal em produto multi-usuario com landing page publica, login via Google OAuth e banco PostgreSQL persistente.
-
-- [x] **Phase 10: PostgreSQL Foundation** - Migrar banco para PostgreSQL com Alembic, mantendo todos os testes passando (completed 2026-03-28)
-- [x] **Phase 11: Google OAuth** - Login com Google, sessoes persistentes e infraestrutura de autenticacao (completed 2026-03-28)
-- [x] **Phase 12: Data Isolation** - Isolamento completo de dados por usuario, alertas por email do dono e controle de quota SerpAPI (completed 2026-03-29)
-- [x] **Phase 13: Landing Page** - Pagina publica com hero, proposta de valor e CTA de login (completed 2026-03-30)
-- [x] **Phase 14: Production Fixes** - Corrigir func.strftime SQLite-only e adicionar APP_BASE_URL ao render.yaml (completed 2026-03-30)
-
-## Phase Details
+- [x] **Phase 10: PostgreSQL Foundation** - Migrar banco para PostgreSQL com Alembic, mantendo todos os testes passando
+- [x] **Phase 11: Google OAuth** - Login com Google, sessoes persistentes e infraestrutura de autenticacao
+- [x] **Phase 12: Data Isolation** - Isolamento completo de dados por usuario, alertas por email do dono e controle de quota SerpAPI
+- [x] **Phase 13: Landing Page** - Pagina publica com hero, proposta de valor e CTA de login
+- [x] **Phase 14: Production Fixes** - Corrigir func.strftime SQLite-only e adicionar APP_BASE_URL ao render.yaml
 
 ### Phase 10: PostgreSQL Foundation
 **Goal**: Aplicacao roda sobre PostgreSQL em producao com migrations gerenciadas por Alembic, sem quebrar nenhum teste existente
@@ -220,9 +218,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 11-01-PLAN.md — User model + Authlib + config + Alembic migration + test fixtures (AUTH-01, AUTH-02)
-- [x] 11-02-PLAN.md — OAuth routes + SessionMiddleware + AuthMiddleware + testes (AUTH-01, AUTH-02, AUTH-03, AUTH-05)
-- [x] 11-03-PLAN.md — Header UI (avatar/nome/logout) + render.yaml + checkpoint visual (AUTH-04, AUTH-05)
+- [x] 11-01-PLAN.md - User model + Authlib + config + Alembic migration + test fixtures (AUTH-01, AUTH-02)
+- [x] 11-02-PLAN.md - OAuth routes + SessionMiddleware + AuthMiddleware + testes (AUTH-01, AUTH-02, AUTH-03, AUTH-05)
+- [x] 11-03-PLAN.md - Header UI (avatar/nome/logout) + render.yaml + checkpoint visual (AUTH-04, AUTH-05)
 
 ### Phase 12: Data Isolation
 **Goal**: Cada usuario ve exclusivamente seus proprios dados, alertas vao para o email correto e o consumo de SerpAPI e visivel
@@ -268,11 +266,98 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [x] 14-01-PLAN.md — Substituir func.strftime por Python-side processing + adicionar APP_BASE_URL ao render.yaml (DB-01, MULTI-01, MULTI-02, MULTI-03)
+- [x] 14-01-PLAN.md - Substituir func.strftime por Python-side processing + adicionar APP_BASE_URL ao render.yaml (DB-01, MULTI-01, MULTI-02, MULTI-03)
+
+</details>
+
+### v2.1 Clareza de Preco e Robustez (In Progress)
+
+**Milestone Goal:** Tornar o preco das passagens imediatamente compreensivel para o usuario e fortalecer a infraestrutura do projeto (CI, rate limiting, otimizacao de cota, limpeza de legado).
+
+- [ ] **Phase 15: CI Pipeline** - GitHub Actions roda pytest automaticamente e bloqueia deploy com testes falhando
+- [ ] **Phase 16: Passengers Fix** - Corrigir bug de passengers hardcoded no fast-flights
+- [ ] **Phase 17: Price Labels** - Rotulo "por pessoa, ida e volta" e total para multiplos passageiros em todos os contextos
+- [ ] **Phase 18: JWT Sessions** - Migrar sessoes de cookie stateful para JWT stateless em cookie httponly
+- [ ] **Phase 19: Rate Limiting** - Proteger endpoints com limites por usuario e por custo de operacao
+- [ ] **Phase 20: SerpAPI Cache** - Cache in-memory para evitar chamadas duplicadas no mesmo ciclo de polling
+- [ ] **Phase 21: Legacy Removal** - Remover tabela e modelo BookingClassSnapshot do banco e do codigo
+
+## Phase Details
+
+### Phase 15: CI Pipeline
+**Goal**: Todo push e PR na main tem testes executados automaticamente, e deploy so acontece se testes passarem
+**Depends on**: Phase 14
+**Requirements**: CI-01, CI-02
+**Success Criteria** (what must be TRUE):
+  1. Push ou PR na branch main dispara workflow do GitHub Actions que executa pytest e reporta resultado
+  2. Render so faz deploy apos CI checks passarem (configuracao "Auto-Deploy" condicional)
+  3. PR com teste falhando mostra status check vermelho no GitHub
+**Plans**: TBD
+
+### Phase 16: Passengers Fix
+**Goal**: Sistema envia o numero correto de passageiros para a API de busca de voos
+**Depends on**: Phase 15
+**Requirements**: PRICE-03
+**Success Criteria** (what must be TRUE):
+  1. Chamada ao fast-flights usa o numero de passageiros configurado no grupo (nao mais Passengers(adults=1) hardcoded)
+  2. Resultados de busca refletem preco por pessoa para a quantidade correta de passageiros
+**Plans**: TBD
+
+### Phase 17: Price Labels
+**Goal**: Usuario entende imediatamente o que o preco significa e quanto vai pagar no total
+**Depends on**: Phase 16
+**Requirements**: PRICE-01, PRICE-02
+**Success Criteria** (what must be TRUE):
+  1. Todo preco exibido no dashboard (cards, grafico, detalhe) tem rotulo "por pessoa, ida e volta" visivel
+  2. Todo preco em emails de alerta tem rotulo "por pessoa, ida e volta"
+  3. Quando grupo tem mais de 1 passageiro, total calculado (preco x passageiros) aparece ao lado do preco unitario em todos os contextos (dashboard, email, alertas)
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 18: JWT Sessions
+**Goal**: Sessoes de autenticacao sao stateless via JWT, permitindo escalabilidade horizontal sem perder o fluxo OAuth
+**Depends on**: Phase 15
+**Requirements**: JWT-01, JWT-02, JWT-03
+**Success Criteria** (what must be TRUE):
+  1. Apos login via Google, usuario recebe JWT em cookie httponly (nao mais session cookie stateful com user_id)
+  2. SessionMiddleware permanece ativo exclusivamente para o fluxo OAuth (state parameter do Authlib) e nao e usado para autenticacao
+  3. Token JWT expira em 7 dias; apos expiracao usuario e redirecionado para login com mensagem clara
+  4. Todos os 218+ testes continuam passando apos a migracao
+**Plans**: TBD
+
+### Phase 19: Rate Limiting
+**Goal**: Endpoints estao protegidos contra uso excessivo com limites diferenciados por tipo de operacao
+**Depends on**: Phase 18
+**Requirements**: RATE-01, RATE-02
+**Success Criteria** (what must be TRUE):
+  1. Endpoints tem rate limiting ativo: usuario autenticado e identificado por user_id, anonimo por IP (X-Forwarded-For)
+  2. Limites variam por custo da operacao (endpoints de escrita tem limite menor que leitura, autocomplete tem limite proprio)
+  3. Quando limite e excedido, usuario recebe resposta HTTP 429 com mensagem clara de "tente novamente em X segundos"
+**Plans**: TBD
+
+### Phase 20: SerpAPI Cache
+**Goal**: Sistema nao desperdiça cota SerpAPI com buscas duplicadas no mesmo ciclo de polling
+**Depends on**: Phase 16
+**Requirements**: CACHE-01, CACHE-02
+**Success Criteria** (what must be TRUE):
+  1. Resultados de busca SerpAPI sao cacheados in-memory com TTL de 13 horas
+  2. Cache key inclui todos os parametros relevantes (origem, destino, datas, passengers, max_stops) — mesma busca dentro do TTL retorna resultado cacheado sem chamar a API
+  3. Buscas com parametros diferentes (ex: passengers diferente) nao colidem no cache
+**Plans**: TBD
+
+### Phase 21: Legacy Removal
+**Goal**: Codigo e banco estao limpos, sem restos do modelo Amadeus que nao e mais usado
+**Depends on**: Phase 15
+**Requirements**: CLEAN-01, CLEAN-02
+**Success Criteria** (what must be TRUE):
+  1. Tabela booking_class_snapshots removida do banco via migration Alembic executavel com `alembic upgrade head`
+  2. Modelo BookingClassSnapshot e todas as referencias (imports, queries, testes) removidos do codigo
+  3. Todos os testes continuam passando apos a remocao
+**Plans**: TBD
 
 ## Progress
 
-**Execution Order:** Phase 10 -> 11 -> 12 -> 13 -> 14
+**Execution Order:** Phase 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -285,8 +370,15 @@ Plans:
 | 7. Consolidated Email | v1.1 | 2/2 | Complete | 2026-03-26 |
 | 8. Dashboard Redesign | v1.1 | 2/2 | Complete | 2026-03-26 |
 | 9. Visual Polish | v1.2 | 2/2 | Complete | 2026-03-28 |
-| 10. PostgreSQL Foundation | v2.0 | 2/2 | Complete    | 2026-03-28 |
-| 11. Google OAuth | v2.0 | 3/3 | Complete    | 2026-03-28 |
-| 12. Data Isolation | v2.0 | 3/3 | Complete    | 2026-03-29 |
-| 13. Landing Page | v2.0 | 1/1 | Complete    | 2026-03-30 |
-| 14. Production Fixes | v2.0 | 1/1 | Complete   | 2026-03-30 |
+| 10. PostgreSQL Foundation | v2.0 | 2/2 | Complete | 2026-03-28 |
+| 11. Google OAuth | v2.0 | 3/3 | Complete | 2026-03-28 |
+| 12. Data Isolation | v2.0 | 3/3 | Complete | 2026-03-29 |
+| 13. Landing Page | v2.0 | 1/1 | Complete | 2026-03-30 |
+| 14. Production Fixes | v2.0 | 1/1 | Complete | 2026-03-30 |
+| 15. CI Pipeline | v2.1 | 0/? | Not started | - |
+| 16. Passengers Fix | v2.1 | 0/? | Not started | - |
+| 17. Price Labels | v2.1 | 0/? | Not started | - |
+| 18. JWT Sessions | v2.1 | 0/? | Not started | - |
+| 19. Rate Limiting | v2.1 | 0/? | Not started | - |
+| 20. SerpAPI Cache | v2.1 | 0/? | Not started | - |
+| 21. Legacy Removal | v2.1 | 0/? | Not started | - |

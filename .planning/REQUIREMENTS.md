@@ -257,13 +257,28 @@
 | LAND-02 | Phase 13 | Complete |
 | LAND-03 | Phase 13 | Complete |
 | LAND-04 | Phase 13 | Complete |
+| CI-01 | Phase 15 | Pending |
+| CI-02 | Phase 15 | Pending |
+| PRICE-03 | Phase 16 | Pending |
+| PRICE-01 | Phase 17 | Pending |
+| PRICE-02 | Phase 17 | Pending |
+| JWT-01 | Phase 18 | Pending |
+| JWT-02 | Phase 18 | Pending |
+| JWT-03 | Phase 18 | Pending |
+| RATE-01 | Phase 19 | Pending |
+| RATE-02 | Phase 19 | Pending |
+| CACHE-01 | Phase 20 | Pending |
+| CACHE-02 | Phase 20 | Pending |
+| CLEAN-01 | Phase 21 | Pending |
+| CLEAN-02 | Phase 21 | Pending |
 
 **Coverage:**
 - v1 requirements: 28 total, 28 mapped, 0 unmapped
 - v1.1 requirements: 11 total, 11 mapped, 0 unmapped
 - v1.2 requirements: 6 total, 6 mapped, 0 unmapped
 - v2.0 requirements: 16 total, 16 mapped, 0 unmapped
+- v2.1 requirements: 14 total, 14 mapped, 0 unmapped
 
 ---
 *Requirements defined: 2026-03-24*
-*Last updated: 2026-04-03 after v2.1 milestone requirements added*
+*Last updated: 2026-04-03 after v2.1 roadmap created*
