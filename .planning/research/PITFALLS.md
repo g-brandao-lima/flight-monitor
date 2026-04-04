@@ -1,272 +1,318 @@
-# Pitfalls Research
+# Domain Pitfalls
 
-**Domain:** Adding Google OAuth, PostgreSQL migration, and multi-user isolation to existing single-user FastAPI app
-**Researched:** 2026-03-28
-**Confidence:** HIGH (based on codebase inspection + verified documentation)
+**Project:** Flight Monitor v2.1 - Clareza de Preco e Robustez
+**Researched:** 2026-04-03
+**Confidence:** HIGH (inspecao direta do codebase + documentacao oficial + CVE verificado)
 
 ## Critical Pitfalls
 
-### Pitfall 1: check_same_thread Breaks PostgreSQL Connection
+Erros que causam rewrite, perda de dados ou vulnerabilidade de seguranca.
 
-**What goes wrong:**
-The current `app/database.py` passes `connect_args={"check_same_thread": False}` to `create_engine()`. This parameter is SQLite-specific. When the DATABASE_URL switches to PostgreSQL, psycopg2 raises `ProgrammingError: invalid connection option 'check_same_thread'` and the app crashes on startup.
+### Pitfall 1: Remover SessionMiddleware quebra o fluxo OAuth do Authlib
 
-**Why it happens:**
-The FastAPI tutorial itself recommends `check_same_thread=False` for SQLite. Developers copy this pattern and forget it is dialect-specific. When they change only the DATABASE_URL env var to point to PostgreSQL, the connect_args are still passed through.
+**O que da errado:** O Authlib Starlette integration usa `request.session` para armazenar o `state` do OAuth durante `authorize_redirect`. Quando o callback (`authorize_access_token`) e chamado, o Authlib le o `state` da sessao para validar o CSRF. Se o SessionMiddleware for removido para "migrar para JWT puro", o fluxo de login OAuth quebra completamente: o `authorize_redirect` falha ao tentar escrever na sessao inexistente, ou o callback nao encontra o state e rejeita o login.
 
-**How to avoid:**
-Conditionally apply connect_args based on the database dialect:
-```python
-connect_args = {}
-if settings.database_url.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-engine = create_engine(settings.database_url, connect_args=connect_args)
+**Por que acontece:** A migracao para JWT e motivada por "sessoes stateless", mas o fluxo OAuth Authorization Code exige estado temporario entre o redirect e o callback. Esse estado (o parametro `state`) precisa sobreviver ao round-trip browser -> Google -> callback. Sessoes sao o mecanismo padrao do Authlib para isso. Internamente, o Authlib chama `set_state_data(session, state, data)` no authorize_redirect e `get_state_data(session, state)` no authorize_access_token (confirmado no source do Authlib starlette integration).
+
+**Codigo afetado neste projeto:**
+- `app/auth/oauth.py`: `oauth.google.authorize_redirect(request, redirect_uri)` grava state na sessao
+- `app/auth/routes.py` L25: `oauth.google.authorize_access_token(request)` le state da sessao
+- `main.py` L38-44: `SessionMiddleware` configurado com secret_key
+- `app/auth/middleware.py` L22: `request.session.get("user_id")` para verificar autenticacao
+- `app/auth/dependencies.py` L8: `request.session.get("user_id")` para obter usuario
+- `tests/conftest.py` L25-29: `_make_session_cookie` para testes autenticados
+
+**Consequencias:** Login impossivel. Usuarios existentes deslogados. 218+ testes de auth quebram.
+
+**Prevencao:** Manter o SessionMiddleware APENAS para o fluxo OAuth (armazenar state temporario). Apos o callback com sucesso, emitir um JWT como cookie httpOnly. O AuthMiddleware e `get_current_user` passam a ler o JWT do cookie em vez de `request.session["user_id"]`. A sessao continua existindo mas so e usada durante os poucos segundos do fluxo OAuth.
+
+**Arquitetura correta:**
+1. `SessionMiddleware` permanece (para OAuth state do Authlib)
+2. Login callback: recebe userinfo -> cria JWT -> seta cookie `access_token` (httpOnly, secure, samesite=lax)
+3. `AuthMiddleware` verifica cookie JWT (nao sessao)
+4. `get_current_user` decodifica JWT (nao sessao)
+5. Logout: limpa cookie JWT E sessao (por seguranca)
+
+**Deteccao:** Teste de integracao que executa o fluxo completo login -> callback -> dashboard. Se quebrar, o JWT esta substituindo a sessao cedo demais.
+
+**Fase recomendada:** Fazer na fase de JWT, com teste end-to-end do fluxo OAuth como gate.
+
+---
+
+### Pitfall 2: JWT em header Authorization com frontend Jinja2 (app inacessivel)
+
+**O que da errado:** Seguir tutoriais SPA que usam `Authorization: Bearer <token>` em vez de cookie.
+
+**Por que acontece:** A maioria dos tutoriais JWT assume frontend React/Vue que faz fetch() com headers customizados. Flight Monitor usa Jinja2 server-rendered com navegacao por links `<a href>` e formularios `<form>`. Links e formularios HTML nao enviam headers Authorization automaticamente.
+
+**Consequencias:** Todas as paginas HTML retornam 401/redirect. App completamente inacessivel para o usuario.
+
+**Prevencao:** JWT DEVE estar em cookie httpOnly com flags secure (producao), samesite=lax, path=/. O browser envia automaticamente em cada request. O middleware le de `request.cookies.get("access_token")`, nao do header Authorization.
+
+**Deteccao:** Primeiro teste de integracao com TestClient falha.
+
+**Fase recomendada:** Fase de JWT.
+
+---
+
+### Pitfall 3: CVE-2025-68158 no Authlib (CSRF no OAuth state)
+
+**O que da errado:** Versoes do Authlib ate 1.6.5 tem vulnerabilidade critica onde o state do OAuth nao e vinculado a sessao do usuario que iniciou o fluxo. Um atacante pode obter um state valido (iniciando seu proprio fluxo) e usa-lo para forcar o callback na sessao da vitima, resultando em account takeover com 1 clique.
+
+**Por que acontece:** O `set_state_data` do Authlib gravava o state em cache global sem vincular a sessao. O `get_state_data` nao verificava se o state pertencia a sessao atual.
+
+**Codigo afetado neste projeto:**
+- `requirements.txt`: `authlib==1.6.9` (versao ATUAL ja corrigida)
+
+**Consequencias:** Se o Authlib for downgraded ou pinado incorretamente, qualquer usuario pode ter conta sequestrada.
+
+**Prevencao:** Verificar que `authlib>=1.6.6` esta no requirements.txt. Adicionar check de versao no CI. Nunca usar cache backend para OAuth state neste projeto (manter sessao).
+
+**Deteccao:** `pip show authlib | grep Version` no CI.
+
+**Fase recomendada:** Validar na fase de CI (check automatizado de versao minima).
+
+---
+
+### Pitfall 4: Alembic migration para remover BookingClassSnapshot na ordem errada
+
+**O que da errado:** Dois cenarios de falha: (A) Remover o modelo do Python ANTES de criar a migration: o Alembic autogenerate tenta importar models.py, a relationship `FlightSnapshot.booking_classes` referencia `BookingClassSnapshot` que nao existe mais, SQLAlchemy levanta erro no import. (B) Usar autogenerate sem cuidado: gera migration que dropa a tabela mas tambem tenta alterar outras coisas (false positives comuns com FK no autogenerate).
+
+**Por que acontece:** O fluxo natural e "deletar a classe do models.py, rodar alembic revision --autogenerate". Mas a ordem correta e o inverso: criar migration primeiro, aplicar, depois remover o modelo.
+
+**Codigo afetado neste projeto:**
+- `app/models.py` L78-79: `FlightSnapshot.booking_classes` relationship para `BookingClassSnapshot`
+- `app/models.py` L83-90: classe `BookingClassSnapshot`
+- `app/services/snapshot_service.py` L4, L67-72: import e uso de `BookingClassSnapshot`
+- `app/routes/dashboard.py` L413-416: delete de `BookingClassSnapshot` no cascade manual
+- `tests/test_snapshot_service.py` L4, L58-73, L146: testes que criam `BookingClassSnapshot`
+- `alembic/versions/6438afda32c3_baseline_4_tables_from_v1_2.py` L62-70: baseline que cria a tabela
+
+**Consequencias:** Migration mal feita pode: (1) deixar tabela orfao no banco, (2) quebrar o import do models.py durante a geracao da migration, (3) gerar migration incorreta com side effects.
+
+**Prevencao - ordem segura:**
 ```
-This must be done in the same commit that adds PostgreSQL support, not after.
+1. Criar migration MANUAL: alembic revision -m "drop_booking_class_snapshots"
+   upgrade: op.drop_table('booking_class_snapshots')
+   downgrade: op.create_table(...) copiando schema do baseline
+2. Aplicar migration localmente (alembic upgrade head)
+3. Remover BookingClassSnapshot do models.py
+4. Remover relationship booking_classes do FlightSnapshot
+5. Remover imports/usos em snapshot_service.py, dashboard.py
+6. Atualizar/remover testes que usam BookingClassSnapshot
+7. Rodar pytest para confirmar
+```
 
-**Warning signs:**
-App fails to start with a cryptic psycopg2 error about "invalid dsn" or "unexpected keyword argument."
+**Deteccao:** `alembic check` apos remover o modelo deve mostrar "no changes detected".
 
-**Phase to address:**
-Database migration phase (first phase of v2.0). This is the very first line of code to change.
-
----
-
-### Pitfall 2: JSON Columns Silently Behave Differently in PostgreSQL
-
-**What goes wrong:**
-The `RouteGroup` model uses `mapped_column(JSON)` for `origins` and `destinations`. In SQLite, JSON is stored as text with no indexing or querying capability. In PostgreSQL, SQLAlchemy's `JSON` type maps to native JSON, but the real power is in `JSONB`. More critically, mutation tracking for JSON fields does not work by default in SQLAlchemy. If you modify a list in-place (e.g., `group.origins.append("GRU")`), SQLAlchemy will not detect the change and will not flush it to the database.
-
-**Why it happens:**
-SQLAlchemy's `JSON` type does not track in-place mutations. This "works" in SQLite during development because the test patterns tend to replace entire values, not mutate them. In PostgreSQL with connection pooling, stale reads become more visible.
-
-**How to avoid:**
-1. Keep using `sqlalchemy.JSON` (it adapts per dialect automatically). Do not switch to `JSONB` explicitly unless you need JSON path queries.
-2. Use `MutableList.as_mutable(JSON)` from `sqlalchemy.ext.mutable` to enable change detection on list fields.
-3. Alternatively, always assign new lists instead of mutating: `group.origins = [*group.origins, "GRU"]`.
-
-**Warning signs:**
-Updates to origins/destinations "disappear" after save. Tests pass locally (SQLite) but fail in staging (PostgreSQL) due to unflushed mutations.
-
-**Phase to address:**
-Database migration phase. Must be addressed in the model changes, not deferred.
+**Fase recomendada:** Fase de limpeza de legado, ANTES de outras migrations. Nao misturar com outras mudancas de schema.
 
 ---
 
-### Pitfall 3: Missing user_id on Every Existing Table Causes Data Leakage
+### Pitfall 5: Rate limiting por IP do proxy (todos os usuarios limitados juntos)
 
-**What goes wrong:**
-The current schema has no concept of ownership. `RouteGroup`, `FlightSnapshot`, `DetectedSignal`, and `BookingClassSnapshot` have no `user_id` column. If you add users but forget to add `user_id` to even one table, or forget to filter by `user_id` in even one query, User A sees User B's data.
+**O que da errado:** O slowapi usa `get_remote_address` por padrao, que le `request.client.host`. Atras do reverse proxy do Render, TODOS os requests chegam com o IP do proxy. Resultado: todos os usuarios compartilham o mesmo rate limit e sao bloqueados juntos.
 
-**Why it happens:**
-Adding a column is easy. The hard part is ensuring every single query path filters by it. In this codebase, `route_group_service.py`, `snapshot_service.py`, `signal_service.py`, `dashboard_service.py`, `polling_service.py`, and `alert_service.py` all query route_groups or related tables. Missing the filter in any one of them is a data leak.
+**Por que acontece:** O Render termina a conexao TLS no edge e faz proxy para o container. O `request.client.host` retorna o IP do proxy interno do Render, nao do usuario real.
 
-**How to avoid:**
-1. Add `user_id` as a non-nullable foreign key to `route_groups` only. Child tables (`flight_snapshots`, `booking_class_snapshots`, `detected_signals`) inherit isolation through `route_group_id`.
-2. Create a helper function like `get_user_route_groups(db, user_id)` that all services call, so there is exactly one place where the filter lives.
-3. Write a test that creates data for two users and verifies User A cannot see User B's groups, snapshots, or signals through any API endpoint.
+**Codigo afetado neste projeto:**
+- `render.yaml` L7: `--forwarded-allow-ips="*"` (gunicorn confia em qualquer proxy)
+- `main.py`: nao tem ProxyHeadersMiddleware nem custom key_func
 
-**Warning signs:**
-Any query on `route_groups` that does not include `WHERE user_id = :current_user`. The dashboard endpoint showing "all groups" instead of "my groups."
+**Consequencias:** Rate limit inutil (todos compartilham) ou um usuario bloqueia todos os outros.
 
-**Phase to address:**
-Multi-user isolation phase. Must be a dedicated phase AFTER auth works, specifically focused on data isolation with explicit tests.
+**Prevencao:** Usar key function customizada para o slowapi:
+```python
+def get_rate_limit_key(request: Request) -> str:
+    # Usuarios autenticados: rate limit por user_id (do JWT)
+    token = request.cookies.get("access_token")
+    if token:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            return f"user:{payload['sub']}"
+        except Exception:
+            pass
+    # Fallback: IP do X-Forwarded-For
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host or "unknown"
+```
 
----
+**Deteccao:** Logar a key usada pelo rate limiter nos primeiros dias de producao.
 
-### Pitfall 4: Google OAuth Consent Screen Stuck in "Testing" Mode
+**Fase recomendada:** Fazer junto com JWT (depende de ter user_id no token).
 
-**What goes wrong:**
-Google's OAuth consent screen defaults to "Testing" status, which limits login to 100 manually-added test users. Refresh tokens expire after 7 days. When you share the app URL publicly, new users see a scary "This app isn't verified" warning and cannot proceed unless they are on the test user list.
+## Moderate Pitfalls
 
-**Why it happens:**
-Developers set up OAuth in testing mode during development and forget to publish it. Publishing requires setting up a privacy policy URL, terms of service URL, and an authorized domain. For sensitive scopes (like reading email), Google requires a full review that takes weeks.
+### Pitfall 6: GitHub Actions CI e Render autodeploy em conflito
 
-**How to avoid:**
-1. Only request `openid`, `email`, and `profile` scopes. These are non-sensitive and do not require Google verification review.
-2. Set up a privacy policy page (can be a simple static page on the landing) from day one.
-3. Publish the consent screen to "Production" in Google Cloud Console before the first public deploy. With non-sensitive scopes, this is instant (no review needed).
-4. Use a proper domain (not localhost) for the authorized redirect URI in production.
+**O que da errado:** Se o GitHub Actions CI for adicionado SEM alterar o modo de autodeploy do Render, push na main dispara deploy IMEDIATAMENTE em paralelo com o CI. Codigo que falha nos testes vai para producao.
 
-**Warning signs:**
-Login works for you but fails for anyone else. Users report seeing "Google hasn't verified this app" screen.
+**Por que acontece:** O Render tem 3 modos de auto-deploy: "Yes" (sempre, o default atual), "No" (manual/hook), e "After CI Checks Pass" (disponivel desde maio 2025). Se nao mudar para o terceiro modo, CI e deploy sao independentes.
 
-**Phase to address:**
-Auth phase. The Google Cloud Console project must be configured with production settings before the landing page goes live.
+**Codigo afetado neste projeto:**
+- `render.yaml`: nao configura auto-deploy mode
+- Nao existe `.github/workflows/` ainda
 
----
+**Consequencias:** CI passa a ser apenas informativo, sem bloquear deploys quebrados.
 
-### Pitfall 5: APScheduler Polls for ALL Users' Groups, Exhausting SerpAPI Quota
+**Prevencao:**
+1. Criar `.github/workflows/ci.yml` que roda `pytest`
+2. No Render Dashboard -> Settings -> Auto-Deploy: setar para "After CI Checks Pass"
+3. O Render detecta os checks do GitHub Actions via GitHub Checks API
+4. Deploy so acontece se todos os checks passarem
 
-**What goes wrong:**
-The current scheduler polls all active groups every 6 hours via a single CronTrigger. When multiple users create groups, the total active groups across all users can quickly exceed the SerpAPI free tier (250 searches/month). With 10 users having 3 active groups each, that is 30 groups x 4 polls/day x 30 days = 3,600 searches/month (14x over the limit).
+**Alternativa (se free tier nao suportar):** Desativar auto-deploy, usar deploy hook chamado pelo workflow apos testes passarem.
 
-**Why it happens:**
-The single-user design assumed one user's 10 groups max. Multi-user multiplies this. The scheduler has no concept of a global quota budget.
+**Deteccao:** Verificar no Render Dashboard que o modo esta correto apos configurar CI.
 
-**How to avoid:**
-1. Implement a global daily/monthly quota counter in the database. Before each poll, check remaining budget.
-2. Reduce polling frequency as user count grows. Priority-based scheduling: groups with active signals or approaching travel dates get polled more often.
-3. Set a system-wide cap on total active groups (e.g., 30 across all users) and show a "system at capacity" message when reached.
-4. Consider a per-user active group limit lower than 10 (e.g., 3-5 per user).
-
-**Warning signs:**
-SerpAPI returns 429 errors or "quota exceeded" mid-month. Multiple users complain about stale data.
-
-**Phase to address:**
-Multi-user phase (quota management). Must be designed before launch, not after the first month's bill.
+**Fase recomendada:** Fase de CI.
 
 ---
 
-### Pitfall 6: Neon.tech Cold Starts Break Scheduler and UptimeRobot
+### Pitfall 7: Testes quebram em massa ao mudar para JWT
 
-**What goes wrong:**
-Neon's free tier suspends compute after 5 minutes of inactivity. When the APScheduler CronTrigger fires (or UptimeRobot pings), the first database query takes 500ms-2s while Neon wakes up. If the application has a short timeout or the scheduler expects instant responses, polls can fail or timeout.
+**O que da errado:** O `conftest.py` atual cria cookies de sessao assinados com `itsdangerous.TimestampSigner`. Ao migrar para JWT, TODOS os 218+ testes que usam `client` fixture quebram porque o cookie de sessao nao e mais verificado pelo novo middleware.
 
-**Why it happens:**
-Neon's serverless model scales to zero to save resources. The app was designed for a local SQLite file that is always available.
+**Codigo afetado neste projeto:**
+- `tests/conftest.py` L25-29: `_make_session_cookie` (funcao que fica obsoleta para auth)
+- `tests/conftest.py` L97-98: `client.cookies.set("session", cookie_value)`
 
-**How to avoid:**
-1. Use Neon's pooled connection string (with PgBouncer, the `-pooler` hostname suffix) instead of the direct connection string. This masks most cold starts.
-2. Set SQLAlchemy's `pool_pre_ping=True` to handle stale connections after Neon suspends.
-3. Add a retry with short delay on the scheduler's database calls.
-4. UptimeRobot's 5-minute interval should keep Neon warm most of the time, but be aware of edge cases.
+**Consequencias:** Suite de testes inteira falha. Sem rede de seguranca.
 
-**Warning signs:**
-Intermittent `ConnectionError` or `OperationalError` in logs, especially in the early morning or after quiet periods.
+**Prevencao:**
+1. Criar `_make_jwt_cookie(user_id: int) -> str` no conftest.py
+2. Alterar `client_fixture` para `client.cookies.set("access_token", jwt_token)`
+3. Manter `_make_session_cookie` temporariamente para testes especificos do OAuth flow
+4. Rodar testes apos CADA mudanca incremental
 
-**Phase to address:**
-Database migration phase. Connection configuration must account for serverless behavior from day one.
+**Deteccao:** `pytest` falha em massa imediatamente.
 
----
-
-### Pitfall 7: Existing 188 Tests All Assume No Auth and SQLite
-
-**What goes wrong:**
-All 188 existing tests use SQLite in-memory databases with no authentication context. When auth middleware is added, every endpoint returns 401 Unauthorized in tests. When PostgreSQL-specific features are used (JSONB, connection pooling), tests that pass on SQLite fail on PostgreSQL.
-
-**Why it happens:**
-Tests were written for a single-user, no-auth, SQLite world. The migration touches every layer of the application.
-
-**How to avoid:**
-1. Create a test fixture that provides an authenticated user context (mock the OAuth dependency).
-2. Keep using SQLite for unit tests (speed) but add a separate integration test suite for PostgreSQL-specific behavior.
-3. Add the auth dependency as an overridable FastAPI dependency, so tests can inject a fake user.
-4. Migrate tests incrementally: first make them work with the new auth layer (mock user), then verify data isolation.
-
-**Warning signs:**
-All 188 tests fail after adding auth middleware. Test suite becomes unmaintainable because every test needs auth boilerplate.
-
-**Phase to address:**
-Auth phase (test infrastructure). A `conftest.py` fixture for authenticated requests must be created BEFORE adding auth middleware to routes.
+**Fase recomendada:** Mesma fase do JWT, como primeira tarefa apos alterar o middleware.
 
 ---
 
-## Technical Debt Patterns
+### Pitfall 8: Rate limiting bloqueia TestClient nos testes
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Keep SQLite for dev, PostgreSQL for prod only | Faster local dev, no local PG needed | Dialect differences cause bugs that only appear in prod | Acceptable if integration tests run against PostgreSQL in CI |
-| Store user session in server memory (no Redis) | Zero infra, simple setup | Sessions lost on Render redeploy; cannot scale horizontally | Acceptable for free tier with single dyno |
-| Global SerpAPI key shared by all users | No per-user API key management | One user's heavy usage affects everyone; no accountability | Acceptable for MVP with quota cap; must add usage tracking |
-| Skip Alembic migrations, use `create_all()` | Faster initial setup | Cannot evolve schema without dropping tables; data loss | Never in production with real user data |
+**O que da errado:** Testes de integracao falham com 429 porque slowapi conta requests do TestClient em sequencia rapida.
 
-## Integration Gotchas
+**Prevencao:** Desabilitar rate limiting em testes:
+- `limiter.enabled = False` no conftest.py
+- Ou checar env var `TESTING=true` para nao registrar o limiter
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| Google OAuth + FastAPI | Using `request.session` without adding `SessionMiddleware` to the app | Add `SessionMiddleware` with a secret key before registering OAuth routes |
-| Google OAuth redirect URI | Using `http://localhost:8000/callback` in production | Configure separate OAuth credentials for dev (localhost) and prod (render domain); use HTTPS in prod |
-| Neon.tech connection | Using the direct connection string in application code | Use the pooled connection string (`-pooler` suffix in hostname) for application connections; direct string only for migrations |
-| Neon.tech + PgBouncer | Using prepared statements through PgBouncer in transaction mode | Set `statement_cache_size=0` in engine connect_args or use `NullPool` to avoid `InvalidCachedStatementError` |
-| Render + Neon.tech | Hardcoding DATABASE_URL in code or render.yaml | Use Render environment variables; Neon connection string contains password that must not be in git |
-| SerpAPI in scheduler | Polling synchronously blocks the scheduler thread | Use async or run polling in a thread pool; APScheduler's default thread pool is fine but add timeouts |
+**Fase recomendada:** Fase de rate limiting.
 
-## Performance Traps
+---
 
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| N+1 queries loading route groups with snapshots | Dashboard loads slowly as groups accumulate | Use `joinedload()` or `selectinload()` in SQLAlchemy queries | At 50+ groups with 100+ snapshots each |
-| No index on `route_groups.user_id` | Group listing slows down as users grow | Add index on `user_id` column at creation time | At 100+ users |
-| Unbounded snapshot history | Database grows without limit; queries slow | Add a retention policy (delete snapshots older than 90 days) | At 10,000+ snapshots per group |
-| Neon 0.5 GB storage limit on free tier | Database operations fail silently or with storage errors | Monitor storage usage; implement snapshot cleanup cron | At ~6-12 months of active usage with 10+ users |
+### Pitfall 9: Cache de SerpAPI com key incorreta ou TTL desalinhado
 
-## Security Mistakes
+**O que da errado:** Se a cache key nao incluir todos os parametros (origem, destino, datas, passengers, max_stops), rotas diferentes compartilham resultados errados. Se o TTL for desalinhado com o ciclo de polling (12h), o cache pode servir dados stale ou nunca ser aproveitado.
 
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Storing Google OAuth tokens in plain text in the database | If DB is compromised, attacker can impersonate users on Google services | Only store the user's Google ID (`sub` claim) and email, not access/refresh tokens. The app only needs identity, not API access to Google |
-| Not validating `state` parameter in OAuth callback | CSRF attack can link attacker's Google account to victim's session | Use Authlib or similar library that handles state validation automatically |
-| Using user email as the primary identifier | Users can change their Google email; email is not immutable | Use Google's `sub` claim (unique, immutable user ID) as the primary identifier |
-| Exposing route_group IDs in URLs without ownership check | User A can access `/api/groups/5` even if group 5 belongs to User B | Every endpoint must verify `group.user_id == current_user.id` before returning data |
-| Secret key for SessionMiddleware in source code | Session hijacking if repo is public (this repo IS public on GitHub) | Store secret key in environment variable, never in code |
-| Gmail app password in .env committed to public repo | Anyone can send email from your account | Add `.env` to `.gitignore`; verify it is not in git history; rotate credentials if exposed |
+**Codigo afetado neste projeto:**
+- `app/scheduler.py`: 2 jobs diarios (07:00 e 19:00 UTC)
+- `app/services/serpapi_client.py`: chamada real a SerpAPI
 
-## UX Pitfalls
+**Prevencao:** Cache key = `(origin, destination, departure_date, return_date, passengers, max_stops)`. TTL = 13h (cobre um ciclo de 12h com margem). Dict em memoria (single-worker no Render, sem necessidade de Redis).
 
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Redirecting to login on every page load (no session persistence) | User logs in, refreshes page, has to log in again | Use HTTP-only cookies with reasonable expiration (7 days); check session before redirect |
-| Landing page with no clear call-to-action | User arrives, reads about the product, but does not know how to try it | Single prominent "Entrar com Google" button above the fold |
-| Showing empty dashboard to new users | New user logs in, sees empty page, does not know what to do | Show an onboarding prompt: "Crie seu primeiro grupo de rotas" with a guided example |
-| Losing the user's place after OAuth redirect | User was configuring a group, clicks login, returns to homepage instead of their group | Store the intended destination in session before redirect; return to it after auth |
-| No feedback when system quota is exhausted | User creates a group but it never gets polled; no explanation | Show clear status: "Seu grupo sera atualizado em X horas" or "Sistema em capacidade maxima" |
+**Deteccao:** Logar cache hit/miss ratio.
 
-## "Looks Done But Isn't" Checklist
+**Fase recomendada:** Fase de otimizacao SerpAPI.
 
-- [ ] **Google OAuth:** Often missing HTTPS redirect URI for production. Verify that the Google Cloud Console has the Render production URL as an authorized redirect URI, not just localhost.
-- [ ] **Data isolation:** Often missing filter on dashboard aggregate queries. Verify that the "best price" and "signal count" dashboard queries filter by user_id.
-- [ ] **Database migration:** Often missing data migration script for existing data. Verify that existing route_groups in the SQLite database can be exported/imported to PostgreSQL with a user_id assigned.
-- [ ] **Session expiry:** Often missing session cleanup. Verify that expired sessions do not accumulate in memory/database.
-- [ ] **Scheduler:** Often missing user context in background jobs. Verify that email alerts include the correct recipient (the group owner's email, not a hardcoded GMAIL_RECIPIENT).
-- [ ] **Landing page:** Often missing meta tags for social sharing. Verify that `og:title`, `og:description`, and `og:image` are set.
-- [ ] **Error handling:** Often missing graceful degradation when Neon is cold. Verify that the app shows a loading state, not a 500 error, during cold start.
-- [ ] **Consent screen:** Often left in "Testing" mode. Verify by logging in with a Google account NOT on the test user list.
+---
 
-## Recovery Strategies
+### Pitfall 10: Labels de preco inconsistentes entre templates e email
 
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| Data leakage (missing user_id filter) | HIGH | Audit all queries, add filters, notify affected users, consider it a security incident |
-| check_same_thread crash on deploy | LOW | One-line fix in database.py, redeploy |
-| OAuth consent screen in testing mode | LOW | Publish to production in Google Cloud Console, add privacy policy URL |
-| SerpAPI quota exhausted mid-month | MEDIUM | Reduce polling frequency immediately, implement quota tracking, consider upgrading to paid tier ($25/month) |
-| All tests broken after adding auth | MEDIUM | Create auth fixture in conftest.py, systematically update test files. Expect 2-4 hours of work |
-| Neon cold start failures in scheduler | LOW | Add pool_pre_ping=True, switch to pooled connection string, add retry logic |
-| JSON mutation tracking bug | MEDIUM | Switch to immutable assignment pattern across all services that modify origins/destinations. Requires auditing every service file |
+**O que da errado:** O rotulo "por pessoa, ida e volta" precisa aparecer em 7+ locais. Se um for esquecido, o usuario ve precos sem contexto e pode tomar decisao errada.
 
-## Pitfall-to-Phase Mapping
+**Codigo afetado neste projeto:**
+- `app/templates/dashboard/index.html` L326-330: preco no card (ja tem "/ pessoa" e total)
+- `app/templates/dashboard/detail.html`: grafico de preco
+- `app/services/alert_service.py` L241+, L324+: HTML e plain text do email consolidado
+- `app/templates/dashboard/alerts.html`: pagina de alertas
 
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| check_same_thread crash | Phase 1: Database Migration | App starts successfully with PostgreSQL connection string |
-| JSON column differences | Phase 1: Database Migration | Test that modifying origins/destinations persists correctly on PostgreSQL |
-| Neon cold start handling | Phase 1: Database Migration | App survives a 10-second database suspension without crashing |
-| PgBouncer prepared statement error | Phase 1: Database Migration | No `InvalidCachedStatementError` when using pooled connection string |
-| OAuth consent screen stuck | Phase 2: Google OAuth | A Google account NOT in the test user list can log in successfully |
-| Test suite breakage | Phase 2: Google OAuth | All 188 existing tests pass with auth fixtures; no test requires real Google login |
-| Missing user_id isolation | Phase 3: Multi-user Isolation | Test with 2 users proves complete data isolation across all endpoints |
-| Scheduler quota exhaustion | Phase 3: Multi-user Isolation | Global quota counter prevents polling when monthly limit reached |
-| Security (token storage, CSRF, sub claim) | Phase 2: Google OAuth | OAuth tokens not stored; state parameter validated; sub used as user ID |
-| Email alerts to wrong user | Phase 3: Multi-user Isolation | Alert email sent to group owner's email, not hardcoded recipient |
+**Prevencao:** Criar filtro Jinja2 centralizado `format_price_label(price, passengers)` e funcao Python equivalente para emails. Usar em TODOS os pontos de exibicao. Testes verificam presenca do texto "por pessoa" em respostas HTML e email.
+
+**Fase recomendada:** PRIMEIRA fase (clareza de preco).
+
+## Minor Pitfalls
+
+### Pitfall 11: JWT secret key fraca em producao
+
+**O que da errado:** `config.py` tem `session_secret_key: str = "dev-secret-change-in-production"`. Se o mesmo padrao for usado para JWT secret e o deploy nao configurar a env var, tokens podem ser forjados.
+
+**Prevencao:** Validar no startup que JWT_SECRET_KEY NAO e o default quando `DATABASE_URL` nao e sqlite.
+
+---
+
+### Pitfall 12: Alembic downgrade impossivel apos drop de BookingClassSnapshot
+
+**O que da errado:** Downgrade recria tabela vazia, dados antigos sao perdidos.
+
+**Prevencao:** Aceitar como one-way. Documentar na migration. Verificar que a tabela esta vazia em producao antes de aplicar (projeto migrou de Amadeus para SerpAPI).
+
+---
+
+### Pitfall 13: GitHub Actions sem cache de pip
+
+**O que da errado:** CI leva 2-3 minutos em vez de 30 segundos.
+
+**Prevencao:** `actions/cache@v4` com key no hash de requirements.txt.
+
+---
+
+### Pitfall 14: JWT expiry muito curto para uso pessoal
+
+**O que da errado:** Expiry de 1h (padrao de tutoriais) forca re-login a cada hora. UX terrivel para dashboard aberto.
+
+**Prevencao:** 7 dias de expiry. Produto pessoal, sem requisito de seguranca extremo.
+
+---
+
+### Pitfall 15: itsdangerous ainda necessario como dependencia transitiva
+
+**O que da errado:** Remover itsdangerous do requirements.txt, mas SessionMiddleware (que permanece para OAuth) depende dele via Starlette.
+
+**Prevencao:** Manter itsdangerous no requirements.txt. SessionMiddleware continua ativo.
+
+## Phase-Specific Warnings
+
+| Fase | Pitfall provavel | Mitigacao |
+|------|-------------------|-----------|
+| Clareza de preco (labels) | #10: label inconsistente entre templates/email | Centralizar em filtro Jinja2 + funcao Python |
+| CI (GitHub Actions) | #6: deploy sem gate de CI | Configurar Render "After CI Checks Pass" |
+| CI (GitHub Actions) | #3: Authlib CVE check | Adicionar verificacao de versao no workflow |
+| CI (GitHub Actions) | #13: CI lento | Cache de pip no workflow |
+| JWT stateless | #1: remover SessionMiddleware quebra OAuth | Manter SessionMiddleware para OAuth state |
+| JWT stateless | #2: JWT em header em vez de cookie | Usar cookie httpOnly |
+| JWT stateless | #7: testes quebram em massa | Migrar conftest.py junto com middleware |
+| JWT stateless | #11: secret key fraca | Validar no startup |
+| JWT stateless | #14: expiry muito curto | 7 dias |
+| Rate limiting | #5: rate limit por IP do proxy | Key function com user_id do JWT |
+| Rate limiting | #8: TestClient bloqueado por 429 | Desabilitar limiter nos testes |
+| Otimizacao SerpAPI | #9: cache key incorreta/TTL errado | Key com todos os params, TTL 13h |
+| Remocao BookingClassSnapshot | #4: migration na ordem errada | Migration manual ANTES de remover modelo |
+| Remocao BookingClassSnapshot | #12: downgrade impossivel | Aceitar one-way, verificar tabela vazia |
+
+## Ordem de Fases Recomendada (baseada em dependencias de pitfalls)
+
+1. **Clareza de preco** - sem dependencias tecnicas, reduz confusao do usuario imediatamente
+2. **CI (GitHub Actions)** - rede de seguranca para todas as fases seguintes
+3. **JWT stateless** - mudanca mais arriscada, precisa do CI como safety net
+4. **Rate limiting** - depende do JWT (para key function por user_id)
+5. **Otimizacao SerpAPI** - independente, mas beneficia-se do CI
+6. **Remocao BookingClassSnapshot** - ultima, limpeza sem impacto funcional
 
 ## Sources
 
-- [FastAPI SQL Databases tutorial (check_same_thread)](https://fastapi.tiangolo.com/tutorial/sql-databases/)
-- [SQLAlchemy PostgreSQL dialect docs](https://docs.sqlalchemy.org/en/21/dialects/postgresql.html)
-- [SQLAlchemy check_same_thread discussion](https://github.com/sqlalchemy/sqlalchemy/discussions/8551)
-- [Beware of JSON fields in SQLAlchemy](https://amercader.net/blog/beware-of-json-fields-in-sqlalchemy/)
-- [Neon.tech connection pooling docs](https://neon.com/docs/connect/connection-pooling)
-- [Neon.tech free plan guide](https://neon.com/blog/how-to-make-the-most-of-neons-free-plan)
-- [Google OAuth consent screen setup](https://support.google.com/cloud/answer/10311615?hl=en)
-- [Google unverified apps policy](https://support.google.com/cloud/answer/7454865?hl=en)
-- [Authlib FastAPI OAuth client docs](https://docs.authlib.org/en/latest/client/fastapi.html)
-- [SQLite to PostgreSQL migration checklist](https://www.fmularczyk.pl/posts/2023_06_sqlite_to_postgresql/)
-- [Alembic batch migrations for SQLite](https://alembic.sqlalchemy.org/en/latest/batch.html)
-- [WorkOS multi-tenant architecture guide](https://workos.com/blog/developers-guide-saas-multi-tenant-architecture)
-- [Neon serverless pricing 2026 breakdown](https://vela.simplyblock.io/articles/neon-serverless-postgres-pricing-2026/)
-- Codebase inspection: `app/database.py`, `app/models.py`, `app/config.py` (verified 2026-03-28)
-
----
-*Pitfalls research for: Flight Monitor v2.0 multi-user migration*
-*Researched: 2026-03-28*
+- [Authlib Starlette OAuth Client docs](https://docs.authlib.org/en/latest/client/starlette.html)
+- [Authlib starlette integration source - set_state_data/get_state_data](https://github.com/authlib/authlib/blob/main/authlib/integrations/starlette_client/integration.py)
+- [Authlib issue #425 - SessionMiddleware requirement](https://github.com/authlib/authlib/issues/425)
+- [CVE-2025-68158 - Authlib CSRF vulnerability (account takeover)](https://github.com/advisories/GHSA-fg6f-75jq-6523)
+- [SlowAPI GitHub repo - key_func documentation](https://github.com/laurentS/slowapi)
+- [Are You Rate Limiting the Wrong IPs? A SlowAPI Story](https://medium.com/@amarharolikar/are-you-rate-limiting-the-wrong-ips-a-slowapi-story-88c2755f5318)
+- [Render changelog - Skip auto-deploy if CI checks fail](https://render.com/changelog/skip-auto-deploying-if-ci-checks-fail)
+- [Render community - GitHub Actions + Render trigger after CI](https://community.render.com/t/how-to-trigger-render-deployments-from-github-actions-after-ci-passes/38798)
+- [Alembic cookbook - batch operations and FK](https://alembic.sqlalchemy.org/en/latest/cookbook.html)
+- [Alembic batch migrations - FK limitation](https://alembic.sqlalchemy.org/en/latest/batch.html)
+- Inspecao direta do codebase: main.py, app/auth/*, app/models.py, app/services/*, tests/conftest.py, render.yaml, requirements.txt, alembic/versions/
