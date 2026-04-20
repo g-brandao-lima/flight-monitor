@@ -25,6 +25,7 @@ class SerpApiClient:
         return_date: str,
         max_results: int = 5,
         max_stops: int | None = None,
+        adults: int = 1,
     ) -> tuple[list[dict], dict | None]:
         """Busca voos + price insights numa unica chamada API.
 
@@ -40,6 +41,7 @@ class SerpApiClient:
             "currency": "BRL",
             "gl": "br",
             "hl": "pt",
+            "adults": max(1, int(adults)),
             "api_key": self._api_key,
         }
         if max_stops is not None:

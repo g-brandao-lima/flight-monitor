@@ -21,15 +21,17 @@ def search_flights(
     return_date: str,
     max_results: int = 5,
     max_stops: int | None = None,
+    adults: int = 1,
 ) -> tuple[list[dict], dict | None, str]:
     """Busca voos: tenta fast-flights primeiro, fallback para SerpAPI.
 
     Retorna (flights, insights_or_none, source).
     source e "fast_flights" ou "serpapi".
     """
+    pax = max(1, int(adults))
     try:
         flights = _search_fast_flights(
-            origin, destination, departure_date, return_date, max_results, max_stops
+            origin, destination, departure_date, return_date, max_results, max_stops, pax
         )
         return flights, None, "fast_flights"
     except Exception as e:
@@ -43,6 +45,7 @@ def search_flights(
         return_date=return_date,
         max_results=max_results,
         max_stops=max_stops,
+        adults=pax,
     )
     return flights, insights, "serpapi"
 
@@ -54,6 +57,7 @@ def _search_fast_flights(
     return_date: str,
     max_results: int,
     max_stops: int | None,
+    adults: int,
 ) -> list[dict]:
     if not _FF_AVAILABLE:
         raise RuntimeError("fast-flights nao esta instalado")
@@ -64,7 +68,7 @@ def _search_fast_flights(
             FlightData(date=return_date, from_airport=destination, to_airport=origin),
         ],
         trip="round-trip",
-        passengers=Passengers(adults=1),
+        passengers=Passengers(adults=max(1, int(adults))),
         seat="economy",
         max_stops=max_stops,
     )

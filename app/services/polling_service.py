@@ -117,6 +117,7 @@ def _poll_group(db, group: RouteGroup):
                         return_date=ret_date.isoformat(),
                         max_results=5,
                         max_stops=group.max_stops,
+                        adults=group.passengers or 1,
                     )
                 except Exception as e:
                     logger.warning(

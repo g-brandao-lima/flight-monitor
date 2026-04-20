@@ -125,6 +125,41 @@ def test_search_passes_correct_params(mock_settings, mock_search_cls):
     assert call_args["gl"] == "br"
     assert call_args["hl"] == "pt"
     assert call_args["api_key"] == "my_api_key"
+    assert call_args["adults"] == 1
+
+
+@patch("app.services.serpapi_client.GoogleSearch")
+@patch("app.services.serpapi_client.settings")
+def test_search_passes_adults_param(mock_settings, mock_search_cls):
+    mock_settings.serpapi_api_key = "key"
+    mock_instance = MagicMock()
+    mock_instance.get_dict.return_value = _make_flights_response([400])
+    mock_search_cls.return_value = mock_instance
+
+    client = SerpApiClient()
+    client.search_flights_with_insights(
+        "GRU", "LIS", "2026-06-01", "2026-06-15", adults=3
+    )
+
+    call_args = mock_search_cls.call_args[0][0]
+    assert call_args["adults"] == 3
+
+
+@patch("app.services.serpapi_client.GoogleSearch")
+@patch("app.services.serpapi_client.settings")
+def test_search_adults_clamped_to_minimum_one(mock_settings, mock_search_cls):
+    mock_settings.serpapi_api_key = "key"
+    mock_instance = MagicMock()
+    mock_instance.get_dict.return_value = _make_flights_response([400])
+    mock_search_cls.return_value = mock_instance
+
+    client = SerpApiClient()
+    client.search_flights_with_insights(
+        "GRU", "LIS", "2026-06-01", "2026-06-15", adults=0
+    )
+
+    call_args = mock_search_cls.call_args[0][0]
+    assert call_args["adults"] == 1
 
 
 @patch("app.services.serpapi_client.GoogleSearch")
