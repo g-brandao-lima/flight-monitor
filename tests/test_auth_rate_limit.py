@@ -37,3 +37,23 @@ def test_rate_limit_returns_429_with_retry_after():
 
     response = client.get("/auth/login", follow_redirects=False)
     assert response.status_code == 429
+
+
+def test_autocomplete_endpoint_has_rate_limit(client):
+    """GET /api/airports/search tem rate limit (LIMIT_AUTOCOMPLETE=30/min)."""
+    for _ in range(30):
+        response = client.get("/api/airports/search?q=gru")
+        assert response.status_code != 429
+
+    response = client.get("/api/airports/search?q=gru")
+    assert response.status_code == 429
+
+
+def test_polling_endpoint_has_strict_rate_limit(client):
+    """POST /polling/manual tem limite baixo (LIMIT_POLLING=5/min)."""
+    for i in range(5):
+        response = client.post("/polling/manual", follow_redirects=False)
+        assert response.status_code != 429, f"Req {i + 1} bloqueada cedo"
+
+    response = client.post("/polling/manual", follow_redirects=False)
+    assert response.status_code == 429

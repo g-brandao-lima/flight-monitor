@@ -13,6 +13,12 @@ from fastapi.responses import JSONResponse
 from app.auth.dependencies import get_current_user
 from app.database import get_db
 from app.models import DetectedSignal, RouteGroup, User
+from app.rate_limit import (
+    limiter,
+    LIMIT_AUTOCOMPLETE,
+    LIMIT_POLLING,
+    LIMIT_WRITE,
+)
 from app.services.dashboard_service import (
     get_groups_with_summary,
     get_dashboard_summary,
@@ -166,7 +172,8 @@ def alerts_page(
 
 
 @router.get("/api/airports/search")
-def api_search_airports(q: str = ""):
+@limiter.limit(LIMIT_AUTOCOMPLETE)
+def api_search_airports(request: Request, q: str = ""):
     """Endpoint de busca de aeroportos para autocomplete."""
     if len(q) < 2:
         return JSONResponse([])
@@ -188,6 +195,7 @@ def create_group_page(
 
 
 @router.post("/groups/create", response_class=HTMLResponse)
+@limiter.limit(LIMIT_WRITE)
 def create_group_form(
     request: Request,
     name: str = Form(""),
@@ -302,6 +310,7 @@ def edit_group_page(
 
 
 @router.post("/groups/{group_id}/edit", response_class=HTMLResponse)
+@limiter.limit(LIMIT_WRITE)
 def edit_group_form(
     request: Request,
     group_id: int,
@@ -373,7 +382,9 @@ def edit_group_form(
 
 
 @router.post("/groups/{group_id}/toggle")
+@limiter.limit(LIMIT_WRITE)
 def toggle_group(
+    request: Request,
     group_id: int,
     db: Session = Depends(get_db),
     user: User | None = Depends(get_current_user),
@@ -399,7 +410,9 @@ FLASH_MESSAGES["grupo_excluido"] = "Grupo excluído com sucesso."
 
 
 @router.post("/groups/{group_id}/delete")
+@limiter.limit(LIMIT_WRITE)
 def delete_group(
+    request: Request,
     group_id: int,
     db: Session = Depends(get_db),
     user: User | None = Depends(get_current_user),
@@ -438,7 +451,9 @@ def _run_polling_background(user_id: int | None = None) -> None:
 
 
 @router.post("/polling/manual")
+@limiter.limit(LIMIT_POLLING)
 def manual_polling(
+    request: Request,
     background_tasks: BackgroundTasks,
     user: User | None = Depends(get_current_user),
 ):
