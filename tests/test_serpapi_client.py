@@ -130,7 +130,13 @@ def test_search_passes_correct_params(mock_settings, mock_search_cls):
 
 @patch("app.services.serpapi_client.GoogleSearch")
 @patch("app.services.serpapi_client.settings")
-def test_search_passes_adults_param(mock_settings, mock_search_cls):
+def test_search_always_uses_adults_1_ignoring_caller_value(mock_settings, mock_search_cls):
+    """Phase 16 revertida: adults recebido e ignorado, sempre 1.
+
+    Google Flights retorna preco inconsistente para N adults (total em
+    internacional, por pessoa em domestico). Forcamos adults=1 para
+    garantir que snapshot.price e sempre por pessoa.
+    """
     mock_settings.serpapi_api_key = "key"
     mock_instance = MagicMock()
     mock_instance.get_dict.return_value = _make_flights_response([400])
@@ -139,23 +145,6 @@ def test_search_passes_adults_param(mock_settings, mock_search_cls):
     client = SerpApiClient()
     client.search_flights_with_insights(
         "GRU", "LIS", "2026-06-01", "2026-06-15", adults=3
-    )
-
-    call_args = mock_search_cls.call_args[0][0]
-    assert call_args["adults"] == 3
-
-
-@patch("app.services.serpapi_client.GoogleSearch")
-@patch("app.services.serpapi_client.settings")
-def test_search_adults_clamped_to_minimum_one(mock_settings, mock_search_cls):
-    mock_settings.serpapi_api_key = "key"
-    mock_instance = MagicMock()
-    mock_instance.get_dict.return_value = _make_flights_response([400])
-    mock_search_cls.return_value = mock_instance
-
-    client = SerpApiClient()
-    client.search_flights_with_insights(
-        "GRU", "LIS", "2026-06-01", "2026-06-15", adults=0
     )
 
     call_args = mock_search_cls.call_args[0][0]

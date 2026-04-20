@@ -105,13 +105,17 @@ def _search_fast_flights(
     if not _FF_AVAILABLE:
         raise RuntimeError("fast-flights nao esta instalado")
 
+    # Sempre adults=1 na chamada real. Google Flights retorna preco inconsistente
+    # para N adults (total em rotas internacionais, por pessoa em domesticas).
+    # Com adults=1 garantimos que snapshot.price e sempre PRECO POR PESSOA.
+    # Template multiplica por pax no display de 'total da viagem'.
     tfs = TFSData.from_interface(
         flight_data=[
             FlightData(date=departure_date, from_airport=origin, to_airport=destination),
             FlightData(date=return_date, from_airport=destination, to_airport=origin),
         ],
         trip="round-trip",
-        passengers=Passengers(adults=max(1, int(adults))),
+        passengers=Passengers(adults=1),
         seat="economy",
         max_stops=max_stops,
     )
@@ -120,18 +124,13 @@ def _search_fast_flights(
     if not result.flights:
         raise ValueError("fast-flights nao retornou resultados")
 
-    # Google Flights (backing do fast-flights) retorna preco TOTAL para todos
-    # os adults do request. Normalizamos para PRECO POR PESSOA, consistente com
-    # serpapi_client e com a semantica de snapshot.price no resto do sistema.
-    pax_divisor = max(1, int(adults))
-
     normalized = []
     for flight in result.flights:
         price = _parse_price(flight.price)
         if price is None:
             continue
         normalized.append({
-            "price": price / pax_divisor,
+            "price": price,
             "airline": flight.name or "??",
             "flights": [],
             "type": "Round trip",

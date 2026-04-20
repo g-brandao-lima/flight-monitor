@@ -31,6 +31,12 @@ class SerpApiClient:
 
         Retorna (flights_sorted, price_insights_or_none).
         Economiza 50% das chamadas vs buscar separado.
+
+        Nota sobre adults: o parametro e ACEITO mas internamente sempre usamos
+        adults=1. Motivo: Google Flights retorna preco inconsistente para N
+        adults (total em rotas internacionais, por pessoa em domesticas), o
+        que polui os dados. Com adults=1 sempre, price e sempre por pessoa.
+        Template multiplica por pax no display de 'total da viagem'.
         """
         params = {
             "engine": "google_flights",
@@ -41,7 +47,7 @@ class SerpApiClient:
             "currency": "BRL",
             "gl": "br",
             "hl": "pt",
-            "adults": max(1, int(adults)),
+            "adults": 1,
             "api_key": self._api_key,
         }
         if max_stops is not None:
@@ -55,12 +61,6 @@ class SerpApiClient:
         other = data.get("other_flights", [])
         all_flights = best + other
 
-        # SerpAPI/Google Flights retorna preco TOTAL para todos os adults do request.
-        # Normalizamos aqui para PRECO POR PESSOA, que e a semantica usada em todo
-        # o resto do sistema (snapshot.price e por pessoa). Sem isso, grupos com
-        # passengers > 1 mostram preco dobrado/triplicado como "por pessoa".
-        pax = max(1, int(params.get("adults", 1)))
-
         normalized = []
         for flight in all_flights:
             if "price" not in flight:
@@ -72,7 +72,7 @@ class SerpApiClient:
                 airline = segments[0].get("airline", "??")
 
             normalized.append({
-                "price": flight["price"] / pax,
+                "price": flight["price"],
                 "airline": airline,
                 "flights": segments,
                 "type": flight.get("type", "Round trip"),

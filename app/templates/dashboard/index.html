@@ -382,7 +382,7 @@
                 {% if snap %}
                 <div class="card-route">
                     {{ snap.origin }} → {{ snap.destination }}
-                    {% if snap.airline %}· {{ snap.airline }}{% endif %}
+                    {% if snap.airline and snap.airline != '??' %}· {{ snap.airline }}{% endif %}
                     {% if item.group.max_stops == 0 %}<span style="color:#34d399"> Direto</span>{% elif item.group.max_stops == 1 %}<span> · 1 conexão</span>{% endif %}
                 </div>
                 <div class="card-dates">
