@@ -120,13 +120,18 @@ def _search_fast_flights(
     if not result.flights:
         raise ValueError("fast-flights nao retornou resultados")
 
+    # Google Flights (backing do fast-flights) retorna preco TOTAL para todos
+    # os adults do request. Normalizamos para PRECO POR PESSOA, consistente com
+    # serpapi_client e com a semantica de snapshot.price no resto do sistema.
+    pax_divisor = max(1, int(adults))
+
     normalized = []
     for flight in result.flights:
         price = _parse_price(flight.price)
         if price is None:
             continue
         normalized.append({
-            "price": price,
+            "price": price / pax_divisor,
             "airline": flight.name or "??",
             "flights": [],
             "type": "Round trip",

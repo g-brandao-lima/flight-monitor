@@ -55,6 +55,12 @@ class SerpApiClient:
         other = data.get("other_flights", [])
         all_flights = best + other
 
+        # SerpAPI/Google Flights retorna preco TOTAL para todos os adults do request.
+        # Normalizamos aqui para PRECO POR PESSOA, que e a semantica usada em todo
+        # o resto do sistema (snapshot.price e por pessoa). Sem isso, grupos com
+        # passengers > 1 mostram preco dobrado/triplicado como "por pessoa".
+        pax = max(1, int(params.get("adults", 1)))
+
         normalized = []
         for flight in all_flights:
             if "price" not in flight:
@@ -66,7 +72,7 @@ class SerpApiClient:
                 airline = segments[0].get("airline", "??")
 
             normalized.append({
-                "price": flight["price"],
+                "price": flight["price"] / pax,
                 "airline": airline,
                 "flights": segments,
                 "type": flight.get("type", "Round trip"),
