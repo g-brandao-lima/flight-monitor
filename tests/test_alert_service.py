@@ -335,6 +335,7 @@ def _make_signals_list(count: int = 1) -> list[unittest.mock.MagicMock]:
 
 
 def test_consolidated_email_subject_contains_group_name_and_best_price():
+    """Sem contexto historico (db=None), subject usa fallback neutro."""
     # Arrange
     group = _make_group(name="GRU-MIA Fevereiro")
     snapshots = [
@@ -347,11 +348,10 @@ def test_consolidated_email_subject_contains_group_name_and_best_price():
     # Act
     msg = compose_consolidated_email(signals, snapshots, group)
 
-    # Assert
+    # Assert: Phase 26 troca subject para fallback neutro com nome + preco
     subject = msg["Subject"]
     assert "GRU-MIA Fevereiro" in subject
     assert "R$ 2.800,50" in subject
-    assert "melhor preco" in subject
 
 
 def test_consolidated_email_cheapest_route_in_body():

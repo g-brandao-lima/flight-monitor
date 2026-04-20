@@ -252,10 +252,7 @@ def compose_consolidated_email(
         f"{settings.app_base_url}/api/v1/alerts/silence/{token}?group_id={group.id}"
     )
 
-    subject = (
-        f"Flight Monitor: {group.name} "
-        f"- {format_price_brl(cheapest.price)} (melhor preco)"
-    )
+    subject = _build_subject(cheapest, historical_ctx, group)
 
     html = _render_consolidated_html(cheapest, top3, other_routes, signals, silence_url, group, historical_ctx)
     plain = _render_consolidated_plain(cheapest, top3, other_routes, signals, silence_url, group, historical_ctx)
@@ -268,6 +265,36 @@ def compose_consolidated_email(
     msg.attach(MIMEText(plain, "plain", "utf-8"))
     msg.attach(MIMEText(html, "html", "utf-8"))
     return msg
+
+
+def _build_subject(cheapest: FlightSnapshot, ctx: dict | None, group: RouteGroup) -> str:
+    """Subject line factual (Phase 26).
+
+    Se houver contexto historico com variacao significativa vs media, destaca
+    o delta percentual e o preco absoluto. Senao, fallback neutro.
+
+    Exemplos:
+    - "GRU-LIS caiu 23% hoje: R$ 3.120 (media 90d R$ 4.050)"
+    - "GRU-LIS em R$ 3.120 (media 90d R$ 3.150)"
+    - "Flight Monitor: Europa Verao - R$ 3.120" (sem amostras suficientes)
+    """
+    route = f"{cheapest.origin}-{cheapest.destination}"
+    price_str = format_price_brl(cheapest.price)
+
+    if not ctx or ctx.get("avg", 0) <= 0:
+        return f"Flight Monitor: {group.name} em {price_str}"
+
+    avg = ctx["avg"]
+    avg_str = format_price_brl(avg)
+    pct = (cheapest.price - avg) / avg * 100
+
+    if pct <= -10:
+        return f"{route} caiu {abs(pct):.0f}% hoje: {price_str} (media 90d {avg_str})"
+    if pct <= -5:
+        return f"{route} {abs(pct):.0f}% abaixo da media: {price_str} (media 90d {avg_str})"
+    if pct >= 10:
+        return f"{route} subiu {pct:.0f}%: {price_str} (media 90d {avg_str})"
+    return f"{route} em {price_str} (media 90d {avg_str})"
 
 
 def _format_historical_context(ctx: dict | None, current_price: float) -> str:
