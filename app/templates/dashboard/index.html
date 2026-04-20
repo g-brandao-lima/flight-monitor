@@ -421,6 +421,17 @@
                     </span>
                 </div>
                 {% endif %}
+                {% if item.savings %}
+                <div class="card-price-sub" style="margin-top:4px;font-size:11px;">
+                    {% if item.savings.direction == 'saved' %}
+                    <span style="color:#34d399;">Voce economizou {{ format_price_brl(item.savings.delta) }} esperando ({{ item.savings.days_monitoring }}d)</span>
+                    {% elif item.savings.direction == 'lost' %}
+                    <span style="color:#f87171;">Comprar ao criar teria economizado {{ format_price_brl(item.savings.delta) }}</span>
+                    {% else %}
+                    <span style="color:#64748b;">Preco estavel desde que criou ({{ item.savings.days_monitoring }}d)</span>
+                    {% endif %}
+                </div>
+                {% endif %}
                 {% if snap.source %}
                 <div class="card-price-sub" style="margin-top:6px;">
                     {% if snap.source == 'kiwi' %}

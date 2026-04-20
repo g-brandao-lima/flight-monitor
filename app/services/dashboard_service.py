@@ -202,6 +202,8 @@ def get_groups_with_summary(db: Session, user_id: int | None = None) -> list[dic
                     pct = round((current_price - spark_avg) / spark_avg * 100)
                     price_badge = {"label": f"{pct}% acima da média 30d", "tone": "bad"}
 
+        savings = _compute_savings_since_creation(db, group, cheapest_snapshot)
+
         result.append({
             "group": group,
             "cheapest_snapshot": cheapest_snapshot,
@@ -213,11 +215,61 @@ def get_groups_with_summary(db: Session, user_id: int | None = None) -> list[dic
             "collection_count": collection_count,
             "sparkline": sparkline,
             "price_badge": price_badge,
+            "savings": savings,
         })
 
     # Sort by cheapest price (groups with data first, then by price ascending)
     result.sort(key=lambda x: x["cheapest_snapshot"].price if x["cheapest_snapshot"] else float("inf"))
     return result
+
+
+def _compute_savings_since_creation(
+    db: Session, group: RouteGroup, current_snapshot: FlightSnapshot | None
+) -> dict | None:
+    """Simulador "se tivesse comprado ao criar o grupo" (Phase 31).
+
+    Retorna dict {initial_price, current_price, delta, direction, days} ou None.
+
+    direction = 'saved': preco atual < inicial, espera valeu a pena
+    direction = 'lost': preco atual > inicial, teria pago menos comprando na criacao
+    direction = 'even': diferenca < 1%
+    """
+    if current_snapshot is None or group.created_at is None:
+        return None
+
+    window_end = group.created_at + datetime.timedelta(days=2)
+    initial_snap = (
+        db.query(FlightSnapshot)
+        .filter(
+            FlightSnapshot.route_group_id == group.id,
+            FlightSnapshot.collected_at >= group.created_at,
+            FlightSnapshot.collected_at < window_end,
+        )
+        .order_by(FlightSnapshot.price.asc())
+        .first()
+    )
+    if initial_snap is None or initial_snap.price <= 0:
+        return None
+
+    initial_price = initial_snap.price
+    current_price = current_snapshot.price
+    delta = current_price - initial_price
+    pct = abs(delta) / initial_price * 100 if initial_price else 0
+
+    direction = "even"
+    if pct >= 1:
+        direction = "saved" if delta < 0 else "lost"
+
+    days_monitoring = (datetime.datetime.utcnow() - group.created_at).days
+
+    return {
+        "initial_price": initial_price,
+        "current_price": current_price,
+        "delta": abs(delta),
+        "direction": direction,
+        "pct": round(pct, 1),
+        "days_monitoring": days_monitoring,
+    }
 
 
 def get_price_history(db: Session, group_id: int, user_id: int | None = None, days: int = 14) -> dict:
