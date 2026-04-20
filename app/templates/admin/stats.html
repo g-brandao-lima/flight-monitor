@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Stats - Flight Monitor{% endblock %}
+
+{% block content %}
+<style>
+    .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 16px; }
+    .admin-card { background: #1a1e2e; border: 1px solid #2d3748; border-radius: 12px; padding: 20px; }
+    .admin-card h2 { font-size: 14px; font-weight: 700; margin: 0 0 12px; color: #f1f5f9; letter-spacing: 0.3px; text-transform: uppercase; }
+    .metric-value { font-size: 28px; font-weight: 700; color: #f1f5f9; line-height: 1; }
+    .metric-label { font-size: 12px; color: #64748b; margin-top: 4px; }
+    .quota-bar-outer { background: #0f1420; border-radius: 8px; height: 10px; overflow: hidden; margin-top: 12px; }
+    .quota-bar-inner { height: 100%; border-radius: 8px; transition: width 0.4s; }
+    .quota-ok { background: linear-gradient(90deg, #34d399, #10b981); }
+    .quota-warn { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+    .quota-crit { background: linear-gradient(90deg, #f87171, #dc2626); }
+    .source-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; color: #e2e8f0; }
+    .source-bar { flex: 1; height: 6px; background: #0f1420; border-radius: 3px; overflow: hidden; }
+    .source-bar-fill { height: 100%; background: #60a5fa; border-radius: 3px; }
+    .source-count { color: #64748b; font-size: 12px; min-width: 60px; text-align: right; }
+    .admin-link { color: #60a5fa; text-decoration: none; font-size: 13px; }
+    .admin-link:hover { text-decoration: underline; }
+    .admin-subtitle { color: #94a3b8; font-size: 13px; margin-bottom: 0; }
+</style>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <div>
+        <h1 style="font-size: 20px; font-weight: 700; margin: 0; color: #f1f5f9;">Painel Admin</h1>
+        <p class="admin-subtitle">Metricas operacionais do Flight Monitor. Visivel apenas para o dono.</p>
+    </div>
+    <a href="/" class="admin-link">Voltar ao Dashboard</a>
+</div>
+
+<div class="admin-grid">
+    <div class="admin-card">
+        <h2>Quota SerpAPI</h2>
+        <div class="metric-value">
+            {{ quota.used }}<span style="font-size:16px;color:#64748b;"> / {{ quota.limit }}</span>
+        </div>
+        <div class="metric-label">{{ quota.pct_used }}% usado no mes corrente ({{ quota.year_month }})</div>
+        <div class="quota-bar-outer">
+            <div class="quota-bar-inner {% if quota.pct_used >= 90 %}quota-crit{% elif quota.pct_used >= 60 %}quota-warn{% else %}quota-ok{% endif %}"
+                 style="width: {{ quota.pct_used }}%;"></div>
+        </div>
+        <div class="metric-label" style="margin-top:12px;">
+            {% if quota.exhausted %}
+            <strong style="color:#f87171;">Quota esgotada.</strong>
+            {% else %}
+            Restam <strong style="color:#e2e8f0;">{{ quota.remaining }}</strong> buscas.
+            {% endif %}
+            Reset em <strong style="color:#e2e8f0;">{{ quota.next_reset_date.strftime('%d/%m/%Y') }}</strong>
+            ({{ quota.days_to_reset }} dias).
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <h2>Fontes dos ultimos {{ sources.days }} dias</h2>
+        {% if sources.total == 0 %}
+        <div class="metric-label">Nenhum snapshot coletado no periodo.</div>
+        {% else %}
+        <div class="metric-value">{{ sources.total }}</div>
+        <div class="metric-label">snapshots coletados</div>
+        <div style="margin-top:12px;">
+            {% for item in sources.breakdown %}
+            <div class="source-row">
+                <span style="min-width:200px;">{{ item.label }}</span>
+                <div class="source-bar"><div class="source-bar-fill" style="width: {{ item.pct }}%;"></div></div>
+                <span class="source-count">{{ item.count }} ({{ item.pct }}%)</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="admin-card">
+        <h2>Cache in-memory</h2>
+        <div class="metric-value">{{ cache.entries }}</div>
+        <div class="metric-label">entradas ativas (TTL {{ cache.ttl_minutes }} min)</div>
+        <div class="metric-label" style="margin-top:12px;">
+            Cache reseta a cada restart da aplicacao. Evita chamadas duplicadas
+            quando varios grupos monitoram a mesma rota no mesmo ciclo de polling.
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <h2>Observabilidade</h2>
+        {% if sentry_enabled %}
+        <div class="metric-label" style="margin-bottom:8px;">Sentry ativo em producao.</div>
+        <a href="{{ sentry_url }}" target="_blank" rel="noopener" class="admin-link">
+            Abrir dashboard Sentry &rarr;
+        </a>
+        {% else %}
+        <div class="metric-label" style="color:#f87171;">Sentry desativado (SENTRY_DSN vazio).</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

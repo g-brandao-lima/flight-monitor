@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     sentry_dsn: str = ""
     sentry_environment: str = "development"
     sentry_traces_sample_rate: float = 0.1
+    admin_email: str = ""
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

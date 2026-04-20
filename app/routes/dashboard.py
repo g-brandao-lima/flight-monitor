@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+from app.templates_config import get_templates
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -32,7 +32,7 @@ from app.services.airport_service import is_valid_code, get_all_airports, search
 
 router = APIRouter(tags=["dashboard"])
 _TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
-templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
+templates = get_templates(str(_TEMPLATES_DIR))
 
 IATA_PATTERN = re.compile(r"^[A-Z]{3}$")
 MAX_ACTIVE_GROUPS = 10

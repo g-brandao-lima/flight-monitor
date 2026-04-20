@@ -15,7 +15,8 @@ init_sentry()
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+
+from app.templates_config import get_templates
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.sessions import SessionMiddleware
@@ -26,7 +27,7 @@ from app.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 _TEMPLATES_DIR = Path(__file__).resolve().parent / "app" / "templates"
-_templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
+_templates = get_templates(str(_TEMPLATES_DIR))
 
 
 @asynccontextmanager
@@ -58,11 +59,13 @@ from app.auth.routes import router as auth_router
 from app.routes.route_groups import router as route_groups_router
 from app.routes.alerts import router as alerts_router
 from app.routes.dashboard import router as dashboard_router
+from app.routes.admin import router as admin_router
 
 app.include_router(auth_router)
 app.include_router(route_groups_router, prefix="/api/v1")
 app.include_router(alerts_router, prefix="/api/v1")
 app.include_router(dashboard_router)
+app.include_router(admin_router)
 
 
 @app.head("/")

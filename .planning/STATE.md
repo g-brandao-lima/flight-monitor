@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.1
-milestone_name: Clareza de Preco e Robustez
+milestone: v2.2
+milestone_name: UX Polish e Quick Wins
 status: roadmap created
 stopped_at: null
-last_updated: "2026-04-03T00:00:00.000Z"
+last_updated: "2026-04-20T18:00:00.000Z"
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -19,14 +19,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-03)
 
 **Core value:** Detectar o momento certo de comprar uma passagem antes que o preco suba, apresentando o preco de forma clara e imediata para o usuario tomar decisao rapida.
-**Current focus:** v2.1 roadmap created, ready to plan Phase 15
+**Current focus:** v2.2 roadmap created, executing 8 UX polish + engagement quick-win phases
 
 ## Current Position
 
-Phase: 15 (CI Pipeline) - first of 7 v2.1 phases (15-21)
-Plan: Not yet planned
-Status: Ready to plan
-Last activity: 2026-04-03 — Roadmap v2.1 created with 7 phases, 14 requirements mapped
+Phase: 24 (Admin Stats Panel) - first of 8 v2.2 phases (24-31)
+Plan: Implementing inline
+Status: In progress
+Last activity: 2026-04-20 — v2.1 shipped, v2.2 roadmap created with 8 phases from research docs
 
 Progress: [░░░░░░░░░░] 0%
 

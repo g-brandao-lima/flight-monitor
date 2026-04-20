@@ -6,7 +6,21 @@
 - ✅ **v1.1 Polish & UX** - Phases 6-8 (shipped 2026-03-26)
 - ✅ **v1.2 Visual Polish** - Phase 9 (shipped 2026-03-28)
 - ✅ **v2.0 Multi-usuario** - Phases 10-14 (shipped 2026-03-30)
-- 🚧 **v2.1 Clareza de Preco e Robustez** - Phases 15-21 (in progress)
+- ✅ **v2.1 Clareza de Preco e Robustez** - Phases 15-23 (shipped 2026-04-20, 11 phases, Phase 18 deferred)
+- 🚧 **v2.2 UX Polish e Quick Wins** - Phases 24-31 (in progress)
+
+### v2.2 UX Polish e Quick Wins (In Progress)
+
+**Milestone Goal:** Melhorar UX imediata do produto (painel admin, toggle preco, email com contexto) e entregar quick wins de engajamento baseados na pesquisa de mercado (sparkline, estado vazio util, digest semanal, card compartilhavel, simulador de economia).
+
+- [ ] **Phase 24: Admin Stats Panel** - /admin/stats com quota SerpAPI, data de reset, distribuicao de fontes, cache hit rate, ultimos erros. Visivel apenas para o dono.
+- [ ] **Phase 25: Toggle de modo de preco** - Alternar entre "Por pessoa, ida e volta" (default) e "Total da viagem". Persistido em cookie.
+- [ ] **Phase 26: Email com subject factual** - Subject line com dados concretos: "GRU-LIS caiu 23% hoje (R$ 3.120, media 90d: R$ 4.050)".
+- [ ] **Phase 27: Sparkline inline nos cards** - Grafico de tendencia 30 ou 90 dias por grupo, SVG puro sem JS.
+- [ ] **Phase 28: Estado vazio com rotas populares** - Primeiro login mostra 6 rotas populares com CTA de monitorar, nao tela vazia.
+- [ ] **Phase 29: Weekly digest terca a noite** - Email resumo personalizado por usuario com mudancas nos grupos.
+- [ ] **Phase 30: Card Preco Justo compartilhavel** - PNG via Pillow com Open Graph para WhatsApp/IG.
+- [ ] **Phase 31: Simulador economizou/perdeu** - Mostra no dashboard quanto usuario teria economizado se comprasse no dia de criar o grupo.
 
 ## Phases
 
