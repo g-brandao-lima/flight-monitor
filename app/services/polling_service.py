@@ -7,6 +7,7 @@ from app.config import settings
 from app.database import SessionLocal
 from app.models import RouteGroup
 from app.services.alert_service import compose_consolidated_email, send_email, should_alert
+from app.services import flight_cache
 from app.services.flight_search import search_flights
 from app.services.quota_service import increment_usage, get_remaining_quota, MONTHLY_QUOTA
 from app.services.serpapi_client import classify_price
@@ -109,6 +110,13 @@ def _poll_group(db, group: RouteGroup):
     for origin in origins:
         for destination in destinations:
             for dep_date, ret_date in date_pairs:
+                adults = group.passengers or 1
+                cache_key = flight_cache.make_key(
+                    origin, destination, dep_date.isoformat(),
+                    ret_date.isoformat(), group.max_stops, adults,
+                )
+                was_cache_hit = flight_cache.get(cache_key) is not None
+
                 try:
                     flights, insights, source = search_flights(
                         origin=origin,
@@ -117,7 +125,7 @@ def _poll_group(db, group: RouteGroup):
                         return_date=ret_date.isoformat(),
                         max_results=5,
                         max_stops=group.max_stops,
-                        adults=group.passengers or 1,
+                        adults=adults,
                     )
                 except Exception as e:
                     logger.warning(
@@ -125,7 +133,7 @@ def _poll_group(db, group: RouteGroup):
                     )
                     continue
 
-                if source == "serpapi":
+                if source == "serpapi" and not was_cache_hit:
                     increment_usage(db)
 
                 if not flights:

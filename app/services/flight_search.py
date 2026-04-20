@@ -1,6 +1,7 @@
 import logging
 import re
 
+from app.services import flight_cache
 from app.services.serpapi_client import SerpApiClient
 
 logger = logging.getLogger(__name__)
@@ -22,18 +23,58 @@ def search_flights(
     max_results: int = 5,
     max_stops: int | None = None,
     adults: int = 1,
+    use_cache: bool = True,
 ) -> tuple[list[dict], dict | None, str]:
-    """Busca voos: tenta fast-flights primeiro, fallback para SerpAPI.
+    """Busca voos com cache in-memory (30 min TTL).
 
     Retorna (flights, insights_or_none, source).
-    source e "fast_flights" ou "serpapi".
+    source reflete a origem real (inclui resultados reusados do cache).
+    Para saber se foi cache hit, use `search_flights_ex`.
+    """
+    flights, insights, source, _ = search_flights_ex(
+        origin, destination, departure_date, return_date,
+        max_results, max_stops, adults, use_cache,
+    )
+    return flights, insights, source
+
+
+def search_flights_ex(
+    origin: str,
+    destination: str,
+    departure_date: str,
+    return_date: str,
+    max_results: int = 5,
+    max_stops: int | None = None,
+    adults: int = 1,
+    use_cache: bool = True,
+) -> tuple[list[dict], dict | None, str, bool]:
+    """Versao estendida: retorna (flights, insights, source, was_cache_hit).
+
+    Usar quando o caller precisa distinguir cache hit de chamada real,
+    por exemplo para contabilizar quota SerpAPI corretamente.
     """
     pax = max(1, int(adults))
+
+    cache_key = flight_cache.make_key(
+        origin, destination, departure_date, return_date, max_stops, pax
+    )
+    if use_cache:
+        hit = flight_cache.get(cache_key)
+        if hit is not None:
+            flights_cached, insights_cached, orig_source = hit
+            logger.info(
+                "flight_cache HIT %s->%s %s (orig=%s)",
+                origin, destination, departure_date, orig_source,
+            )
+            return flights_cached[:max_results], insights_cached, orig_source, True
+
     try:
         flights = _search_fast_flights(
             origin, destination, departure_date, return_date, max_results, max_stops, pax
         )
-        return flights, None, "fast_flights"
+        if use_cache:
+            flight_cache.put(cache_key, (flights, None, "fast_flights"))
+        return flights, None, "fast_flights", False
     except Exception as e:
         logger.warning("fast-flights falhou (%s), usando SerpAPI como fallback", e)
 
@@ -47,7 +88,9 @@ def search_flights(
         max_stops=max_stops,
         adults=pax,
     )
-    return flights, insights, "serpapi"
+    if use_cache:
+        flight_cache.put(cache_key, (flights, insights, "serpapi"))
+    return flights, insights, "serpapi", False
 
 
 def _search_fast_flights(

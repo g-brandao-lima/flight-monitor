@@ -29,6 +29,15 @@ def _make_session_cookie(data: dict) -> str:
     return signer.sign(payload).decode("utf-8")
 
 
+@pytest.fixture(autouse=True)
+def _reset_flight_cache():
+    """Ensure flight_cache is clean between tests to avoid cross-test contamination."""
+    from app.services import flight_cache as _fc
+    _fc.clear()
+    yield
+    _fc.clear()
+
+
 @pytest.fixture(name="db")
 def db_fixture():
     Base.metadata.create_all(bind=engine)
