@@ -6,6 +6,8 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import sentry_sdk
+
 from app.observability import init_sentry
 
 init_sentry()
@@ -153,6 +155,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
+    sentry_sdk.capture_exception(exc)
     logger.error("Unhandled exception at %s: %s", request.url, exc, exc_info=True)
     message, detail = DEFAULT_ERROR
     return HTMLResponse(
