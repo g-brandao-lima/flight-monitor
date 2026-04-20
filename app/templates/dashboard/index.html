@@ -91,6 +91,20 @@
     .price-medium { color: #fbbf24; }
     .price-high { color: #f87171; }
     .price-none { color: #64748b; }
+    .price-mode-btn {
+        background: #1a1e2e;
+        color: #94a3b8;
+        border: 1px solid #2d3748;
+        padding: 4px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.15s, color 0.15s;
+    }
+    .price-mode-btn:first-child { border-radius: 6px 0 0 6px; border-right: none; }
+    .price-mode-btn:last-child { border-radius: 0 6px 6px 0; }
+    .price-mode-btn.active { background: #0ea5e9; color: white; border-color: #0ea5e9; }
+    .price-mode-btn:hover:not(.active) { background: #252a3a; color: #e2e8f0; }
     .source-badge {
         display: inline-block;
         font-size: 10px;
@@ -278,8 +292,17 @@
             <span class="metric-value">{{ summary.next_polling }}</span>
         </div>
         <div class="metric">
-            <span class="metric-label">Buscas restantes:</span>
-            <span class="metric-value{% if summary.api_remaining is defined and summary.api_remaining <= 10 %}" style="color: #ef4444{% elif summary.api_remaining is defined and summary.api_remaining <= 50 %}" style="color: #f59e0b{% endif %}">{{ summary.api_remaining if summary.api_remaining is defined else "—" }}/{{ summary.api_quota if summary.api_quota is defined else 250 }}</span>
+            <span class="metric-label">Exibir preço:</span>
+            <form method="POST" action="/preferences/price-mode" style="display:inline-flex;margin:0;gap:0;">
+                <button type="submit" name="mode" value="per_person"
+                        class="price-mode-btn {% if price_mode == 'per_person' %}active{% endif %}">
+                    Por pessoa
+                </button>
+                <button type="submit" name="mode" value="total"
+                        class="price-mode-btn {% if price_mode == 'total' %}active{% endif %}">
+                    Total da viagem
+                </button>
+            </form>
         </div>
     </div>
     <div class="summary-actions">
@@ -334,13 +357,21 @@
             </div>
 
             {% if snap %}
+            {% set display_price = snap.price * pax if price_mode == 'total' else snap.price %}
             <div class="card-price-area">
                 <div class="card-price {% if cls == 'LOW' %}price-low{% elif cls == 'MEDIUM' %}price-medium{% elif cls == 'HIGH' %}price-high{% else %}price-none{% endif %}">
-                    {{ format_price_brl(snap.price) }}
+                    {{ format_price_brl(display_price) }}
                 </div>
+                {% if price_mode == 'total' %}
+                <div class="card-price-sub">total {{ pax }} {{ 'passageiros' if pax > 1 else 'passageiro' }}, ida e volta</div>
+                {% if pax > 1 %}
+                <div class="card-price-sub">{{ format_price_brl(snap.price) }} por pessoa</div>
+                {% endif %}
+                {% else %}
                 <div class="card-price-sub">por pessoa, ida e volta</div>
                 {% if pax > 1 %}
                 <div class="card-price-sub">Total {{ pax }} passageiros: {{ format_price_brl(snap.price * pax) }}</div>
+                {% endif %}
                 {% endif %}
                 {% if snap.source %}
                 <div class="card-price-sub" style="margin-top:6px;">

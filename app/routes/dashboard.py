@@ -126,6 +126,9 @@ def dashboard_index(
     summary = get_dashboard_summary(db, user_id=user_id)
     activity = get_recent_activity(db, user_id=user_id)
     flash_message = FLASH_MESSAGES.get(msg) if msg else None
+    price_mode = request.cookies.get("price_mode", "per_person")
+    if price_mode not in ("per_person", "total"):
+        price_mode = "per_person"
     return templates.TemplateResponse(
         request=request,
         name="dashboard/index.html",
@@ -138,8 +141,28 @@ def dashboard_index(
             "booking_urls": booking_urls,
             "flash_message": flash_message,
             "user": user,
+            "price_mode": price_mode,
         },
     )
+
+
+PRICE_MODE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365  # 1 ano
+
+
+@router.post("/preferences/price-mode")
+def set_price_mode(mode: str = Form(...)):
+    """Persiste preferencia de exibicao de preco em cookie (Phase 25)."""
+    if mode not in ("per_person", "total"):
+        mode = "per_person"
+    response = RedirectResponse(url="/", status_code=303)
+    response.set_cookie(
+        key="price_mode",
+        value=mode,
+        max_age=PRICE_MODE_COOKIE_MAX_AGE,
+        httponly=False,
+        samesite="lax",
+    )
+    return response
 
 
 @router.get("/alerts", response_class=HTMLResponse)
