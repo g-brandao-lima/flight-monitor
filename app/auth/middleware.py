@@ -4,7 +4,7 @@ from fastapi import Request
 
 from app.observability import bind_user_context
 
-PUBLIC_PATHS = frozenset({"/", "/auth/login", "/auth/callback", "/auth/logout", "/sentry-debug"})
+PUBLIC_PATHS = frozenset({"/", "/auth/login", "/auth/callback", "/auth/logout"})
 PUBLIC_PREFIXES = ("/auth/", "/static/", "/api/airports/")
 
 

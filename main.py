@@ -71,16 +71,6 @@ async def health_check():
     return HTMLResponse(content="", status_code=200)
 
 
-@app.get("/sentry-debug")
-async def sentry_debug():
-    """Endpoint temporario para validar que o Sentry captura erros.
-
-    Remover apos confirmar que eventos chegam ao dashboard Sentry.
-    """
-    _ = 1 / 0
-    return HTMLResponse(content="unreachable")
-
-
 FIELD_LABELS = {
     "name": "Nome do grupo",
     "origins": "Origens",
