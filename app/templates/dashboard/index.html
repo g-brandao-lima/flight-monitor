@@ -91,6 +91,17 @@
     .price-medium { color: #fbbf24; }
     .price-high { color: #f87171; }
     .price-none { color: #64748b; }
+    .price-badge {
+        display: inline-block;
+        font-size: 10px;
+        padding: 3px 8px;
+        border-radius: 10px;
+        letter-spacing: 0.2px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .price-badge-good { background: #064e3b; color: #34d399; border: 1px solid #065f46; }
+    .price-badge-bad { background: #4c1d1d; color: #f87171; border: 1px solid #7f1d1d; }
     .price-mode-btn {
         background: #1a1e2e;
         color: #94a3b8;
@@ -372,6 +383,13 @@
                 {% if pax > 1 %}
                 <div class="card-price-sub">Total {{ pax }} passageiros: {{ format_price_brl(snap.price * pax) }}</div>
                 {% endif %}
+                {% endif %}
+                {% if item.price_badge %}
+                <div class="card-price-sub" style="margin-top:6px;">
+                    <span class="price-badge {% if item.price_badge.tone == 'good' %}price-badge-good{% else %}price-badge-bad{% endif %}">
+                        {{ item.price_badge.label }}
+                    </span>
+                </div>
                 {% endif %}
                 {% if snap.source %}
                 <div class="card-price-sub" style="margin-top:6px;">

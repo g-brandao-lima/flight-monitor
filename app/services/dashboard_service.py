@@ -162,28 +162,45 @@ def get_groups_with_summary(db: Session, user_id: int | None = None) -> list[dic
             ct[0].strftime("%Y-%m-%d %H") for ct in collected_times if ct[0]
         ))
 
-        # Sparkline data (last 7 prices for mini chart)
+        # Sparkline data (last 30 days, one price per day - minimum do dia)
         sparkline = []
+        price_badge = None
         if collection_count >= 2:
+            cutoff_30d = datetime.datetime.utcnow() - timedelta(days=30)
             spark_snaps = (
                 db.query(FlightSnapshot.price, FlightSnapshot.collected_at)
                 .filter(
                     FlightSnapshot.route_group_id == group.id,
                     FlightSnapshot.origin.in_(group.origins),
                     FlightSnapshot.destination.in_(group.destinations),
+                    FlightSnapshot.collected_at >= cutoff_30d,
                 )
-                .order_by(FlightSnapshot.collected_at.desc())
-                .limit(30)
+                .order_by(FlightSnapshot.collected_at.asc())
                 .all()
             )
-            # Group by collection cycle, take min price per cycle
-            seen_hours = set()
-            for s in reversed(spark_snaps):
-                hour_key = s.collected_at.strftime("%Y-%m-%d-%H") if s.collected_at else None
-                if hour_key and hour_key not in seen_hours:
-                    seen_hours.add(hour_key)
-                    sparkline.append(s.price)
-            sparkline = sparkline[-7:]
+            # Agrupa por dia, pega menor preco de cada dia
+            by_day: dict = {}
+            for s in spark_snaps:
+                if not s.collected_at:
+                    continue
+                day_key = s.collected_at.strftime("%Y-%m-%d")
+                if day_key not in by_day or s.price < by_day[day_key]:
+                    by_day[day_key] = s.price
+            sparkline = [by_day[k] for k in sorted(by_day.keys())]
+
+            # Badge factual: preco atual vs sparkline de 30d
+            if cheapest_snapshot and sparkline and len(sparkline) >= 3:
+                current_price = cheapest_snapshot.price
+                spark_min = min(sparkline)
+                spark_avg = sum(sparkline) / len(sparkline)
+                if current_price <= spark_min * 1.01:
+                    price_badge = {"label": "Menor preço em 30 dias", "tone": "good"}
+                elif current_price <= spark_avg * 0.95:
+                    pct = round((spark_avg - current_price) / spark_avg * 100)
+                    price_badge = {"label": f"{pct}% abaixo da média 30d", "tone": "good"}
+                elif current_price >= spark_avg * 1.10:
+                    pct = round((current_price - spark_avg) / spark_avg * 100)
+                    price_badge = {"label": f"{pct}% acima da média 30d", "tone": "bad"}
 
         result.append({
             "group": group,
@@ -195,6 +212,7 @@ def get_groups_with_summary(db: Session, user_id: int | None = None) -> list[dic
             "best_ever": best_ever,
             "collection_count": collection_count,
             "sparkline": sparkline,
+            "price_badge": price_badge,
         })
 
     # Sort by cheapest price (groups with data first, then by price ascending)
