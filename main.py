@@ -10,10 +10,13 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.auth.middleware import AuthMiddleware
 from app.config import settings
+from app.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 _TEMPLATES_DIR = Path(__file__).resolve().parent / "app" / "templates"
@@ -31,6 +34,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Flight Monitor", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Middlewares (Starlette LIFO: SessionMiddleware adicionado primeiro, executa primeiro)
 is_production = not settings.database_url.startswith("sqlite")

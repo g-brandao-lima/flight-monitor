@@ -16,3 +16,4 @@ alembic==1.18.4
 authlib==1.6.9
 itsdangerous==2.2.0
 fast-flights==2.2
+slowapi==0.1.9

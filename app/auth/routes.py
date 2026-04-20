@@ -7,6 +7,7 @@ import logging
 from app.auth.oauth import oauth
 from app.database import get_db
 from app.models import User
+from app.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.get("/login")
+@limiter.limit("10/minute")
 async def login(request: Request):
     redirect_uri = request.url_for("auth_callback")
     return await oauth.google.authorize_redirect(request, redirect_uri)

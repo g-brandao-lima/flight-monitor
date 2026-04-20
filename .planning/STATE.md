@@ -45,6 +45,13 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 15.1 inserted after Phase 15: Security Emergency Fix (URGENT - vazamento de dados em /api/v1/route-groups/ + rate limit login) - 2026-04-20
+- Phase 17.1 inserted after Phase 17: Price Source Indicator (coluna source em FlightSnapshot + badge visual) - 2026-04-20
+- Phase 22 added: Historical Context in Alerts (email e UI mostram "X% abaixo da média dos últimos 90 dias") - 2026-04-20
+- Phase 23 added: Inventory Signal Empirical Validation (análise SQL dos snapshots para medir acerto do sinal K/Q/V) - 2026-04-20
+
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
@@ -54,6 +61,9 @@ Recent decisions affecting current work:
 - [v2.1]: Passengers fix before cache — cache key needs correct passengers count
 - [v2.1]: JWT before rate limiting — request.state.user_id improves slowapi key_func
 - [v2.1]: Legacy removal last — blocks nothing, not blocked by anything
+- [v2.1, 2026-04-20]: Pesquisa de mercado validou gaps: contexto histórico e WhatsApp ausentes no BR
+- [v2.1, 2026-04-20]: Kiwi Tequila como fonte complementar (markup no checkout), SerpAPI mantém como primária
+- [v2.1, 2026-04-20]: fast-flights marcado para remoção (scraping frágil, retorna vazio silenciosamente)
 
 ### Pending Todos
 
