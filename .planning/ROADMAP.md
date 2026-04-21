@@ -423,7 +423,10 @@ Plans:
   2. Proximo a cada preco (tooltip, nota de rodape ou infobox) aparece disclaimer: "pode divergir ate 5% do valor final; bagagem e taxas nao incluidas"
   3. fast-flights removido do codigo (imports, chamadas, dependencia); apenas SerpAPI e cache local restam como fontes de preco
   4. Todos os testes continuam passando apos remocao do fast-flights
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 31.9-01-PLAN.md — UI copy: rotulo preco de referencia + disclaimer em cards, detalhe e email (HYG-01, HYG-02)
+- [ ] 31.9-02-PLAN.md — Remocao fast-flights do orchestrator e requirements (HYG-03)
 **UI hint**: yes
 
 ### Phase 32: Cache Layer Travelpayouts
