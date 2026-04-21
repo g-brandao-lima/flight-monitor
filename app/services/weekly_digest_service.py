@@ -106,7 +106,7 @@ def compose_digest_email(digest: dict) -> MIMEMultipart:
     user = digest["user"]
     items = digest["items"]
 
-    subject = f"Flight Monitor: seu resumo semanal ({len(items)} grupos ativos)"
+    subject = f"Orbita: seu resumo semanal ({len(items)} grupos ativos)"
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
@@ -142,7 +142,7 @@ def _render_plain(digest: dict) -> str:
     lines.append(f"Acesse o dashboard: {settings.app_base_url}/")
     lines.append("")
     lines.append("Boas viagens!")
-    lines.append("Flight Monitor")
+    lines.append("Orbita")
     return "\n".join(lines)
 
 

@@ -1,4 +1,4 @@
-"""Rotas administrativas do Flight Monitor.
+"""Rotas administrativas do Orbita.
 
 Acessivel somente pelo email configurado em ADMIN_EMAIL. Usa 404 para
 nao-admins (evita enumeracao). Phase 24.

@@ -8,7 +8,7 @@ def test_app_starts_and_responds(client):
     # Assert
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
-    assert "Flight Monitor" in response.text
+    assert "Orbita" in response.text
 
 
 def test_app_has_openapi_docs(client):

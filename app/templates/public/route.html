@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set s = stats %}
-{% block title %}Passagens {{ s.origin_city }} para {{ s.destination_city }} - Flight Monitor{% endblock %}
+{% block title %}Passagens {{ s.origin_city }} para {{ s.destination_city }} - Orbita{% endblock %}
 {% block head %}
 <link rel="canonical" href="{{ canonical }}">
 <meta name="description" content="Passagens {{ s.origin_city }} ({{ s.origin }}) para {{ s.destination_city }} ({{ s.destination }}): preco atual {{ format_price_brl(s.current_price) if s.current_price else 'consulte' }}{% if s.median_180d %}, mediana 180d {{ format_price_brl(s.median_180d) }}{% endif %}. Monitore e receba alertas quando o preco cair.">

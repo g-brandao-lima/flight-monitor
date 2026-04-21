@@ -1,0 +1,39 @@
+# fly.toml — configuracao de deploy para Fly.io
+# Migrate from Render: 1 maquina always-on em GRU, APScheduler in-process preservado
+# Depois de fly launch, rodar: fly secrets set KEY=VALUE para cada env var
+
+app = "orbita-flights"
+primary_region = "gru"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  PYTHONUNBUFFERED = "1"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 250
+    soft_limit = 200
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "15s"
+    method = "GET"
+    path = "/"
+    protocol = "http"
+    timeout = "5s"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

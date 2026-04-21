@@ -88,20 +88,20 @@ def compose_welcome_email(user_name: str, user_email: str) -> MIMEMultipart:
     dashboard_url = f"{settings.app_base_url}/"
 
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Bem-vindo ao Flight Monitor, {first_name}!"
+    msg["Subject"] = f"Bem-vindo ao Orbita, {first_name}!"
     msg["From"] = settings.gmail_sender
     msg["To"] = user_email
 
     plain = (
         f"Olá, {first_name}!\n\n"
-        "Sua conta no Flight Monitor foi criada.\n\n"
-        "O que o Flight Monitor faz:\n"
+        "Sua conta no Orbita foi criada.\n\n"
+        "O que o Orbita faz:\n"
         "- Monitora preços de passagens aéreas 24h por dia\n"
         "- Detecta o momento ideal de compra antes que o preço suba\n"
         "- Envia alertas direto no seu email\n\n"
         f"Crie seu primeiro grupo de monitoramento: {dashboard_url}\n\n"
         "Boas viagens!\n"
-        "Equipe Flight Monitor"
+        "Equipe Orbita"
     )
 
     html = (
@@ -116,10 +116,10 @@ def compose_welcome_email(user_name: str, user_email: str) -> MIMEMultipart:
         '</div>'
         f'<h1 style="text-align:center;font-size:24px;margin:0 0 8px;">Olá, {first_name}!</h1>'
         '<p style="text-align:center;color:#94a3b8;font-size:16px;margin:0 0 32px;">'
-        'Sua conta no Flight Monitor foi criada.</p>'
+        'Sua conta no Orbita foi criada.</p>'
         '<div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:24px;'
         'margin-bottom:24px;">'
-        '<p style="font-size:14px;color:#94a3b8;margin:0 0 16px;">O que o Flight Monitor faz:</p>'
+        '<p style="font-size:14px;color:#94a3b8;margin:0 0 16px;">O que o Orbita faz:</p>'
         '<ul style="font-size:14px;color:#e2e8f0;padding-left:20px;margin:0;">'
         '<li style="margin-bottom:8px;">Monitora preços de passagens aéreas 24h por dia</li>'
         '<li style="margin-bottom:8px;">Detecta o momento ideal de compra antes que o preço suba</li>'
@@ -131,7 +131,7 @@ def compose_welcome_email(user_name: str, user_email: str) -> MIMEMultipart:
         'border-radius:10px;text-decoration:none;">Criar meu primeiro grupo</a>'
         '</div>'
         '<p style="text-align:center;color:#64748b;font-size:13px;margin-top:32px;">'
-        'Boas viagens!<br>Equipe Flight Monitor</p>'
+        'Boas viagens!<br>Equipe Orbita</p>'
         '</body></html>'
     )
 
@@ -276,13 +276,13 @@ def _build_subject(cheapest: FlightSnapshot, ctx: dict | None, group: RouteGroup
     Exemplos:
     - "GRU-LIS caiu 23% hoje: R$ 3.120 (media 90d R$ 4.050)"
     - "GRU-LIS em R$ 3.120 (media 90d R$ 3.150)"
-    - "Flight Monitor: Europa Verao - R$ 3.120" (sem amostras suficientes)
+    - "Orbita: Europa Verao - R$ 3.120" (sem amostras suficientes)
     """
     route = f"{cheapest.origin}-{cheapest.destination}"
     price_str = format_price_brl(cheapest.price)
 
     if not ctx or ctx.get("avg", 0) <= 0:
-        return f"Flight Monitor: {group.name} em {price_str}"
+        return f"Orbita: {group.name} em {price_str}"
 
     avg = ctx["avg"]
     avg_str = format_price_brl(avg)
