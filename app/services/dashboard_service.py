@@ -507,13 +507,8 @@ def booking_urls(
 ) -> dict:
     """Gera URLs de deep link para sites de busca de voos.
 
-    Retorna dict com URLs prontas para Google Flights, Decolar e Skyscanner.
-    Todos abrem com resultados de voos ja carregados.
-
-    Ordem visual recomendada no template:
-    1. google_flights (fonte real do preco mostrado no card)
-    2. decolar (OTA mais usada no Brasil)
-    3. skyscanner (meta-search mais conhecido)
+    Retorna dict com URLs prontas para Google Flights e Skyscanner.
+    Ambos abrem com resultados de voos ja carregados.
     """
     dep_iso = departure_date.strftime("%Y-%m-%d") if hasattr(departure_date, 'strftime') else str(departure_date)
     ret_iso = return_date.strftime("%Y-%m-%d") if hasattr(return_date, 'strftime') else str(return_date)
@@ -527,10 +522,6 @@ def booking_urls(
             f"q=Flights%20from%20{origin}%20to%20{destination}%20"
             f"on%20{dep_iso}%20returning%20{ret_iso}"
             f"&hl=pt-BR&curr=BRL"
-        ),
-        "decolar": (
-            f"https://www.decolar.com/shop/flights/results/roundtrip/"
-            f"{origin}/{destination}/{dep_iso}/{ret_iso}/{pax}/0/0/NA/NA?from=SB"
         ),
         "skyscanner": (
             f"https://www.skyscanner.com.br/transport/flights/"
