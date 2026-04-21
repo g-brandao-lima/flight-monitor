@@ -82,38 +82,13 @@ def test_parse_price_returns_none_on_non_numeric():
 
 
 # ---------------------------------------------------------------------------
-# search_flights — source routing
+# search_flights — SerpAPI only (Phase 31.9 removed fast-flights)
 # ---------------------------------------------------------------------------
 
 
-@patch(FF_MOCK_TARGET)
-def test_search_uses_fast_flights_when_available(mock_gf):
-    from app.services.flight_search import search_flights
-
-    mock_result = MagicMock()
-    flight = MagicMock()
-    flight.price = "R$450"
-    flight.configure_mock(name="LATAM")
-    mock_result.flights = [flight]
-    mock_gf.return_value = mock_result
-
-    flights, insights, source = search_flights(
-        "GRU", "GIG", "2026-05-01", "2026-05-08"
-    )
-
-    assert source == "fast_flights"
-    assert insights is None
-    assert len(flights) >= 1
-    assert flights[0]["price"] == 450.0
-    assert flights[0]["airline"] == "LATAM"
-
-
 @patch("app.services.flight_search.SerpApiClient")
-@patch(FF_MOCK_TARGET)
-def test_search_falls_back_to_serpapi_on_fast_flights_failure(mock_gf, mock_cls):
+def test_search_uses_serpapi(mock_cls):
     from app.services.flight_search import search_flights
-
-    mock_gf.side_effect = RuntimeError("protobuf schema changed")
 
     mock_client = MagicMock()
     mock_client.search_flights_with_insights.return_value = (
@@ -123,7 +98,7 @@ def test_search_falls_back_to_serpapi_on_fast_flights_failure(mock_gf, mock_cls)
     mock_cls.return_value = mock_client
 
     flights, insights, source = search_flights(
-        "GRU", "GIG", "2026-05-01", "2026-05-08"
+        "GRU", "GIG", "2026-05-01", "2026-05-08", use_cache=False
     )
 
     assert source == "serpapi"
@@ -132,117 +107,30 @@ def test_search_falls_back_to_serpapi_on_fast_flights_failure(mock_gf, mock_cls)
 
 
 @patch("app.services.flight_search.SerpApiClient")
-@patch(FF_MOCK_TARGET)
-def test_search_propagates_error_when_both_fail(mock_gf, mock_cls):
+def test_search_propagates_error_when_serpapi_fails(mock_cls):
     from app.services.flight_search import search_flights
 
-    mock_gf.side_effect = RuntimeError("fast-flights down")
     mock_client = MagicMock()
     mock_client.search_flights_with_insights.side_effect = Exception("SerpAPI quota")
     mock_cls.return_value = mock_client
 
     with pytest.raises(Exception):
-        search_flights("GRU", "GIG", "2026-05-01", "2026-05-08")
+        search_flights("GRU", "GIG", "2026-05-01", "2026-05-08", use_cache=False)
 
 
-@patch(FF_MOCK_TARGET)
-def test_search_raises_when_fast_flights_returns_empty(mock_gf):
-    """fast-flights sem resultados e tratado como falha -> tenta SerpAPI."""
-    from app.services.flight_search import search_flights
+# HYG-03 — fast-flights removido (Phase 31.9)
 
-    mock_result = MagicMock()
-    mock_result.flights = []
-    mock_gf.return_value = mock_result
-
-    with patch("app.services.flight_search.SerpApiClient") as mock_cls:
-        mock_client = MagicMock()
-        mock_client.search_flights_with_insights.return_value = (
-            MOCK_SERPAPI_FLIGHTS,
-            MOCK_SERPAPI_INSIGHTS,
-        )
-        mock_cls.return_value = mock_client
-
-        flights, insights, source = search_flights(
-            "GRU", "GIG", "2026-05-01", "2026-05-08"
-        )
-
-    assert source == "serpapi"
+def test_flight_search_nao_importa_fast_flights():
+    """HYG-03: fast-flights foi removido do orchestrator."""
+    from pathlib import Path
+    source = Path("app/services/flight_search.py").read_text(encoding="utf-8")
+    assert "fast_flights" not in source
+    assert "FlightData" not in source
+    assert "TFSData" not in source
 
 
-@patch(FF_MOCK_TARGET)
-def test_search_respects_max_results(mock_gf):
-    from app.services.flight_search import search_flights
-
-    mock_result = MagicMock()
-    flights_raw = []
-    for i in range(10):
-        f = MagicMock()
-        f.price = f"R${500 + i * 10}"
-        f.configure_mock(name="LATAM")
-        flights_raw.append(f)
-    mock_result.flights = flights_raw
-    mock_gf.return_value = mock_result
-
-    flights, _, _ = search_flights(
-        "GRU", "GIG", "2026-05-01", "2026-05-08", max_results=3
-    )
-
-    assert len(flights) == 3
-
-
-@patch(FF_MOCK_TARGET)
-def test_search_returns_sorted_by_price(mock_gf):
-    from app.services.flight_search import search_flights
-
-    mock_result = MagicMock()
-    f1, f2, f3 = MagicMock(), MagicMock(), MagicMock()
-    f1.price = "R$700"
-    f1.configure_mock(name="GOL")
-    f2.price = "R$450"
-    f2.configure_mock(name="LATAM")
-    f3.price = "R$580"
-    f3.configure_mock(name="AZUL")
-    mock_result.flights = [f1, f2, f3]
-    mock_gf.return_value = mock_result
-
-    flights, _, _ = search_flights("GRU", "GIG", "2026-05-01", "2026-05-08")
-
-    prices = [f["price"] for f in flights]
-    assert prices == sorted(prices)
-
-
-@patch(FF_MOCK_TARGET)
-def test_search_passes_currency_brl(mock_gf):
-    from app.services.flight_search import search_flights
-
-    mock_result = MagicMock()
-    f = MagicMock()
-    f.price = "R$500"
-    f.configure_mock(name="LATAM")
-    mock_result.flights = [f]
-    mock_gf.return_value = mock_result
-
-    search_flights("GRU", "GIG", "2026-05-01", "2026-05-08")
-
-    _, kwargs = mock_gf.call_args
-    assert kwargs.get("currency") == "BRL" or mock_gf.call_args[1].get("currency") == "BRL" or (
-        len(mock_gf.call_args[0]) >= 2 and mock_gf.call_args[0][1] == "BRL"
-    )
-
-
-@patch(FF_MOCK_TARGET)
-def test_search_normalized_dict_has_required_keys(mock_gf):
-    from app.services.flight_search import search_flights
-
-    mock_result = MagicMock()
-    f = MagicMock()
-    f.price = "R$500"
-    f.configure_mock(name="LATAM")
-    mock_result.flights = [f]
-    mock_gf.return_value = mock_result
-
-    flights, _, _ = search_flights("GRU", "GIG", "2026-05-01", "2026-05-08")
-
-    assert "price" in flights[0]
-    assert "airline" in flights[0]
-    assert isinstance(flights[0]["price"], float)
+def test_flight_search_nao_expoe_helpers_fast_flights():
+    """HYG-03: funcoes auxiliares de fast-flights foram removidas."""
+    import app.services.flight_search as fs
+    assert not hasattr(fs, "_search_fast_flights")
+    assert not hasattr(fs, "_FF_AVAILABLE")

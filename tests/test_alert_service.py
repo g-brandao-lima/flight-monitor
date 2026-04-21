@@ -533,3 +533,63 @@ def test_compose_alert_email_recipient_email_sets_to_header():
 
     # Assert
     assert msg["To"] == "owner@example.com"
+
+
+# HYG-01, HYG-02 — Price Fidelity Hygiene (Phase 31.9)
+
+def _extract_html_and_plain(msg):
+    """Extrai payloads HTML e plain do MIMEMultipart de consolidated email."""
+    html_body = ""
+    plain_body = ""
+    for part in msg.walk():
+        ctype = part.get_content_type()
+        if ctype == "text/html":
+            html_body = part.get_payload(decode=True).decode("utf-8", errors="replace")
+        elif ctype == "text/plain":
+            plain_body = part.get_payload(decode=True).decode("utf-8", errors="replace")
+    return html_body, plain_body
+
+
+def test_consolidated_email_html_contem_rotulo_preco_referencia():
+    group = _make_group(name="GRU-MIA")
+    snapshots = [_make_snapshot(price=3200.00)]
+    signals = _make_signals_list(1)
+
+    msg = compose_consolidated_email(signals, snapshots, group)
+    html, _ = _extract_html_and_plain(msg)
+
+    assert "Preco de referencia Google Flights" in html
+
+
+def test_consolidated_email_html_contem_disclaimer():
+    group = _make_group(name="GRU-MIA")
+    snapshots = [_make_snapshot(price=3200.00)]
+    signals = _make_signals_list(1)
+
+    msg = compose_consolidated_email(signals, snapshots, group)
+    html, _ = _extract_html_and_plain(msg)
+
+    assert "Pode divergir ate 5% do valor final" in html
+    assert "bagagem e taxas nao incluidas" in html
+
+
+def test_consolidated_email_plain_contem_rotulo_preco_referencia():
+    group = _make_group(name="GRU-MIA")
+    snapshots = [_make_snapshot(price=3200.00)]
+    signals = _make_signals_list(1)
+
+    msg = compose_consolidated_email(signals, snapshots, group)
+    _, plain = _extract_html_and_plain(msg)
+
+    assert "Preco de referencia Google Flights" in plain
+
+
+def test_consolidated_email_plain_contem_disclaimer():
+    group = _make_group(name="GRU-MIA")
+    snapshots = [_make_snapshot(price=3200.00)]
+    signals = _make_signals_list(1)
+
+    msg = compose_consolidated_email(signals, snapshots, group)
+    _, plain = _extract_html_and_plain(msg)
+
+    assert "Pode divergir ate 5% do valor final" in plain

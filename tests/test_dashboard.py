@@ -313,3 +313,42 @@ def test_toggle_respects_limit(client, db, test_user):
 
     db.refresh(inactive)
     assert inactive.is_active is False
+
+
+# HYG-01, HYG-02 — Price Fidelity Hygiene (Phase 31.9)
+
+def test_dashboard_card_exibe_rotulo_preco_referencia(client, db, test_user):
+    group = _make_group(db, user_id=test_user.id)
+    _make_snapshot(db, group, price=3500.0)
+
+    response = client.get("/")
+
+    assert "Preco de referencia Google Flights" in response.text
+
+
+def test_dashboard_card_exibe_disclaimer_divergencia(client, db, test_user):
+    group = _make_group(db, user_id=test_user.id)
+    _make_snapshot(db, group, price=3500.0)
+
+    response = client.get("/")
+
+    assert "Pode divergir ate 5% do valor final" in response.text
+    assert "bagagem e taxas nao incluidas" in response.text
+
+
+def test_detail_page_exibe_rotulo_preco_referencia(client, db, test_user):
+    group = _make_group(db, user_id=test_user.id)
+    _make_snapshot(db, group, price=3500.0, collected_at=datetime.datetime.utcnow() - timedelta(hours=1))
+
+    response = client.get(f"/groups/{group.id}")
+
+    assert "Preco de referencia Google Flights" in response.text
+
+
+def test_detail_page_exibe_disclaimer_divergencia(client, db, test_user):
+    group = _make_group(db, user_id=test_user.id)
+    _make_snapshot(db, group, price=3500.0, collected_at=datetime.datetime.utcnow() - timedelta(hours=1))
+
+    response = client.get(f"/groups/{group.id}")
+
+    assert "Pode divergir ate 5% do valor final" in response.text

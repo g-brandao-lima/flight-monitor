@@ -400,8 +400,14 @@
             {% if snap %}
             {% set display_price = snap.price * pax if price_mode == 'total' else snap.price %}
             <div class="card-price-area">
+                <div class="card-price-sub" style="font-size:11px;color:#64748b;margin-bottom:4px;letter-spacing:0.2px;">
+                    Preco de referencia Google Flights
+                </div>
                 <div class="card-price {% if cls == 'LOW' %}price-low{% elif cls == 'MEDIUM' %}price-medium{% elif cls == 'HIGH' %}price-high{% else %}price-none{% endif %}">
                     {{ format_price_brl(display_price) }}
+                </div>
+                <div class="card-price-sub" style="margin-top:6px;font-size:10px;color:#475569;line-height:1.4;font-style:italic;" title="Pode divergir ate 5% do valor final; bagagem e taxas nao incluidas.">
+                    Pode divergir ate 5% do valor final; bagagem e taxas nao incluidas.
                 </div>
                 {% if price_mode == 'total' %}
                 <div class="card-price-sub">total {{ pax }} {{ 'passageiros' if pax > 1 else 'passageiro' }}, ida e volta</div>

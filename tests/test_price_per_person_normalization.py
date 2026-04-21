@@ -57,26 +57,5 @@ def test_serpapi_returns_price_as_is_no_division(mock_settings, mock_search_cls)
     assert flights[0]["price"] == 3000, "Preco deve vir intacto da API"
 
 
-@patch("app.services.flight_search._FF_AVAILABLE", True)
-@patch("app.services.flight_search.get_flights_from_filter")
-@patch("app.services.flight_search.TFSData")
-@patch("app.services.flight_search.Passengers")
-@patch("app.services.flight_search.FlightData")
-def test_fast_flights_always_uses_adults_1(
-    _fd_mock, mock_pax, _tfs_mock, mock_get_flights
-):
-    """Mesmo com caller pedindo adults=N, fast-flights e chamado com adults=1."""
-    from app.services.flight_search import search_flights
-
-    mock_flight = MagicMock()
-    mock_flight.price = "R$2500"
-    mock_flight.name = "GOL"
-    mock_result = MagicMock()
-    mock_result.flights = [mock_flight]
-    mock_get_flights.return_value = mock_result
-
-    search_flights(
-        "GRU", "LIS", "2026-09-15", "2026-09-25", use_cache=False, adults=3
-    )
-
-    mock_pax.assert_called_once_with(adults=1)
+# Teste de fast-flights removido na Phase 31.9 (HYG-03). SerpAPI agora
+# garante adults=1 via serpapi_client; coberto por test_serpapi_client.

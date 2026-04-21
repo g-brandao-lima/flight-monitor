@@ -354,10 +354,12 @@ def _render_consolidated_html(
         f'<p style="margin:8px 0 0;padding:6px 10px;background:rgba(255,255,255,0.15);border-radius:6px;font-size:13px;font-weight:600;">{context_phrase}</p>'
         if context_phrase else ''
     )
+    label_html = '<p style="margin:4px 0 0;font-size:12px;opacity:0.9;font-weight:600;">Preco de referencia Google Flights</p>'
+    disclaimer_html = '<p style="margin:8px 0 0;font-size:11px;opacity:0.8;font-style:italic;">Pode divergir ate 5% do valor final; bagagem e taxas nao incluidas.</p>'
     parts.append(
         '<div style="background:#059669;color:white;padding:16px 20px;border-radius:8px 8px 0 0;">'
         f'<h2 style="margin:0;">Melhor preco: {format_price_brl(cheapest.price)}</h2>'
-        + header_sub + source_html + context_html +
+        + label_html + header_sub + source_html + context_html + disclaimer_html +
         '</div>'
     )
 
@@ -451,6 +453,8 @@ def _render_consolidated_plain(
     lines = []
 
     lines.append(f"MELHOR PRECO: {format_price_brl(cheapest.price)} por pessoa, ida e volta{pax_suffix}")
+    lines.append("Preco de referencia Google Flights")
+    lines.append("(Pode divergir ate 5% do valor final; bagagem e taxas nao incluidas)")
     lines.append(
         f"Rota: {cheapest.origin} -> {cheapest.destination} | {cheapest.airline}"
     )
