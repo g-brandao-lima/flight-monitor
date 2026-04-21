@@ -4,191 +4,326 @@
 <style>
     html { scroll-behavior: smooth; }
 
-    /* Landing sections */
+    /* ==========================================================================
+       HERO
+       ========================================================================== */
     .landing-hero {
         text-align: center;
-        max-width: 720px;
+        max-width: 760px;
         margin: 0 auto;
-        padding: 64px 0;
+        padding: var(--sp-20) 0 var(--sp-16);
+        position: relative;
     }
-    .landing-hero-icon {
-        margin-bottom: 24px;
+    .landing-hero::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        height: 400px;
+        background: radial-gradient(ellipse at center, rgba(99,102,241,0.22), transparent 60%);
+        pointer-events: none;
+        z-index: -1;
     }
+    .landing-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-2);
+        padding: 6px 12px;
+        background: rgba(99,102,241,0.10);
+        border: 1px solid rgba(99,102,241,0.24);
+        border-radius: var(--r-full);
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--brand-400);
+        letter-spacing: 0.02em;
+        margin-bottom: var(--sp-6);
+    }
+    .landing-eyebrow-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: var(--r-full);
+        background: var(--accent-500);
+        box-shadow: 0 0 8px var(--accent-500);
+        animation: pulseDot 2s ease-in-out infinite;
+    }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.3); } }
+
     .landing-hero h1 {
-        font-size: 40px;
+        font-size: 56px;
         font-weight: 700;
-        line-height: 1.1;
-        color: #e2e8f0;
-        margin-bottom: 16px;
+        line-height: 1.05;
+        color: var(--text-0);
+        letter-spacing: -0.03em;
+        margin-bottom: var(--sp-5);
+    }
+    .landing-hero h1 .gradient {
+        background: var(--gradient-brand);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
     .landing-hero-subtitle {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 400;
-        line-height: 1.6;
-        color: #94a3b8;
-        max-width: 520px;
+        line-height: 1.55;
+        color: var(--text-1);
+        max-width: 580px;
         margin: 0 auto;
+    }
+    .landing-cta-row {
+        display: flex;
+        gap: var(--sp-3);
+        justify-content: center;
+        margin-top: var(--sp-8);
+        flex-wrap: wrap;
     }
     .landing-cta {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        margin-top: 32px;
-        background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+        gap: var(--sp-2);
+        background: var(--gradient-brand);
         color: #fff;
-        font-size: 16px;
-        font-weight: 700;
-        padding: 16px 32px;
-        border-radius: 10px;
-        min-height: 44px;
+        font-size: 15px;
+        font-weight: 600;
+        padding: 0 var(--sp-6);
+        min-height: 48px;
+        border-radius: var(--r-md);
         text-decoration: none;
-        box-shadow: 0 2px 12px rgba(14, 165, 233, 0.25);
-        transition: box-shadow 0.2s ease, transform 0.2s ease;
+        letter-spacing: -0.01em;
+        box-shadow: var(--glow-brand);
+        transition: transform 150ms ease, box-shadow 200ms ease, filter 150ms ease;
     }
-    .landing-cta:hover {
-        box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4);
-        transform: translateY(-1px);
+    .landing-cta:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .landing-cta-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--sp-2);
+        padding: 0 var(--sp-6);
+        min-height: 48px;
+        border: 1px solid var(--border-2);
+        border-radius: var(--r-md);
+        color: var(--text-1);
+        font-size: 15px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: border-color 150ms ease, color 150ms ease;
     }
-    .landing-cta:active {
-        transform: scale(0.97);
+    .landing-cta-secondary:hover { border-color: var(--border-3); color: var(--text-0); }
+
+    .landing-social-proof {
+        margin-top: var(--sp-6);
+        font-size: 13px;
+        color: var(--text-2);
     }
 
-    /* Sections */
-    .landing-section {
-        padding: 64px 0;
-    }
+    /* ==========================================================================
+       SECTIONS
+       ========================================================================== */
+    .landing-section { padding: var(--sp-16) 0; }
     .landing-section-heading {
         text-align: center;
-        font-size: 24px;
+        font-size: 32px;
         font-weight: 700;
-        color: #e2e8f0;
+        color: var(--text-0);
         line-height: 1.2;
-        margin-bottom: 32px;
+        letter-spacing: -0.025em;
+        margin-bottom: var(--sp-3);
+    }
+    .landing-section-sub {
+        text-align: center;
+        font-size: 15px;
+        color: var(--text-2);
+        margin-bottom: var(--sp-10);
+        max-width: 520px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
-    /* Step and feature grids */
+    /* ==========================================================================
+       GRIDS
+       ========================================================================== */
     .landing-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
+        gap: var(--sp-4);
     }
+    .landing-grid-2 { grid-template-columns: repeat(2, 1fr); }
 
     /* Cards */
     .landing-card {
-        background: #111827;
-        border: 1px solid #1e293b;
-        border-radius: 12px;
-        padding: 24px;
+        background: var(--bg-1);
+        border: 1px solid var(--border-1);
+        border-radius: var(--r-lg);
+        padding: var(--sp-6);
+        box-shadow: var(--elev-1);
+        transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
     }
-
-    /* Step cards */
-    .step-number {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #0ea5e9;
-        color: #fff;
-        font-size: 13px;
-        font-weight: 700;
-        display: flex;
+    .landing-card:hover {
+        border-color: var(--border-3);
+        transform: translateY(-2px);
+        box-shadow: var(--elev-2);
+    }
+    .step-num {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: var(--r-full);
+        background: rgba(99,102,241,0.12);
+        border: 1px solid rgba(99,102,241,0.24);
+        color: var(--brand-400);
+        font-size: 14px;
+        font-weight: 700;
+        font-family: var(--font-mono);
+        margin-bottom: var(--sp-4);
     }
     .step-title {
         font-size: 16px;
-        font-weight: 700;
-        color: #e2e8f0;
-        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-0);
+        letter-spacing: -0.01em;
+        margin-bottom: var(--sp-2);
     }
     .step-desc {
-        font-size: 13px;
-        font-weight: 400;
-        color: #94a3b8;
-        line-height: 1.5;
+        font-size: 14px;
+        color: var(--text-2);
+        line-height: 1.55;
     }
 
-    /* Feature cards */
-    .feature-card {
-        transition: border-color 0.2s ease;
-    }
-    .feature-card:hover {
-        border-color: #0ea5e9;
-    }
+    /* Diferenciais (com icone) */
     .feature-icon {
-        width: 48px;
-        height: 48px;
-        background: rgba(14, 165, 233, 0.1);
-        border-radius: 12px;
+        color: var(--accent-500);
+        margin-bottom: var(--sp-4);
+    }
+
+    /* Popular routes card (com link) */
+    a.landing-card { text-decoration: none; color: inherit; display: block; }
+    a.landing-card:hover .step-title { color: var(--brand-400); }
+
+    /* ==========================================================================
+       FAQ
+       ========================================================================== */
+    .faq-list {
+        max-width: 720px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-2);
+    }
+    .faq-item {
+        background: var(--bg-1);
+        border: 1px solid var(--border-1);
+        border-radius: var(--r-md);
+        overflow: hidden;
+    }
+    .faq-item summary {
+        list-style: none;
+        padding: var(--sp-4) var(--sp-5);
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text-0);
         display: flex;
         align-items: center;
-        justify-content: center;
-        margin-bottom: 16px;
+        justify-content: space-between;
     }
-    .feature-title {
-        font-size: 16px;
-        font-weight: 700;
-        color: #e2e8f0;
-        margin-bottom: 8px;
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary::after {
+        content: "+";
+        font-size: 20px;
+        color: var(--text-2);
+        font-weight: 300;
+        transition: transform 200ms ease;
     }
-    .feature-desc {
-        font-size: 13px;
-        font-weight: 400;
-        color: #94a3b8;
-        line-height: 1.5;
+    .faq-item[open] summary::after { transform: rotate(45deg); }
+    .faq-item[open] summary { border-bottom: 1px solid var(--border-1); }
+    .faq-answer {
+        padding: var(--sp-4) var(--sp-5);
+        font-size: 14px;
+        color: var(--text-1);
+        line-height: 1.6;
     }
 
-    /* Final CTA section */
+    /* ==========================================================================
+       FINAL CTA
+       ========================================================================== */
     .landing-final-cta {
-        border-top: 1px solid #1e293b;
-        padding: 64px 0;
         text-align: center;
+        padding: var(--sp-20) var(--sp-4);
+        background: var(--bg-1);
+        border: 1px solid var(--border-1);
+        border-radius: var(--r-xl);
+        margin: var(--sp-16) 0;
+        position: relative;
+        overflow: hidden;
+    }
+    .landing-final-cta::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at center top, rgba(34,211,238,0.16), transparent 60%);
+        pointer-events: none;
     }
     .landing-final-cta h2 {
-        font-size: 24px;
+        font-size: 32px;
         font-weight: 700;
-        color: #e2e8f0;
-        line-height: 1.2;
+        color: var(--text-0);
+        letter-spacing: -0.025em;
+        margin-bottom: var(--sp-3);
+        position: relative;
     }
-    .landing-final-cta .landing-cta {
-        margin-top: 24px;
+    .landing-final-cta p {
+        color: var(--text-1);
+        font-size: 16px;
+        margin-bottom: var(--sp-6);
+        position: relative;
     }
+    .landing-final-cta .landing-cta { position: relative; }
     .landing-final-subtext {
+        color: var(--text-3);
         font-size: 13px;
-        font-weight: 400;
-        color: #64748b;
-        margin-top: 16px;
+        margin-top: var(--sp-4);
+        margin-bottom: 0;
     }
 
-    /* Mobile */
+    /* ==========================================================================
+       FOOTER
+       ========================================================================== */
+    .landing-footer {
+        padding: var(--sp-10) 0 var(--sp-8);
+        border-top: 1px solid var(--border-1);
+        margin-top: var(--sp-12);
+        text-align: center;
+    }
+    .landing-footer-tagline {
+        font-family: var(--font-mono);
+        color: var(--text-2);
+        font-size: 13px;
+        margin-bottom: var(--sp-2);
+        letter-spacing: 0.02em;
+    }
+    .landing-footer-copy {
+        color: var(--text-3);
+        font-size: 12px;
+    }
+
+    /* ==========================================================================
+       MOBILE
+       ========================================================================== */
     @media (max-width: 768px) {
-        .landing-hero {
-            padding-top: 48px;
-        }
-        .landing-hero h1 {
-            font-size: 28px;
-        }
-        .landing-section-heading,
-        .landing-final-cta h2 {
-            font-size: 20px;
-        }
-        .landing-section {
-            padding: 48px 0;
-        }
-        .landing-grid {
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
-        .landing-card {
-            padding: 24px 16px;
-        }
-        .landing-cta {
-            padding: 16px 24px;
-        }
-        .landing-final-cta {
-            padding: 48px 0;
-        }
+        .landing-hero { padding: var(--sp-12) var(--sp-4); }
+        .landing-hero h1 { font-size: 36px; letter-spacing: -0.02em; }
+        .landing-hero-subtitle { font-size: 15px; }
+        .landing-section { padding: var(--sp-12) 0; }
+        .landing-section-heading { font-size: 24px; }
+        .landing-grid, .landing-grid-2 { grid-template-columns: 1fr; }
+        .landing-final-cta { padding: var(--sp-12) var(--sp-4); margin: var(--sp-8) 0; }
+        .landing-final-cta h2 { font-size: 24px; }
     }
 </style>
 {% endblock %}
@@ -196,83 +331,140 @@
 {% block content %}
 <!-- Hero -->
 <section class="landing-hero">
-    <div class="landing-hero-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1z"/>
-        </svg>
+    <span class="landing-eyebrow">
+        <span class="landing-eyebrow-dot" aria-hidden="true"></span>
+        Monitoramento ativo
+    </span>
+    <h1>Compre passagem no <span class="gradient">momento certo</span>.</h1>
+    <p class="landing-hero-subtitle">
+        A Orbita monitora a rota que voce quer e te avisa por email quando o preco esta
+        historicamente baixo. Voce para de checar Google Flights toda semana.
+    </p>
+    <div class="landing-cta-row">
+        <a href="/auth/login" class="landing-cta">
+            Cadastrar minha primeira rota
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        {% if popular_public_routes %}
+        <a href="#rotas-populares" class="landing-cta-secondary">Ver rotas populares</a>
+        {% endif %}
     </div>
-    <h1>Saiba quando comprar antes que o preço suba.</h1>
-    <p class="landing-hero-subtitle">Monitoramos voos 24h por dia e avisamos quando é a melhor hora de comprar sua passagem.</p>
-    <a href="/auth/login" class="landing-cta">Começar grátis</a>
 </section>
 
 <!-- Como funciona -->
-<section class="landing-section">
+<section class="landing-section" id="como-funciona">
     <h2 class="landing-section-heading">Como funciona</h2>
+    <p class="landing-section-sub">Tres passos. Depois voce so recebe email quando vale a pena.</p>
     <div class="landing-grid">
         <div class="landing-card">
-            <div class="step-number">1</div>
-            <div class="step-title">Configure seus voos</div>
-            <div class="step-desc">Escolha origens, destinos e datas. O monitoramento começa automaticamente.</div>
+            <div class="step-num">1</div>
+            <div class="step-title">Cadastra a rota</div>
+            <div class="step-desc">Origem, destino e um periodo flexivel (tipo "junho de 2026"). Nao precisa data exata.</div>
         </div>
         <div class="landing-card">
-            <div class="step-number">2</div>
-            <div class="step-title">Receba sinais inteligentes</div>
-            <div class="step-desc">Nosso sistema analisa preços e disponibilidade 24h por dia e detecta o momento ideal de compra.</div>
+            <div class="step-num">2</div>
+            <div class="step-title">A Orbita monitora todo dia</div>
+            <div class="step-desc">A gente compara o preco atual com 180 dias de historico da sua rota.</div>
         </div>
         <div class="landing-card">
-            <div class="step-number">3</div>
-            <div class="step-title">Compre na hora certa</div>
-            <div class="step-desc">Receba alertas no seu email quando for a melhor hora de garantir sua passagem.</div>
+            <div class="step-num">3</div>
+            <div class="step-title">Voce recebe um email quando vale a pena</div>
+            <div class="step-desc">So quando detectamos oportunidade real. Sem newsletter, sem spam.</div>
         </div>
     </div>
 </section>
 
-<!-- Por que somos diferentes -->
-<section class="landing-section">
-    <h2 class="landing-section-heading">Por que somos diferentes</h2>
-    <div class="landing-grid">
-        <div class="landing-card feature-card">
+<!-- Por que Orbita -->
+<section class="landing-section" id="diferenciais">
+    <h2 class="landing-section-heading">Por que Orbita</h2>
+    <p class="landing-section-sub">Diferenca real no dia-a-dia de quem planeja viagem.</p>
+    <div class="landing-grid landing-grid-2">
+        <div class="landing-card">
             <div class="feature-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
             </div>
-            <div class="feature-title">Sinais antes do preço subir</div>
-            <div class="feature-desc">Detectamos quando assentos baratos estão acabando, antes que o preço aumente. Você compra no momento certo.</div>
+            <div class="step-title">Alerta antes do preco subir</div>
+            <div class="step-desc">Outros servicos avisam que o preco caiu ontem. A Orbita te avisa que vale comprar hoje, antes da proxima alta.</div>
         </div>
-        <div class="landing-card feature-card">
+        <div class="landing-card">
             <div class="feature-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-3 3"/></svg>
             </div>
-            <div class="feature-title">Monitoramento passivo 24h</div>
-            <div class="feature-desc">Configure uma vez e esqueça. O sistema verifica seus voos automaticamente e só te aciona quando vale a pena.</div>
+            <div class="step-title">Historico real da sua rota</div>
+            <div class="step-desc">180 dias de dados por rota. Voce ve se R$ 2.400 e caro ou barato pra GRU-LIS, baseado em preco real e nao em chute.</div>
         </div>
-        <div class="landing-card feature-card">
+        <div class="landing-card">
             <div class="feature-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             </div>
-            <div class="feature-title">Alerta direto no seu email</div>
-            <div class="feature-desc">Sem apps extras. Quando detectamos uma oportunidade, você recebe um email claro com tudo que precisa saber.</div>
+            <div class="step-title">Periodo flexivel, nao data fixa</div>
+            <div class="step-desc">Cadastra o mes ou a semana e a Orbita procura o melhor dia dentro desse intervalo.</div>
+        </div>
+        <div class="landing-card">
+            <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="step-title">Zero custo pra voce</div>
+            <div class="step-desc">A Orbita e gratis. A gente recebe comissao da companhia quando voce compra, sem aumentar o preco da sua passagem.</div>
         </div>
     </div>
 </section>
 
+<!-- Rotas populares -->
 {% if popular_public_routes %}
-<section class="landing-section">
+<section class="landing-section" id="rotas-populares">
     <h2 class="landing-section-heading">Rotas populares</h2>
+    <p class="landing-section-sub">Historico de 180 dias, atualizado todo dia. Entre em qualquer uma pra ver a media e o menor preco registrado.</p>
     <div class="landing-grid">
-        {% for r in popular_public_routes[:3] %}
-        <a href="/rotas/{{ r.origin }}-{{ r.destination }}" class="landing-card" style="text-decoration:none; display:block;">
+        {% for r in popular_public_routes[:6] %}
+        <a href="/rotas/{{ r.origin }}-{{ r.destination }}" class="landing-card">
             <div class="step-title">{{ r.origin_city }} &rarr; {{ r.destination_city }}</div>
-            <div class="step-desc">{{ r.origin }} &rarr; {{ r.destination }} &middot; ver historico e melhores meses</div>
+            <div class="step-desc mono">{{ r.origin }} &rarr; {{ r.destination }} &middot; ver historico completo</div>
         </a>
         {% endfor %}
     </div>
 </section>
 {% endif %}
 
-<!-- CTA final -->
+<!-- FAQ -->
+<section class="landing-section" id="faq">
+    <h2 class="landing-section-heading">Perguntas frequentes</h2>
+    <div class="faq-list">
+        <details class="faq-item">
+            <summary>A Orbita e gratis mesmo?</summary>
+            <div class="faq-answer">Sim. A gente ganha comissao da companhia aerea quando voce compra pelo nosso link. O preco final pra voce e o mesmo de qualquer outro canal.</div>
+        </details>
+        <details class="faq-item">
+            <summary>Quantos emails vou receber?</summary>
+            <div class="faq-answer">Zero ate a Orbita detectar uma oportunidade boa. Em media, uma a duas notificacoes por mes por rota, depende da volatilidade do trecho.</div>
+        </details>
+        <details class="faq-item">
+            <summary>Voces mostram todas as companhias?</summary>
+            <div class="faq-answer">A gente usa a API Travelpayouts, que agrega dezenas de companhias e OTAs. Voce ve o menor preco disponivel no mercado naquele momento.</div>
+        </details>
+        <details class="faq-item">
+            <summary>Funciona pra voo domestico tambem?</summary>
+            <div class="faq-answer">Sim. GRU-SDU, CGH-POA, BSB-REC, todas as rotas brasileiras sao monitoradas. Nacional ou internacional, mesmo sistema.</div>
+        </details>
+        <details class="faq-item">
+            <summary>Como voces preveem se o preco vai subir?</summary>
+            <div class="faq-answer">A gente combina 180 dias de historico da rota com sinais empiricos: sazonalidade, distancia ate a data de viagem e padrao semanal. Nao e magia, e dado.</div>
+        </details>
+        <details class="faq-item">
+            <summary>Posso cadastrar varias rotas?</summary>
+            <div class="faq-answer">Pode. Sem limite no plano gratis.</div>
+        </details>
+        <details class="faq-item">
+            <summary>Meus dados ficam seguros?</summary>
+            <div class="faq-answer">A gente so guarda seu email e as rotas que voce cadastrou. Nada de cartao, CPF ou dado de viagem.</div>
+        </details>
+    </div>
+</section>
+
+<!-- Final CTA -->
 <section class="landing-final-cta">
-    <h2>Pronto para encontrar a passagem ideal?</h2>
+    <h2>Comeca agora. Leva menos de um minuto.</h2>
+    <p>Cadastra uma rota, a gente olha o preco. Simples assim.</p>
     <a href="/auth/login" class="landing-cta">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -283,6 +475,12 @@
         </svg>
         Entrar com Google
     </a>
-    <p class="landing-final-subtext">Grátis. Sem cartão de crédito.</p>
+    <p class="landing-final-subtext">Gratis. Sem cartao de credito.</p>
 </section>
+
+<!-- Footer -->
+<footer class="landing-footer">
+    <p class="landing-footer-tagline">Orbita // o radar das passagens aereas</p>
+    <p class="landing-footer-copy">&copy; 2026 Orbita. Feito no Brasil.</p>
+</footer>
 {% endblock %}

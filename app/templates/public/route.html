@@ -13,46 +13,195 @@
 <meta name="twitter:title" content="Passagens {{ s.origin_city }} para {{ s.destination_city }}">
 <meta name="twitter:image" content="{{ og_image }}">
 <style>
-    .public-hero { text-align:center; padding: 48px 0 32px; }
-    .public-hero h1 { font-size: 32px; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
-    .public-hero .sub { color:#94a3b8; font-size: 15px; }
-    .public-price { font-size: 56px; font-weight: 700; color: #22c55e; font-family: ui-monospace, monospace; margin: 24px 0 8px; }
-    .public-price-sub { color: #94a3b8; font-size: 13px; }
-    .public-card { background:#111827; border:1px solid #1e293b; border-radius:12px; padding:24px; margin-bottom:16px; }
-    .public-card h2 { font-size: 18px; color:#e2e8f0; margin-bottom: 12px; font-weight: 600; }
-    .public-months { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; }
-    .public-month { background:#0b0e14; border:1px solid #1e293b; border-radius:8px; padding:12px; text-align:center; }
-    .public-month .label { color:#94a3b8; font-size:12px; }
-    .public-month .price { color:#e2e8f0; font-size:18px; font-weight:700; font-family: ui-monospace, monospace; }
-    .public-cta { text-align:center; padding: 32px 0; }
-    .public-cta .btn-cta { display:inline-block; background: linear-gradient(135deg,#0ea5e9,#3b82f6); color:#fff; font-weight:700; padding: 14px 28px; border-radius:10px; text-decoration:none; transition: transform .15s; }
-    .public-cta .btn-cta:hover { transform: translateY(-1px); }
-    .public-buy { text-align:center; margin-top:12px; }
-    .public-buy a { color:#60a5fa; font-size:13px; text-decoration:underline; }
-    .public-disclaimer { color:#64748b; font-size:11px; font-style:italic; margin-top: 12px; text-align:center; }
+    .pub-hero {
+        text-align: center;
+        padding: var(--sp-16) 0 var(--sp-10);
+        position: relative;
+    }
+    .pub-hero::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        height: 300px;
+        background: radial-gradient(ellipse at center, rgba(99,102,241,0.18), transparent 60%);
+        pointer-events: none;
+        z-index: -1;
+    }
+    .pub-route-codes {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-3);
+        padding: 6px 14px;
+        background: rgba(99,102,241,0.10);
+        border: 1px solid rgba(99,102,241,0.24);
+        border-radius: var(--r-full);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--brand-400);
+        letter-spacing: 0.04em;
+        margin-bottom: var(--sp-5);
+    }
+    .pub-route-codes svg { color: var(--accent-500); }
+    .pub-hero h1 {
+        font-size: 40px;
+        font-weight: 700;
+        line-height: 1.1;
+        color: var(--text-0);
+        letter-spacing: -0.025em;
+        margin-bottom: var(--sp-6);
+    }
+    .pub-price {
+        font-family: var(--font-mono);
+        font-size: 64px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--success-400);
+        margin-bottom: var(--sp-2);
+        font-feature-settings: "tnum";
+    }
+    .pub-price-sub {
+        color: var(--text-2);
+        font-size: 14px;
+        margin-bottom: var(--sp-2);
+    }
+    .pub-price-sub .divider { color: var(--text-3); }
+    .pub-disclaimer {
+        color: var(--text-3);
+        font-size: 11px;
+        font-style: italic;
+        margin-top: var(--sp-4);
+    }
+
+    .pub-card {
+        background: var(--bg-1);
+        border: 1px solid var(--border-1);
+        border-radius: var(--r-lg);
+        padding: var(--sp-6);
+        margin-bottom: var(--sp-4);
+        box-shadow: var(--elev-1);
+    }
+    .pub-card h2 {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--text-0);
+        margin-bottom: var(--sp-2);
+    }
+    .pub-card-desc {
+        font-size: 13px;
+        color: var(--text-2);
+        margin-bottom: var(--sp-5);
+    }
+
+    .pub-months {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: var(--sp-2);
+    }
+    .pub-month {
+        background: var(--bg-0);
+        border: 1px solid var(--border-1);
+        border-radius: var(--r-md);
+        padding: var(--sp-3);
+        text-align: center;
+        transition: border-color 150ms ease;
+    }
+    .pub-month:hover { border-color: var(--border-3); }
+    .pub-month .label {
+        color: var(--text-2);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: var(--sp-1);
+        font-weight: 500;
+    }
+    .pub-month .price {
+        color: var(--text-0);
+        font-size: 18px;
+        font-weight: 700;
+        font-family: var(--font-mono);
+        letter-spacing: -0.01em;
+    }
+    .pub-month.best {
+        border-color: rgba(16,185,129,0.4);
+        background: rgba(16,185,129,0.05);
+    }
+    .pub-month.best .price { color: var(--success-400); }
+
+    .pub-cta-section {
+        text-align: center;
+        padding: var(--sp-10) 0 var(--sp-4);
+    }
+    .pub-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--sp-2);
+        min-height: 48px;
+        padding: 0 var(--sp-6);
+        border-radius: var(--r-md);
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        text-decoration: none;
+        transition: transform 150ms ease, filter 150ms ease, box-shadow 200ms ease;
+    }
+    .pub-cta-monitor {
+        background: var(--gradient-brand);
+        color: #fff;
+        box-shadow: var(--glow-brand);
+    }
+    .pub-cta-monitor:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .pub-cta-buy {
+        background: var(--gradient-success);
+        color: #fff;
+    }
+    .pub-cta-buy:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .pub-cta-note {
+        color: var(--text-2);
+        font-size: 12px;
+        margin-top: var(--sp-3);
+    }
+
+    @media (max-width: 768px) {
+        .pub-hero { padding: var(--sp-10) var(--sp-4) var(--sp-6); }
+        .pub-hero h1 { font-size: 28px; }
+        .pub-price { font-size: 44px; }
+        .pub-card { padding: var(--sp-4); }
+    }
 </style>
 {% endblock %}
 {% block content %}
-<section class="public-hero">
+<section class="pub-hero">
+    <span class="pub-route-codes">
+        <span>{{ s.origin }}</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        <span>{{ s.destination }}</span>
+    </span>
     <h1>Passagens {{ s.origin_city }} para {{ s.destination_city }}</h1>
-    <div class="sub">{{ s.origin }} &rarr; {{ s.destination }}</div>
     {% if s.current_price %}
-    <div class="public-price">{{ format_price_brl(s.current_price) }}</div>
-    <div class="public-price-sub">
+    <div class="pub-price">{{ format_price_brl(s.current_price) }}</div>
+    <div class="pub-price-sub">
         preco de referencia
-        {% if s.median_180d %} &middot; mediana 180d {{ format_price_brl(s.median_180d) }}{% endif %}
-        {% if s.cached_at %} &middot; atualizado {{ format_date_br(s.cached_at.date()) }}{% endif %}
+        {% if s.median_180d %} <span class="divider">|</span> mediana 180d {{ format_price_brl(s.median_180d) }}{% endif %}
+        {% if s.cached_at %} <span class="divider">|</span> atualizado {{ format_date_br(s.cached_at.date()) }}{% endif %}
     </div>
-    <div class="public-disclaimer">Pode divergir ate 5% do valor final; bagagem e taxas nao incluidas.</div>
+    <div class="pub-disclaimer">Pode divergir ate 5% do valor final; bagagem e taxas nao incluidas.</div>
     {% endif %}
 </section>
 
 {% if s.best_months %}
-<div class="public-card">
+<div class="pub-card">
     <h2>Melhores meses historicos</h2>
-    <div class="public-months">
+    <p class="pub-card-desc">Baseado nos 180 dias anteriores. Comece sua busca por aqui.</p>
+    <div class="pub-months">
         {% for m in s.best_months %}
-        <div class="public-month">
+        <div class="pub-month best">
             <div class="label">{{ m.month_label }}</div>
             <div class="price">{{ format_price_brl(m.avg_price) }}</div>
         </div>
@@ -62,11 +211,12 @@
 {% endif %}
 
 {% if s.monthly_series %}
-<div class="public-card">
+<div class="pub-card">
     <h2>Historico 180 dias</h2>
-    <div class="public-months">
+    <p class="pub-card-desc">Preco medio por mes da rota.</p>
+    <div class="pub-months">
         {% for m in s.monthly_series %}
-        <div class="public-month">
+        <div class="pub-month">
             <div class="label">{{ m.month_label }}</div>
             <div class="price">{{ format_price_brl(m.avg_price) }}</div>
         </div>
@@ -75,17 +225,21 @@
 </div>
 {% endif %}
 
-<section class="public-cta">
-    <a href="/auth/login" class="btn-cta">Monitore essa rota</a>
-    <p style="color:#64748b; font-size:13px; margin-top:12px;">Gratis. Avisamos por email quando o preco cair.</p>
+<section class="pub-cta-section">
+    <a href="/auth/login" class="pub-cta pub-cta-monitor">
+        Monitore essa rota
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+    <p class="pub-cta-note">Gratis. Avisamos por email quando o preco cair.</p>
 </section>
 
 {% if affiliate_url %}
-<section class="public-cta" style="padding-top: 0;">
-    <a href="{{ affiliate_url }}" target="_blank" rel="nofollow sponsored noopener" class="btn-cta" style="background: linear-gradient(135deg,#16a34a,#22c55e);">
+<section class="pub-cta-section" style="padding-top: 0;">
+    <a href="{{ affiliate_url }}" target="_blank" rel="nofollow sponsored noopener" class="pub-cta pub-cta-buy">
         Comprar agora
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
     </a>
-    <p style="color:#64748b; font-size:12px; margin-top:12px;">Redireciona para Aviasales (parceiro). Podemos receber comissao sem custo extra para voce.</p>
+    <p class="pub-cta-note">Redireciona para Aviasales (parceiro). Podemos receber comissao sem custo extra para voce.</p>
 </section>
 {% endif %}
 {% endblock %}
