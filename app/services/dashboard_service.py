@@ -518,13 +518,15 @@ def booking_urls(
     dep_sky = departure_date.strftime("%y%m%d") if hasattr(departure_date, 'strftime') else ""
     ret_sky = return_date.strftime("%y%m%d") if hasattr(return_date, 'strftime') else ""
     pax = max(1, passengers)
+    kayak_pax_suffix = f"/{pax}adults" if pax > 1 else ""
 
     return {
+        # Hash-based format (#flt=) preenche a busca de forma confiavel; a
+        # variante antiga (?q=Flights%20from...) abria a home em branco com
+        # frequencia.
         "google_flights": (
-            f"https://www.google.com/travel/flights?"
-            f"q=Flights%20from%20{origin}%20to%20{destination}%20"
-            f"on%20{dep_iso}%20returning%20{ret_iso}"
-            f"&hl=pt-BR&curr=BRL"
+            f"https://www.google.com/travel/flights?hl=pt-BR&curr=BRL"
+            f"#flt={origin}.{destination}.{dep_iso}*{destination}.{origin}.{ret_iso};c:BRL;e:1;sd:1;t:f"
         ),
         "decolar": (
             f"https://www.decolar.com/shop/flights/results/multipleoneway/"
@@ -535,5 +537,9 @@ def booking_urls(
             f"https://www.skyscanner.com.br/transport/flights/"
             f"{origin.lower()}/{destination.lower()}/{dep_sky}/{ret_sky}/"
             f"?adultsv2={pax}&cabinclass=economy"
+        ),
+        "kayak": (
+            f"https://www.kayak.com.br/flights/"
+            f"{origin}-{destination}/{dep_iso}/{ret_iso}{kayak_pax_suffix}"
         ),
     }

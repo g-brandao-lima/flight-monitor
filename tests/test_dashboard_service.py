@@ -35,6 +35,44 @@ def test_booking_urls_decolar_defaults_to_single_passenger():
     assert "/1/0/0?from=SB&di=1" in urls["decolar"]
 
 
+def test_booking_urls_google_flights_uses_hash_flt_format():
+    """Hash-based #flt= preenche a busca; o formato ?q= abria a home vazia."""
+    urls = booking_urls(
+        origin="REC",
+        destination="SCL",
+        departure_date=datetime.date(2026, 7, 8),
+        return_date=datetime.date(2026, 7, 15),
+    )
+    assert urls["google_flights"].startswith(
+        "https://www.google.com/travel/flights?hl=pt-BR&curr=BRL#flt="
+    )
+    assert "REC.SCL.2026-07-08*SCL.REC.2026-07-15" in urls["google_flights"]
+
+
+def test_booking_urls_kayak_br_com_passageiros():
+    urls = booking_urls(
+        origin="REC",
+        destination="SCL",
+        departure_date=datetime.date(2026, 7, 8),
+        return_date=datetime.date(2026, 7, 15),
+        passengers=2,
+    )
+    assert urls["kayak"] == (
+        "https://www.kayak.com.br/flights/REC-SCL/2026-07-08/2026-07-15/2adults"
+    )
+
+
+def test_booking_urls_kayak_sem_sufixo_quando_solo():
+    urls = booking_urls(
+        origin="REC",
+        destination="SCL",
+        departure_date=datetime.date(2026, 7, 8),
+        return_date=datetime.date(2026, 7, 15),
+    )
+    assert urls["kayak"].endswith("/2026-07-08/2026-07-15")
+    assert "adults" not in urls["kayak"]
+
+
 def _make_group(db, name="Test Group", group_id=None, **kwargs):
     defaults = dict(
         name=name,
