@@ -241,11 +241,14 @@ def compose_consolidated_email(
 
     # Contexto historico (Phase 22): "X% abaixo da media dos ultimos 90 dias"
     historical_ctx = None
+    recommendation = None
     if db is not None:
+        from app.services.price_prediction_service import build_recommendation_for_group
         from app.services.snapshot_service import get_historical_price_context
         historical_ctx = get_historical_price_context(
             db, cheapest.origin, cheapest.destination
         )
+        recommendation = build_recommendation_for_group(db, group, cheapest)
 
     token = generate_silence_token(group.id)
     silence_url = (
@@ -254,8 +257,8 @@ def compose_consolidated_email(
 
     subject = _build_subject(cheapest, historical_ctx, group)
 
-    html = _render_consolidated_html(cheapest, top3, other_routes, signals, silence_url, group, historical_ctx)
-    plain = _render_consolidated_plain(cheapest, top3, other_routes, signals, silence_url, group, historical_ctx)
+    html = _render_consolidated_html(cheapest, top3, other_routes, signals, silence_url, group, historical_ctx, recommendation)
+    plain = _render_consolidated_plain(cheapest, top3, other_routes, signals, silence_url, group, historical_ctx, recommendation)
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
@@ -322,6 +325,7 @@ def _render_consolidated_html(
     silence_url: str,
     group: RouteGroup,
     historical_ctx: dict | None = None,
+    recommendation=None,
 ) -> str:
     """Monta corpo HTML do email consolidado."""
     parts = []
@@ -362,6 +366,28 @@ def _render_consolidated_html(
         + label_html + header_sub + source_html + context_html + disclaimer_html +
         '</div>'
     )
+
+    if recommendation is not None:
+        rec_colors = {
+            "COMPRE": ("#059669", "#ECFDF5"),
+            "AGUARDE": ("#B45309", "#FFFBEB"),
+            "MONITORAR": ("#475569", "#F1F5F9"),
+        }
+        accent, bg_color = rec_colors.get(recommendation.action, ("#475569", "#F1F5F9"))
+        deadline_html = ""
+        if recommendation.deadline:
+            deadline_html = (
+                f'<div style="font-size:12px;font-family:monospace;margin-top:6px;opacity:0.85;">'
+                f'Ate {_fmt_date(recommendation.deadline)}</div>'
+            )
+        parts.append(
+            f'<div style="margin:16px 0 0;padding:14px 18px;background:{bg_color};'
+            f'border-left:4px solid {accent};border-radius:6px;color:{accent};">'
+            f'<div style="font-size:12px;font-weight:700;letter-spacing:0.1em;">RECOMENDACAO: {recommendation.action}</div>'
+            f'<div style="font-size:14px;color:#0f172a;margin-top:4px;">{recommendation.reason}</div>'
+            f'{deadline_html}'
+            '</div>'
+        )
 
     parts.append('<div style="border:1px solid #e5e7eb;padding:20px;border-radius:0 0 8px 8px;">')
 
@@ -467,6 +493,7 @@ def _render_consolidated_plain(
     silence_url: str,
     group: RouteGroup,
     historical_ctx: dict | None = None,
+    recommendation=None,
 ) -> str:
     """Monta corpo text/plain do email consolidado."""
     pax = max(1, int(group.passengers or 1))
@@ -474,6 +501,8 @@ def _render_consolidated_plain(
     lines = []
 
     lines.append(f"MELHOR PRECO: {format_price_brl(cheapest.price)} por pessoa, ida e volta{pax_suffix}")
+    if recommendation is not None:
+        lines.append(f"RECOMENDACAO: {recommendation.action}: {recommendation.reason}")
     lines.append("Preço de referência Google Flights")
     lines.append("(Pode divergir até 5% do valor final; bagagem e taxas não incluídas)")
     lines.append(

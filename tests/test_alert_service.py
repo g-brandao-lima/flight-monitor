@@ -597,3 +597,66 @@ def test_consolidated_email_plain_contem_disclaimer():
     _, plain = _extract_html_and_plain(msg)
 
     assert "Pode divergir até 5% do valor final" in plain
+
+
+# --- Phase 34: recomendacao no email consolidado ---
+
+def test_consolidated_email_exibe_recomendacao_compre_no_topo(monkeypatch):
+    from app.services import price_prediction_service
+    from app.services.price_prediction_service import Recommendation
+
+    fixed = Recommendation(
+        action="COMPRE",
+        reason="Preco 18% abaixo da media e dentro da janela otima.",
+        confidence=0.85,
+        deadline=datetime.date(2026, 6, 15),
+    )
+    monkeypatch.setattr(
+        price_prediction_service,
+        "build_recommendation_for_group",
+        lambda db, group, snap: fixed,
+    )
+
+    group = _make_group(name="GRU-LIS")
+    snapshots = [_make_snapshot(price=2800.00)]
+    signals = _make_signals_list(1)
+    db = unittest.mock.MagicMock()
+
+    msg = compose_consolidated_email(signals, snapshots, group, db=db)
+    html, _ = _extract_html_and_plain(msg)
+
+    assert "RECOMENDACAO: COMPRE" in html
+    assert "Preco 18% abaixo" in html
+    assert "15/06/2026" in html
+    # Card deve vir antes do container principal (topo do corpo)
+    assert html.index("RECOMENDACAO: COMPRE") < html.index("border:1px solid #e5e7eb")
+
+
+def test_consolidated_email_plain_tem_recomendacao_primeira_linha(monkeypatch):
+    from app.services import price_prediction_service
+    from app.services.price_prediction_service import Recommendation
+
+    fixed = Recommendation(
+        action="AGUARDE",
+        reason="Janela otima comeca em 45 dias. Sem urgencia ainda.",
+        confidence=0.7,
+        deadline=None,
+    )
+    monkeypatch.setattr(
+        price_prediction_service,
+        "build_recommendation_for_group",
+        lambda db, group, snap: fixed,
+    )
+
+    group = _make_group(name="GRU-LIS")
+    snapshots = [_make_snapshot(price=3500.00)]
+    signals = _make_signals_list(1)
+    db = unittest.mock.MagicMock()
+
+    msg = compose_consolidated_email(signals, snapshots, group, db=db)
+    _, plain = _extract_html_and_plain(msg)
+
+    lines = plain.splitlines()
+    assert lines[0].startswith("MELHOR PRECO")
+    assert lines[1].startswith("RECOMENDACAO: AGUARDE")
+    assert "Janela otima" in lines[1]
