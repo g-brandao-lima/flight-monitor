@@ -374,6 +374,90 @@
     a.landing-card:hover .step-title { color: var(--brand-400); }
 
     /* ==========================================================================
+       COMPARATIVA (tabela)
+       ========================================================================== */
+    .compare-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--border-1);
+        border-radius: var(--r-lg);
+        background: var(--bg-1);
+        box-shadow: var(--elev-1);
+    }
+    .compare-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .compare-table th, .compare-table td {
+        padding: var(--sp-3) var(--sp-4);
+        text-align: center;
+        border-bottom: 1px solid var(--border-1);
+    }
+    .compare-table thead th {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-2);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: var(--bg-2);
+    }
+    .compare-table thead th.orbita-col {
+        color: var(--accent-500);
+        background: linear-gradient(180deg, rgba(34,211,238,0.10), transparent);
+    }
+    .compare-table tbody th {
+        text-align: left;
+        font-weight: 500;
+        color: var(--text-1);
+        min-width: 220px;
+    }
+    .compare-table tbody td {
+        color: var(--text-2);
+        font-family: var(--font-mono);
+        font-size: 16px;
+    }
+    .compare-table tbody td.orbita-col {
+        color: var(--success-400);
+        background: rgba(16,185,129,0.04);
+        font-weight: 700;
+    }
+    .compare-table tbody tr:last-child th,
+    .compare-table tbody tr:last-child td { border-bottom: none; }
+    .compare-note {
+        text-align: center;
+        color: var(--text-3);
+        font-size: 12px;
+        margin-top: var(--sp-3);
+        font-style: italic;
+    }
+
+    /* ==========================================================================
+       "COMO SABEMOS" manifest
+       ========================================================================== */
+    .manifest-block {
+        background: var(--bg-1);
+        border: 1px solid var(--border-1);
+        border-radius: var(--r-lg);
+        padding: var(--sp-8);
+        box-shadow: var(--elev-1);
+    }
+    .manifest-block p {
+        color: var(--text-1);
+        font-size: 16px;
+        line-height: 1.65;
+        margin-bottom: var(--sp-3);
+    }
+    .manifest-block p:last-child { margin-bottom: 0; }
+    .manifest-block strong {
+        color: var(--text-0);
+        font-weight: 600;
+    }
+    .manifest-block .mono {
+        color: var(--accent-500);
+        font-size: 14px;
+    }
+
+    /* ==========================================================================
        FAQ
        ========================================================================== */
     .faq-list {
@@ -522,7 +606,7 @@
         </p>
         <div class="landing-cta-row">
             <a href="/auth/login" class="landing-cta">
-                Cadastrar minha primeira rota
+                Ativar meu radar
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>
             {% if popular_public_routes %}
@@ -633,6 +717,77 @@
     </div>
 </section>
 
+<!-- Tabela comparativa -->
+<section class="landing-section" id="comparativa">
+    <div class="landing-section-eyebrow">Diferente</div>
+    <h2 class="landing-section-heading">Você já deve usar alguns.<br>Veja onde a Órbita entra diferente.</h2>
+    <div class="compare-wrap">
+        <table class="compare-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Google</th>
+                    <th>Skyscanner</th>
+                    <th>Decolar</th>
+                    <th class="orbita-col">Órbita</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Busca sob demanda</th>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td class="orbita-col">—</td>
+                </tr>
+                <tr>
+                    <th>Monitora 24/7 sem você abrir o site</th>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td class="orbita-col">✓</td>
+                </tr>
+                <tr>
+                    <th>Alerta por rota cadastrada</th>
+                    <td>✓*</td>
+                    <td>✓*</td>
+                    <td>—</td>
+                    <td class="orbita-col">✓</td>
+                </tr>
+                <tr>
+                    <th>Período flexível (mês inteiro)</th>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td class="orbita-col">✓</td>
+                </tr>
+                <tr>
+                    <th>Contexto histórico 180 dias</th>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td class="orbita-col">✓</td>
+                </tr>
+                <tr>
+                    <th>Recomendação ativa do momento</th>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td class="orbita-col">✓</td>
+                </tr>
+                <tr>
+                    <th>Grátis pra sempre</th>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td class="orbita-col">✓</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="compare-note">* Alerta tradicional trava numa data específica. A Órbita monitora a janela inteira que você escolheu.</p>
+</section>
+
 <!-- Por que Órbita -->
 <section class="landing-section" id="diferenciais">
     <div class="landing-section-eyebrow">Por que Órbita</div>
@@ -640,32 +795,43 @@
     <div class="landing-grid landing-grid-2">
         <div class="landing-card">
             <div class="feature-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             </div>
-            <div class="step-title">Alerta antes do preço subir</div>
-            <div class="step-desc">Outros serviços avisam que o preço caiu ontem. A Órbita te avisa que vale comprar hoje, antes da próxima alta.</div>
+            <div class="step-title">Você não pesquisa. A gente pesquisa.</div>
+            <div class="step-desc">Google Flights trabalha quando você pede. A Órbita trabalha enquanto você dorme. Quatro leituras por dia, todos os dias.</div>
         </div>
         <div class="landing-card">
             <div class="feature-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-3 3"/></svg>
             </div>
-            <div class="step-title">Histórico real da sua rota</div>
-            <div class="step-desc">180 dias de dados por rota. Você vê se R$ 2.400 é caro ou barato pra GRU-LIS, baseado em preço real e não em chute.</div>
+            <div class="step-title">Preço com contexto, não número solto.</div>
+            <div class="step-desc">Google mostra R$ 3.120. A Órbita mostra R$ 3.120 é 23% abaixo da média dos últimos 180 dias. A diferença é saber se vale comprar.</div>
         </div>
         <div class="landing-card">
             <div class="feature-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             </div>
-            <div class="step-title">Período flexível, não data fixa</div>
-            <div class="step-desc">Cadastra o mês ou a semana e a Órbita procura o melhor dia dentro desse intervalo.</div>
+            <div class="step-title">Janela inteira, não data travada.</div>
+            <div class="step-desc">"Junho de 2026" é suficiente. A gente acha o melhor dia dentro do mês. Você escolhe a intenção, a Órbita escolhe o dia.</div>
         </div>
         <div class="landing-card">
             <div class="feature-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.91 11.12a8.5 8.5 0 1 1-12-8.49"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </div>
-            <div class="step-title">Zero custo pra você</div>
-            <div class="step-desc">A Órbita é grátis. A gente recebe comissão da companhia quando você compra, sem aumentar o preço da sua passagem.</div>
+            <div class="step-title">Grátis pra sempre.</div>
+            <div class="step-desc">A gente ganha comissão do parceiro quando você compra, sem custo extra pra você. Zero anúncio, zero plano premium, zero spam.</div>
         </div>
+    </div>
+</section>
+
+<!-- Como sabemos (manifest) -->
+<section class="landing-section" id="como-sabemos">
+    <div class="landing-section-eyebrow">Como sabemos</div>
+    <h2 class="landing-section-heading">Não é mágica.<br>É dado real, atualizado 4 vezes por dia.</h2>
+    <div class="manifest-block">
+        <p>A gente cruza <strong>180 dias de histórico da sua rota</strong> com a base da <strong>Aviasales</strong>, que agrega dezenas de companhias e agências. Atualizamos 4 vezes por dia: <span class="mono">00:30 · 06:30 · 12:30 · 18:30 UTC</span>.</p>
+        <p>Quando o preço foge da média (pra menos), você recebe um email factual: quanto está, qual a média, quais meses historicamente são mais baratos, e um botão que leva direto pra busca com as datas certas já preenchidas.</p>
+        <p>Sem IA proprietária milagrosa. Sem previsão que você não pode auditar. <strong>Só estatística simples sobre preço real observado.</strong></p>
     </div>
 </section>
 
@@ -741,7 +907,7 @@
 
 <!-- Footer -->
 <footer class="landing-footer">
-    <p class="landing-footer-tagline">Órbita // o radar das passagens aéreas</p>
+    <p class="landing-footer-tagline">Órbita // você dorme, a gente vigia</p>
     <p class="landing-footer-copy">&copy; 2026 Órbita. Feito no Brasil.</p>
 </footer>
 {% endblock %}
