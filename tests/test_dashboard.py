@@ -323,7 +323,7 @@ def test_dashboard_card_exibe_rotulo_preco_referencia(client, db, test_user):
 
     response = client.get("/")
 
-    assert "Preco de referencia Google Flights" in response.text
+    assert "Preço de referência Google Flights" in response.text
 
 
 def test_dashboard_card_exibe_disclaimer_divergencia(client, db, test_user):
@@ -332,8 +332,8 @@ def test_dashboard_card_exibe_disclaimer_divergencia(client, db, test_user):
 
     response = client.get("/")
 
-    assert "Pode divergir ate 5% do valor final" in response.text
-    assert "bagagem e taxas nao incluidas" in response.text
+    assert "Pode divergir até 5% do valor final" in response.text
+    assert "bagagem e taxas não incluídas" in response.text
 
 
 def test_detail_page_exibe_rotulo_preco_referencia(client, db, test_user):
@@ -342,7 +342,7 @@ def test_detail_page_exibe_rotulo_preco_referencia(client, db, test_user):
 
     response = client.get(f"/groups/{group.id}")
 
-    assert "Preco de referencia Google Flights" in response.text
+    assert "Preço de referência Google Flights" in response.text
 
 
 def test_detail_page_exibe_disclaimer_divergencia(client, db, test_user):
@@ -351,4 +351,4 @@ def test_detail_page_exibe_disclaimer_divergencia(client, db, test_user):
 
     response = client.get(f"/groups/{group.id}")
 
-    assert "Pode divergir ate 5% do valor final" in response.text
+    assert "Pode divergir até 5% do valor final" in response.text

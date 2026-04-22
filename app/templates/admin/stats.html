@@ -26,7 +26,7 @@
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
     <div>
         <h1 style="font-size: 20px; font-weight: 700; margin: 0; color: #f1f5f9;">Painel Admin</h1>
-        <p class="admin-subtitle">Metricas operacionais do Orbita. Visivel apenas para o dono.</p>
+        <p class="admin-subtitle">Métricas operacionais do Orbita. Visível apenas para o dono.</p>
     </div>
     <a href="/" class="admin-link">Voltar ao Dashboard</a>
 </div>
@@ -37,7 +37,7 @@
         <div class="metric-value">
             {{ quota.used }}<span style="font-size:16px;color:#64748b;"> / {{ quota.limit }}</span>
         </div>
-        <div class="metric-label">{{ quota.pct_used }}% usado no mes corrente ({{ quota.year_month }})</div>
+        <div class="metric-label">{{ quota.pct_used }}% usado no mês corrente ({{ quota.year_month }})</div>
         <div class="quota-bar-outer">
             <div class="quota-bar-inner {% if quota.pct_used >= 90 %}quota-crit{% elif quota.pct_used >= 60 %}quota-warn{% else %}quota-ok{% endif %}"
                  style="width: {{ quota.pct_used }}%;"></div>
@@ -54,9 +54,9 @@
     </div>
 
     <div class="admin-card">
-        <h2>Fontes dos ultimos {{ sources.days }} dias</h2>
+        <h2>Fontes dos últimos {{ sources.days }} dias</h2>
         {% if sources.total == 0 %}
-        <div class="metric-label">Nenhum snapshot coletado no periodo.</div>
+        <div class="metric-label">Nenhum snapshot coletado no período.</div>
         {% else %}
         <div class="metric-value">{{ sources.total }}</div>
         <div class="metric-label">snapshots coletados</div>
@@ -77,13 +77,13 @@
         <div class="metric-value">{{ cache.entries }}</div>
         <div class="metric-label">entradas ativas (TTL {{ cache.ttl_minutes }} min)</div>
         <div class="metric-label" style="margin-top:12px;">
-            Cache reseta a cada restart da aplicacao. Evita chamadas duplicadas
-            quando varios grupos monitoram a mesma rota no mesmo ciclo de polling.
+            Cache reseta a cada restart da aplicação. Evita chamadas duplicadas
+            quando vários grupos monitoram a mesma rota no mesmo ciclo de polling.
         </div>
     </div>
 
     <div class="admin-card">
-        <h2>Cache Travelpayouts (ultimos 7 dias)</h2>
+        <h2>Cache Travelpayouts (últimos 7 dias)</h2>
         <div class="metric-value">{{ cache_hit_rate_7d.hit_rate_pct }}%</div>
         <div class="metric-label">hit rate ({{ cache_hit_rate_7d.hits }} hits / {{ cache_hit_rate_7d.total }} lookups)</div>
         <div class="metric-label" style="margin-top:12px;">
@@ -99,7 +99,7 @@
     <div class="admin-card">
         <h2>Observabilidade</h2>
         {% if sentry_enabled %}
-        <div class="metric-label" style="margin-bottom:8px;">Sentry ativo em producao.</div>
+        <div class="metric-label" style="margin-bottom:8px;">Sentry ativo em produção.</div>
         <a href="{{ sentry_url }}" target="_blank" rel="noopener" class="admin-link">
             Abrir dashboard Sentry &rarr;
         </a>

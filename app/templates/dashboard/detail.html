@@ -16,16 +16,16 @@
 <div style="background: #1a1e2e; border: 1px solid #2d3748; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
     <p style="color: #94a3b8; margin-bottom: 4px;"><strong style="color: #f1f5f9;">Origens:</strong> {{ group.origins | join(", ") }}</p>
     <p style="color: #94a3b8; margin-bottom: 4px;"><strong style="color: #f1f5f9;">Destinos:</strong> {{ group.destinations | join(", ") }}</p>
-    <p style="color: #94a3b8; margin-bottom: 4px;"><strong style="color: #f1f5f9;">Duracao:</strong> {{ group.duration_days }} dias</p>
-    <p style="color: #94a3b8;"><strong style="color: #f1f5f9;">Periodo:</strong> {{ format_date_br(group.travel_start) }} a {{ format_date_br(group.travel_end) }}</p>
+    <p style="color: #94a3b8; margin-bottom: 4px;"><strong style="color: #f1f5f9;">Duração:</strong> {{ group.duration_days }} dias</p>
+    <p style="color: #94a3b8;"><strong style="color: #f1f5f9;">Período:</strong> {{ format_date_br(group.travel_start) }} a {{ format_date_br(group.travel_end) }}</p>
 </div>
 
 {% if chart_data.prices %}
 <div style="background: #1a1e2e; border: 1px solid #2d3748; border-radius: 12px; padding: 1.5rem;">
     <h2 style="margin-bottom: 0.5rem; font-size: 14px; font-weight: 700; color: #f1f5f9;">Histórico de Preços</h2>
     <p style="color: #64748b; margin-bottom: 0.25rem; font-size: 13px;">Rota: {{ chart_data.route }}</p>
-    <p style="color: #64748b; margin-bottom: 0.25rem; font-size: 12px; font-weight: 600;">Preco de referencia Google Flights</p>
-    <p style="color: #475569; margin-bottom: 0.25rem; font-size: 11px; font-style: italic;">Pode divergir ate 5% do valor final; bagagem e taxas nao incluidas.</p>
+    <p style="color: #64748b; margin-bottom: 0.25rem; font-size: 12px; font-weight: 600;">Preço de referência Google Flights</p>
+    <p style="color: #475569; margin-bottom: 0.25rem; font-size: 11px; font-style: italic;">Pode divergir até 5% do valor final; bagagem e taxas não incluídas.</p>
     <p style="color: #64748b; margin-bottom: 1rem; font-size: 12px;">Valores por pessoa, ida e volta{% if group.passengers and group.passengers > 1 %} (total para {{ group.passengers }} passageiros aparece no tooltip){% endif %}</p>
     <canvas id="priceChart"></canvas>
 </div>

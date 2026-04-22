@@ -558,7 +558,7 @@ def test_consolidated_email_html_contem_rotulo_preco_referencia():
     msg = compose_consolidated_email(signals, snapshots, group)
     html, _ = _extract_html_and_plain(msg)
 
-    assert "Preco de referencia Google Flights" in html
+    assert "Preço de referência Google Flights" in html
 
 
 def test_consolidated_email_html_contem_disclaimer():
@@ -569,8 +569,8 @@ def test_consolidated_email_html_contem_disclaimer():
     msg = compose_consolidated_email(signals, snapshots, group)
     html, _ = _extract_html_and_plain(msg)
 
-    assert "Pode divergir ate 5% do valor final" in html
-    assert "bagagem e taxas nao incluidas" in html
+    assert "Pode divergir até 5% do valor final" in html
+    assert "bagagem e taxas não incluídas" in html
 
 
 def test_consolidated_email_plain_contem_rotulo_preco_referencia():
@@ -581,7 +581,7 @@ def test_consolidated_email_plain_contem_rotulo_preco_referencia():
     msg = compose_consolidated_email(signals, snapshots, group)
     _, plain = _extract_html_and_plain(msg)
 
-    assert "Preco de referencia Google Flights" in plain
+    assert "Preço de referência Google Flights" in plain
 
 
 def test_consolidated_email_plain_contem_disclaimer():
@@ -592,4 +592,4 @@ def test_consolidated_email_plain_contem_disclaimer():
     msg = compose_consolidated_email(signals, snapshots, group)
     _, plain = _extract_html_and_plain(msg)
 
-    assert "Pode divergir ate 5% do valor final" in plain
+    assert "Pode divergir até 5% do valor final" in plain
