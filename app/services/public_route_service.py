@@ -25,6 +25,57 @@ def _month_label(d: datetime.date) -> str:
     return f"{MONTH_LABELS_PT[d.month - 1]}/{d.year}"
 
 
+def get_featured_route_for_hero(db: Session) -> dict | None:
+    """Pega a rota mais ativa (top snapshots) e retorna stats ricos pra landing.
+
+    Retorna dict com tudo que o hero preview card precisa:
+      origin, destination, origin_city, destination_city,
+      current_price, median_180d, pct_vs_median (sinal incluido),
+      min_price, janela (ex: "set - out"), updated_at_hour.
+    None se nenhuma rota tem dados suficientes.
+    """
+    top = get_top_public_routes(db, limit=1)
+    if not top:
+        return None
+    origin = top[0]["origin"]
+    destination = top[0]["destination"]
+    stats = get_route_stats(db, origin, destination)
+    if not stats:
+        return None
+
+    cur = stats.get("current_price")
+    med = stats.get("median_180d")
+    pct = None
+    if cur and med and med > 0:
+        pct = round((cur - med) / med * 100)
+
+    # Janela: mes do current_departure ate mes do current_return
+    dep = stats.get("current_departure_date")
+    ret = stats.get("current_return_date")
+    janela = None
+    if dep and ret:
+        meses = [
+            "jan","fev","mar","abr","mai","jun",
+            "jul","ago","set","out","nov","dez",
+        ]
+        if dep.month == ret.month:
+            janela = meses[dep.month - 1]
+        else:
+            janela = f"{meses[dep.month - 1]} · {meses[ret.month - 1]}"
+
+    # Min historico (menor avg mensal)
+    min_historic = None
+    if stats.get("monthly_series"):
+        min_historic = min(m["avg_price"] for m in stats["monthly_series"])
+
+    return {
+        **stats,
+        "pct_vs_median": pct,
+        "janela": janela,
+        "min_historic": min_historic,
+    }
+
+
 def get_top_public_routes(db: Session, limit: int = 5) -> list[dict]:
     """Rotas com >= MIN_SNAPSHOTS_FOR_INDEX, ordenadas por volume desc."""
     rows = (

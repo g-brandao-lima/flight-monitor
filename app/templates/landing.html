@@ -5,38 +5,42 @@
     html { scroll-behavior: smooth; }
 
     /* ==========================================================================
-       HERO
+       HERO SPLIT
        ========================================================================== */
     .landing-hero {
-        text-align: center;
-        max-width: 760px;
+        max-width: 1200px;
         margin: 0 auto;
-        padding: var(--sp-20) 0 var(--sp-16);
+        padding: var(--sp-16) var(--sp-2) var(--sp-12);
         position: relative;
+        display: grid;
+        grid-template-columns: 1.05fr 1fr;
+        gap: var(--sp-12);
+        align-items: center;
     }
     .landing-hero::before {
         content: "";
         position: absolute;
         top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 600px;
-        height: 400px;
-        background: radial-gradient(ellipse at center, rgba(99,102,241,0.22), transparent 60%);
+        left: 0;
+        right: 0;
+        height: 520px;
+        background: radial-gradient(ellipse at top left, rgba(99,102,241,0.22), transparent 55%),
+                    radial-gradient(ellipse at top right, rgba(34,211,238,0.14), transparent 55%);
         pointer-events: none;
         z-index: -1;
     }
+    .landing-hero-left { text-align: left; }
     .landing-eyebrow {
         display: inline-flex;
         align-items: center;
         gap: var(--sp-2);
         padding: 6px 12px;
-        background: rgba(99,102,241,0.10);
-        border: 1px solid rgba(99,102,241,0.24);
+        background: rgba(34,211,238,0.08);
+        border: 1px solid rgba(34,211,238,0.24);
         border-radius: var(--r-full);
         font-size: 12px;
         font-weight: 500;
-        color: var(--brand-400);
+        color: var(--accent-500);
         letter-spacing: 0.02em;
         margin-bottom: var(--sp-6);
     }
@@ -53,9 +57,9 @@
     .landing-hero h1 {
         font-size: 56px;
         font-weight: 700;
-        line-height: 1.05;
+        line-height: 1.03;
         color: var(--text-0);
-        letter-spacing: -0.03em;
+        letter-spacing: -0.035em;
         margin-bottom: var(--sp-5);
     }
     .landing-hero h1 .gradient {
@@ -65,12 +69,164 @@
         -webkit-text-fill-color: transparent;
     }
     .landing-hero-subtitle {
-        font-size: 18px;
+        font-size: 17px;
         font-weight: 400;
         line-height: 1.55;
         color: var(--text-1);
-        max-width: 580px;
-        margin: 0 auto;
+        max-width: 520px;
+    }
+
+    /* Mini feature cards abaixo dos CTAs */
+    .landing-hero-minis {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--sp-3);
+        margin-top: var(--sp-8);
+        max-width: 560px;
+    }
+    .hero-mini {
+        background: rgba(14,18,32,0.6);
+        border: 1px solid var(--border-1);
+        border-radius: var(--r-md);
+        padding: var(--sp-3) var(--sp-4);
+    }
+    .hero-mini-icon {
+        color: var(--accent-500);
+        margin-bottom: var(--sp-2);
+    }
+    .hero-mini-text {
+        font-size: 12px;
+        color: var(--text-1);
+        line-height: 1.4;
+    }
+
+    /* Preview card (direita) */
+    .landing-preview {
+        background: var(--bg-1);
+        border: 1px solid var(--border-2);
+        border-radius: var(--r-xl);
+        padding: var(--sp-6);
+        box-shadow: var(--elev-3);
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-4);
+        position: relative;
+    }
+    .landing-preview::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: var(--r-xl);
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(34,211,238,0.4), transparent 70%);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+                mask-composite: exclude;
+        pointer-events: none;
+    }
+    .preview-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .preview-header-label {
+        font-size: 12px;
+        color: var(--text-2);
+        letter-spacing: 0.04em;
+    }
+    .preview-days-badge {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-2);
+        padding: 3px 8px;
+        background: var(--bg-2);
+        border: 1px solid var(--border-2);
+        border-radius: var(--r-full);
+    }
+    .preview-route {
+        font-family: var(--font-mono);
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-0);
+        letter-spacing: 0.02em;
+    }
+    .preview-price-block {
+        background: var(--bg-0);
+        border: 1px solid var(--border-1);
+        border-radius: var(--r-lg);
+        padding: var(--sp-5);
+    }
+    .preview-price-label {
+        font-size: 12px;
+        color: var(--text-2);
+        margin-bottom: var(--sp-2);
+    }
+    .preview-price-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--sp-3);
+        flex-wrap: wrap;
+    }
+    .preview-price-value {
+        font-family: var(--font-mono);
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--text-0);
+        letter-spacing: -0.02em;
+        font-feature-settings: "tnum";
+    }
+    .preview-price-delta {
+        font-size: 13px;
+        font-weight: 600;
+        font-family: var(--font-mono);
+    }
+    .preview-price-delta.down { color: var(--success-400); }
+    .preview-price-delta.up { color: var(--danger-400); }
+    .preview-price-delta.flat { color: var(--text-2); }
+    .preview-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--sp-3);
+        margin-top: var(--sp-4);
+        padding-top: var(--sp-4);
+        border-top: 1px solid var(--border-1);
+    }
+    .preview-metric-label { font-size: 11px; color: var(--text-3); margin-bottom: 2px; letter-spacing: 0.04em; }
+    .preview-metric-value { font-family: var(--font-mono); font-size: 14px; color: var(--text-1); font-weight: 600; }
+    .preview-alert {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-3);
+        padding: var(--sp-3) var(--sp-4);
+        background: rgba(16,185,129,0.08);
+        border: 1px solid rgba(16,185,129,0.24);
+        border-radius: var(--r-md);
+    }
+    .preview-alert-icon {
+        color: var(--success-400);
+        flex-shrink: 0;
+    }
+    .preview-alert-main { flex: 1; }
+    .preview-alert-title { font-size: 13px; color: var(--text-0); font-weight: 600; }
+    .preview-alert-sub { font-size: 11px; color: var(--text-2); }
+    .preview-alert-status {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--success-400);
+        text-transform: lowercase;
+        letter-spacing: 0.04em;
+    }
+    .preview-footer {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        font-size: 12px;
+        color: var(--text-2);
+    }
+    .preview-footer-icon {
+        color: var(--brand-400);
+        flex-shrink: 0;
     }
     .landing-cta-row {
         display: flex;
@@ -124,14 +280,25 @@
        SECTIONS
        ========================================================================== */
     .landing-section { padding: var(--sp-16) 0; }
+    .landing-section-eyebrow {
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--accent-500);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: var(--sp-3);
+    }
     .landing-section-heading {
-        text-align: center;
-        font-size: 32px;
+        text-align: left;
+        font-size: 36px;
         font-weight: 700;
         color: var(--text-0);
-        line-height: 1.2;
+        line-height: 1.15;
         letter-spacing: -0.025em;
-        margin-bottom: var(--sp-3);
+        margin-bottom: var(--sp-10);
+        max-width: 620px;
     }
     .landing-section-sub {
         text-align: center;
@@ -171,15 +338,16 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
+        width: 40px;
+        height: 40px;
         border-radius: var(--r-full);
-        background: rgba(99,102,241,0.12);
-        border: 1px solid rgba(99,102,241,0.24);
-        color: var(--brand-400);
-        font-size: 14px;
+        background: rgba(34,211,238,0.08);
+        border: 1px solid rgba(34,211,238,0.24);
+        color: var(--accent-500);
+        font-size: 13px;
         font-weight: 700;
         font-family: var(--font-mono);
+        letter-spacing: 0.06em;
         margin-bottom: var(--sp-4);
     }
     .step-title {
@@ -315,15 +483,26 @@
     /* ==========================================================================
        MOBILE
        ========================================================================== */
-    @media (max-width: 768px) {
-        .landing-hero { padding: var(--sp-12) var(--sp-4); }
-        .landing-hero h1 { font-size: 36px; letter-spacing: -0.02em; }
+    @media (max-width: 960px) {
+        .landing-hero {
+            grid-template-columns: 1fr;
+            gap: var(--sp-8);
+            padding: var(--sp-10) var(--sp-4);
+        }
+        .landing-hero h1 { font-size: 40px; letter-spacing: -0.025em; }
         .landing-hero-subtitle { font-size: 15px; }
+        .landing-hero-minis { max-width: 100%; }
+    }
+    @media (max-width: 768px) {
+        .landing-hero h1 { font-size: 32px; }
+        .landing-hero-minis { grid-template-columns: 1fr; }
         .landing-section { padding: var(--sp-12) 0; }
-        .landing-section-heading { font-size: 24px; }
+        .landing-section-heading { font-size: 26px; }
         .landing-grid, .landing-grid-2 { grid-template-columns: 1fr; }
         .landing-final-cta { padding: var(--sp-12) var(--sp-4); margin: var(--sp-8) 0; }
         .landing-final-cta h2 { font-size: 24px; }
+        .preview-price-value { font-size: 32px; }
+        .preview-route { font-size: 26px; }
     }
 </style>
 {% endblock %}
@@ -331,53 +510,133 @@
 {% block content %}
 <!-- Hero -->
 <section class="landing-hero">
-    <span class="landing-eyebrow">
-        <span class="landing-eyebrow-dot" aria-hidden="true"></span>
-        Monitoramento ativo
-    </span>
-    <h1>Compre passagem no <span class="gradient">momento certo</span>.</h1>
-    <p class="landing-hero-subtitle">
-        A Órbita monitora a rota que você quer e te avisa por email quando o preço está
-        historicamente baixo. Você para de checar o Google Flights toda semana.
-    </p>
-    <div class="landing-cta-row">
-        <a href="/auth/login" class="landing-cta">
-            Cadastrar minha primeira rota
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-        {% if popular_public_routes %}
-        <a href="#rotas-populares" class="landing-cta-secondary">Ver rotas populares</a>
-        {% endif %}
+    <div class="landing-hero-left">
+        <span class="landing-eyebrow">
+            <span class="landing-eyebrow-dot" aria-hidden="true"></span>
+            Monitoramento ativo
+        </span>
+        <h1>Compre passagem<br>no <span class="gradient">momento certo</span>.</h1>
+        <p class="landing-hero-subtitle">
+            A Órbita monitora a rota que você quer e te avisa por email quando o preço
+            está historicamente baixo. Você para de checar o Google Flights toda semana.
+        </p>
+        <div class="landing-cta-row">
+            <a href="/auth/login" class="landing-cta">
+                Cadastrar minha primeira rota
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+            {% if popular_public_routes %}
+            <a href="#rotas-populares" class="landing-cta-secondary">Ver rotas populares</a>
+            {% endif %}
+        </div>
+        <div class="landing-hero-minis">
+            <div class="hero-mini">
+                <div class="hero-mini-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-3 3"/></svg>
+                </div>
+                <div class="hero-mini-text">Preço comparado com a faixa histórica da rota.</div>
+            </div>
+            <div class="hero-mini">
+                <div class="hero-mini-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="hero-mini-text">Leitura diária pra você não perder janela boa.</div>
+            </div>
+            <div class="hero-mini">
+                <div class="hero-mini-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
+                <div class="hero-mini-text">Alerta por email no momento em que vale agir.</div>
+            </div>
+        </div>
     </div>
+
+    {% if featured_route %}
+    <aside class="landing-preview" aria-label="Exemplo de rota monitorada">
+        <div class="preview-header">
+            <span class="preview-header-label">Rota em observação</span>
+            <span class="preview-days-badge">180 dias</span>
+        </div>
+        <div class="preview-route">{{ featured_route.origin }} → {{ featured_route.destination }}</div>
+        <div class="preview-price-block">
+            <div class="preview-price-label">Preço agora</div>
+            <div class="preview-price-row">
+                <div class="preview-price-value">{{ format_price_brl(featured_route.current_price) }}</div>
+                {% if featured_route.pct_vs_median is not none %}
+                {% set pct = featured_route.pct_vs_median %}
+                <div class="preview-price-delta {% if pct <= -5 %}down{% elif pct >= 5 %}up{% else %}flat{% endif %}">
+                    {% if pct > 0 %}+{% endif %}{{ pct }}% {% if pct <= -5 %}abaixo{% elif pct >= 5 %}acima{% else %}vs{% endif %} da média
+                </div>
+                {% endif %}
+            </div>
+            <div class="preview-metrics">
+                {% if featured_route.median_180d %}
+                <div>
+                    <div class="preview-metric-label">Média</div>
+                    <div class="preview-metric-value">{{ format_price_brl(featured_route.median_180d) }}</div>
+                </div>
+                {% endif %}
+                {% if featured_route.min_historic %}
+                <div>
+                    <div class="preview-metric-label">Menor</div>
+                    <div class="preview-metric-value">{{ format_price_brl(featured_route.min_historic) }}</div>
+                </div>
+                {% endif %}
+                {% if featured_route.janela %}
+                <div>
+                    <div class="preview-metric-label">Janela</div>
+                    <div class="preview-metric-value">{{ featured_route.janela }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="preview-alert">
+            <div class="preview-alert-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="preview-alert-main">
+                <div class="preview-alert-title">Alerta preparado</div>
+                <div class="preview-alert-sub">Aviso quando fugir da média histórica</div>
+            </div>
+            <span class="preview-alert-status">pronto</span>
+        </div>
+        <div class="preview-footer">
+            <span class="preview-footer-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="4.5" transform="rotate(-25 12 12)"/></svg>
+            </span>
+            <span>Próxima leitura às 00:30, 06:30, 12:30 e 18:30 UTC</span>
+        </div>
+    </aside>
+    {% endif %}
 </section>
 
 <!-- Como funciona -->
 <section class="landing-section" id="como-funciona">
-    <h2 class="landing-section-heading">Como funciona</h2>
-    <p class="landing-section-sub">Três passos. Depois você só recebe email quando vale a pena.</p>
+    <div class="landing-section-eyebrow">Como funciona</div>
+    <h2 class="landing-section-heading">Você escolhe a rota.<br>A Órbita cuida do timing.</h2>
     <div class="landing-grid">
         <div class="landing-card">
-            <div class="step-num">1</div>
+            <div class="step-num">01</div>
             <div class="step-title">Cadastra a rota</div>
-            <div class="step-desc">Origem, destino e um período flexível (tipo "junho de 2026"). Não precisa data exata.</div>
+            <div class="step-desc">Escolha origem, destino e janela de viagem. Sem travar em uma data só.</div>
         </div>
         <div class="landing-card">
-            <div class="step-num">2</div>
-            <div class="step-title">A Órbita monitora todo dia</div>
-            <div class="step-desc">A gente compara o preço atual com 180 dias de histórico da sua rota.</div>
+            <div class="step-num">02</div>
+            <div class="step-title">Órbita monitora todo dia</div>
+            <div class="step-desc">A gente acompanha o histórico da rota e detecta quando o preço foge do padrão.</div>
         </div>
         <div class="landing-card">
-            <div class="step-num">3</div>
-            <div class="step-title">Você recebe um email quando vale a pena</div>
-            <div class="step-desc">Só quando detectamos oportunidade real. Sem newsletter, sem spam.</div>
+            <div class="step-num">03</div>
+            <div class="step-title">Você recebe email quando vale a pena</div>
+            <div class="step-desc">O alerta chega no momento certo, antes da tarifa boa desaparecer.</div>
         </div>
     </div>
 </section>
 
 <!-- Por que Órbita -->
 <section class="landing-section" id="diferenciais">
-    <h2 class="landing-section-heading">Por que Órbita</h2>
-    <p class="landing-section-sub">Diferença real no dia-a-dia de quem planeja viagem.</p>
+    <div class="landing-section-eyebrow">Por que Órbita</div>
+    <h2 class="landing-section-heading">Menos ruído.<br>Mais contexto pra comprar bem.</h2>
     <div class="landing-grid landing-grid-2">
         <div class="landing-card">
             <div class="feature-icon">
@@ -413,8 +672,9 @@
 <!-- Rotas populares -->
 {% if popular_public_routes %}
 <section class="landing-section" id="rotas-populares">
-    <h2 class="landing-section-heading">Rotas populares</h2>
-    <p class="landing-section-sub">Histórico de 180 dias, atualizado todo dia. Entre em qualquer uma pra ver a média e o menor preço registrado.</p>
+    <div class="landing-section-eyebrow">Rotas populares</div>
+    <h2 class="landing-section-heading">Veja o histórico das rotas mais buscadas.</h2>
+    <p class="landing-section-sub" style="text-align:left;margin-left:0;">Atualizado todo dia. Entre em qualquer uma pra ver a média e o menor preço registrado.</p>
     <div class="landing-grid">
         {% for r in popular_public_routes[:6] %}
         <a href="/rotas/{{ r.origin }}-{{ r.destination }}" class="landing-card">
@@ -428,7 +688,8 @@
 
 <!-- FAQ -->
 <section class="landing-section" id="faq">
-    <h2 class="landing-section-heading">Perguntas frequentes</h2>
+    <div class="landing-section-eyebrow">Perguntas frequentes</div>
+    <h2 class="landing-section-heading">Ainda tem dúvida?</h2>
     <div class="faq-list">
         <details class="faq-item">
             <summary>A Órbita é grátis mesmo?</summary>

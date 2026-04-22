@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     app_base_url: str = "http://localhost:8000"
     google_client_id: str = ""
     google_client_secret: str = ""
-    session_secret_key: str = "dev-secret-change-in-production"
+    # NUNCA usar default em producao. Gerar com: python -c "import secrets; print(secrets.token_hex(32))"
+    session_secret_key: str = "dev-secret-change-in-production"  # noqa: S105
     sentry_dsn: str = ""
     sentry_environment: str = "development"
     sentry_traces_sample_rate: float = 0.1

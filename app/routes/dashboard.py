@@ -31,11 +31,10 @@ from app.services.dashboard_service import (
 from app.services.airport_service import is_valid_code, get_all_airports, search_airports
 from app.services.popular_routes import POPULAR_ROUTES, get_by_slug, default_dates
 from app.services.public_route_service import (
+    get_featured_route_for_hero,
     get_top_public_routes,
     has_enough_data,
 )
-from app.services.share_card_service import build_price_card
-from app.services.snapshot_service import get_historical_price_context
 
 router = APIRouter(tags=["dashboard"])
 _TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
@@ -123,6 +122,7 @@ def dashboard_index(
     if user is None:
         flash_message = FLASH_MESSAGES.get(msg) if msg else None
         popular_public_routes = get_top_public_routes(db, limit=5)
+        featured_route = get_featured_route_for_hero(db)
         return templates.TemplateResponse(
             request=request,
             name="landing.html",
@@ -130,6 +130,8 @@ def dashboard_index(
                 "user": None,
                 "flash_message": flash_message,
                 "popular_public_routes": popular_public_routes,
+                "featured_route": featured_route,
+                "format_price_brl": format_price_brl,
             },
         )
 
@@ -217,68 +219,17 @@ def set_price_mode(mode: str = Form(...)):
     if mode not in ("per_person", "total"):
         mode = "per_person"
     response = RedirectResponse(url="/", status_code=303)
+    from app.config import settings as _settings
+    is_production = not _settings.database_url.startswith("sqlite")
     response.set_cookie(
         key="price_mode",
         value=mode,
         max_age=PRICE_MODE_COOKIE_MAX_AGE,
-        httponly=False,
+        httponly=True,
+        secure=is_production,
         samesite="lax",
     )
     return response
-
-
-@router.get("/groups/{group_id}/share-card.png")
-def group_share_card(
-    group_id: int,
-    db: Session = Depends(get_db),
-    user: User | None = Depends(get_current_user),
-):
-    """Gera card PNG compartilhavel com preco atual (Phase 30).
-
-    Visivel apenas para o dono do grupo. Valida ownership via filtro.
-    """
-    if user is None:
-        return RedirectResponse(url="/?msg=login_required", status_code=303)
-
-    group = (
-        db.query(RouteGroup)
-        .filter(RouteGroup.id == group_id, RouteGroup.user_id == user.id)
-        .first()
-    )
-    if group is None:
-        raise HTTPException(status_code=404, detail="Grupo nao encontrado")
-
-    from app.models import FlightSnapshot
-    cheapest = (
-        db.query(FlightSnapshot)
-        .filter(
-            FlightSnapshot.route_group_id == group_id,
-            FlightSnapshot.origin.in_(group.origins),
-            FlightSnapshot.destination.in_(group.destinations),
-        )
-        .order_by(FlightSnapshot.collected_at.desc(), FlightSnapshot.price.asc())
-        .first()
-    )
-    if cheapest is None:
-        raise HTTPException(status_code=404, detail="Sem dados de preco para compartilhar")
-
-    historical_ctx = get_historical_price_context(
-        db, cheapest.origin, cheapest.destination
-    )
-    png_bytes = build_price_card(
-        group=group,
-        snapshot=cheapest,
-        historical_ctx=historical_ctx,
-        passengers=group.passengers or 1,
-    )
-    return Response(
-        content=png_bytes,
-        media_type="image/png",
-        headers={
-            "Cache-Control": "public, max-age=900",
-            "Content-Disposition": f'inline; filename="preco-justo-{group_id}.png"',
-        },
-    )
 
 
 @router.get("/alerts", response_class=HTMLResponse)

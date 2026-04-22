@@ -52,7 +52,7 @@ def build_public_og_card(
     else:
         draw.text((60, 340), "Monitore este preco", font=f_cities, fill=TEXT)
 
-    draw.text((60, OG_H - 60), "flight-monitor.onrender.com", font=f_sub, fill=MUTED)
+    draw.text((60, OG_H - 60), "orbita-flights.fly.dev", font=f_sub, fill=MUTED)
 
     buf = BytesIO()
     img.save(buf, format="PNG", optimize=True)
