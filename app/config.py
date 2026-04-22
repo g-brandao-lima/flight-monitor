@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "sqlite:///./flight_monitor.db"
+    database_url: str = "sqlite:///./orbita.db"
     serpapi_api_key: str = ""
     gmail_sender: str = ""
     gmail_app_password: str = ""

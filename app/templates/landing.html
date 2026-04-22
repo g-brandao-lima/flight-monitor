@@ -13,8 +13,8 @@
         padding: var(--sp-16) var(--sp-2) var(--sp-12);
         position: relative;
         display: grid;
-        grid-template-columns: 1.05fr 1fr;
-        gap: var(--sp-12);
+        grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.95fr);
+        gap: var(--sp-10);
         align-items: center;
     }
     .landing-hero::before {
@@ -55,9 +55,9 @@
     @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.3); } }
 
     .landing-hero h1 {
-        font-size: 56px;
+        font-size: clamp(32px, 4.2vw, 56px);
         font-weight: 700;
-        line-height: 1.03;
+        line-height: 1.05;
         color: var(--text-0);
         letter-spacing: -0.035em;
         margin-bottom: var(--sp-5);
@@ -374,61 +374,55 @@
     a.landing-card:hover .step-title { color: var(--brand-400); }
 
     /* ==========================================================================
-       COMPARATIVA (tabela)
+       CHECKLIST (o que voce tem)
        ========================================================================== */
-    .compare-wrap {
-        overflow-x: auto;
+    .checklist {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--sp-3);
+    }
+    .check-item {
+        display: flex;
+        gap: var(--sp-4);
+        align-items: flex-start;
+        background: var(--bg-1);
         border: 1px solid var(--border-1);
         border-radius: var(--r-lg);
-        background: var(--bg-1);
+        padding: var(--sp-5);
         box-shadow: var(--elev-1);
+        transition: border-color 200ms ease, transform 200ms ease;
     }
-    .compare-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
+    .check-item:hover {
+        border-color: rgba(16,185,129,0.3);
+        transform: translateY(-1px);
     }
-    .compare-table th, .compare-table td {
-        padding: var(--sp-3) var(--sp-4);
-        text-align: center;
-        border-bottom: 1px solid var(--border-1);
-    }
-    .compare-table thead th {
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--text-2);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        background: var(--bg-2);
-    }
-    .compare-table thead th.orbita-col {
-        color: var(--accent-500);
-        background: linear-gradient(180deg, rgba(34,211,238,0.10), transparent);
-    }
-    .compare-table tbody th {
-        text-align: left;
-        font-weight: 500;
-        color: var(--text-1);
-        min-width: 220px;
-    }
-    .compare-table tbody td {
-        color: var(--text-2);
-        font-family: var(--font-mono);
-        font-size: 16px;
-    }
-    .compare-table tbody td.orbita-col {
+    .check-icon {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: var(--r-full);
+        background: rgba(16,185,129,0.14);
+        border: 1px solid rgba(16,185,129,0.28);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: var(--success-400);
-        background: rgba(16,185,129,0.04);
-        font-weight: 700;
     }
-    .compare-table tbody tr:last-child th,
-    .compare-table tbody tr:last-child td { border-bottom: none; }
-    .compare-note {
-        text-align: center;
-        color: var(--text-3);
-        font-size: 12px;
-        margin-top: var(--sp-3);
-        font-style: italic;
+    .check-body { flex: 1; min-width: 0; }
+    .check-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-0);
+        letter-spacing: -0.01em;
+        margin-bottom: var(--sp-1);
+    }
+    .check-desc {
+        font-size: 13px;
+        color: var(--text-2);
+        line-height: 1.5;
+    }
+    @media (max-width: 768px) {
+        .checklist { grid-template-columns: 1fr; }
     }
 
     /* ==========================================================================
@@ -599,7 +593,7 @@
             <span class="landing-eyebrow-dot" aria-hidden="true"></span>
             Monitoramento ativo
         </span>
-        <h1>Compre passagem<br>no <span class="gradient">momento certo</span>.</h1>
+        <h1>Compre passagem no <span class="gradient">momento certo</span>.</h1>
         <p class="landing-hero-subtitle">
             A Órbita monitora a rota que você quer e te avisa por email quando o preço
             está historicamente baixo. Você para de checar o Google Flights toda semana.
@@ -717,75 +711,57 @@
     </div>
 </section>
 
-<!-- Tabela comparativa -->
-<section class="landing-section" id="comparativa">
-    <div class="landing-section-eyebrow">Diferente</div>
-    <h2 class="landing-section-heading">Você já deve usar alguns.<br>Veja onde a Órbita entra diferente.</h2>
-    <div class="compare-wrap">
-        <table class="compare-table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Google</th>
-                    <th>Skyscanner</th>
-                    <th>Decolar</th>
-                    <th class="orbita-col">Órbita</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>Busca sob demanda</th>
-                    <td>✓</td>
-                    <td>✓</td>
-                    <td>✓</td>
-                    <td class="orbita-col">—</td>
-                </tr>
-                <tr>
-                    <th>Monitora 24/7 sem você abrir o site</th>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td class="orbita-col">✓</td>
-                </tr>
-                <tr>
-                    <th>Alerta por rota cadastrada</th>
-                    <td>✓*</td>
-                    <td>✓*</td>
-                    <td>—</td>
-                    <td class="orbita-col">✓</td>
-                </tr>
-                <tr>
-                    <th>Período flexível (mês inteiro)</th>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td class="orbita-col">✓</td>
-                </tr>
-                <tr>
-                    <th>Contexto histórico 180 dias</th>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td class="orbita-col">✓</td>
-                </tr>
-                <tr>
-                    <th>Recomendação ativa do momento</th>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td class="orbita-col">✓</td>
-                </tr>
-                <tr>
-                    <th>Grátis pra sempre</th>
-                    <td>✓</td>
-                    <td>✓</td>
-                    <td>✓</td>
-                    <td class="orbita-col">✓</td>
-                </tr>
-            </tbody>
-        </table>
+<!-- O que voce tem -->
+<section class="landing-section" id="oferta">
+    <div class="landing-section-eyebrow">O que você tem</div>
+    <h2 class="landing-section-heading">Tudo que o radar entrega,<br>sem você pedir.</h2>
+    <div class="checklist">
+        <div class="check-item">
+            <div class="check-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="check-body">
+                <div class="check-title">Monitora 24/7 sem você abrir o site</div>
+                <div class="check-desc">Quatro leituras automáticas por dia. Você não precisa lembrar de checar.</div>
+            </div>
+        </div>
+        <div class="check-item">
+            <div class="check-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="check-body">
+                <div class="check-title">Alerta por rota cadastrada</div>
+                <div class="check-desc">Email só quando detectamos oportunidade real. Sem newsletter, sem spam.</div>
+            </div>
+        </div>
+        <div class="check-item">
+            <div class="check-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="check-body">
+                <div class="check-title">Período flexível, não data fixa</div>
+                <div class="check-desc">Cadastra "junho de 2026" e a gente acha o melhor dia dentro do mês.</div>
+            </div>
+        </div>
+        <div class="check-item">
+            <div class="check-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="check-body">
+                <div class="check-title">Contexto histórico de 180 dias</div>
+                <div class="check-desc">Você vê se R$ 2.400 é caro ou barato pra sua rota, baseado em dado real.</div>
+            </div>
+        </div>
+        <div class="check-item">
+            <div class="check-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="check-body">
+                <div class="check-title">Recomendação ativa do momento</div>
+                <div class="check-desc">Não só "o preço está tanto". A gente diz se vale comprar agora ou aguardar.</div>
+            </div>
+        </div>
     </div>
-    <p class="compare-note">* Alerta tradicional trava numa data específica. A Órbita monitora a janela inteira que você escolheu.</p>
 </section>
 
 <!-- Por que Órbita -->

@@ -16,7 +16,7 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    return os.getenv("DATABASE_URL", "sqlite:///./flight_monitor.db")
+    return os.getenv("DATABASE_URL", "sqlite:///./orbita.db")
 
 
 def run_migrations_offline():
