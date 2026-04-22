@@ -172,6 +172,43 @@
         gap: var(--sp-4);
         position: relative;
     }
+    .landing-preview-link {
+        color: inherit;
+        text-decoration: none;
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+    .landing-preview-link:hover {
+        transform: translateY(-4px);
+        border-color: rgba(99,102,241,0.55);
+        box-shadow: 0 24px 60px -24px rgba(34,211,238,0.35), var(--elev-3);
+    }
+    .landing-preview-link:focus-visible {
+        outline: 2px solid var(--brand-500);
+        outline-offset: 4px;
+    }
+    .preview-price-hint {
+        font-size: 11px;
+        color: var(--text-3);
+        letter-spacing: 0;
+        font-weight: 500;
+        margin-left: 4px;
+    }
+    .preview-cta-hint {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        align-self: flex-start;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--brand-400, #818cf8);
+        margin-top: -4px;
+        transition: transform 180ms ease, color 180ms ease;
+    }
+    .landing-preview-link:hover .preview-cta-hint {
+        transform: translateX(3px);
+        color: var(--accent-400, #22d3ee);
+    }
     .landing-preview::before {
         content: "";
         position: absolute;
@@ -712,14 +749,14 @@
     </div>
 
     {% if featured_route %}
-    <aside class="landing-preview" aria-label="Exemplo de rota monitorada">
+    <a class="landing-preview landing-preview-link" href="/rotas/{{ featured_route.origin }}-{{ featured_route.destination }}" aria-label="Ver detalhes e preco da rota {{ featured_route.origin }} para {{ featured_route.destination }}">
         <div class="preview-header">
             <span class="preview-header-label">Rota em observação</span>
             <span class="preview-days-badge">180 dias</span>
         </div>
         <div class="preview-route">{{ featured_route.origin }} → {{ featured_route.destination }}</div>
         <div class="preview-price-block">
-            <div class="preview-price-label">Preço agora</div>
+            <div class="preview-price-label">Preço agora <span class="preview-price-hint">por pessoa, ida e volta</span></div>
             <div class="preview-price-row">
                 <div class="preview-price-value" data-countup data-target="{{ featured_route.current_price }}">{{ format_price_brl(featured_route.current_price) }}</div>
                 {% if featured_route.pct_vs_median is not none %}
@@ -766,7 +803,8 @@
             </span>
             <span>Próxima leitura às 00:30, 06:30, 12:30 e 18:30 UTC</span>
         </div>
-    </aside>
+        <span class="preview-cta-hint">Ver rota completa →</span>
+    </a>
     {% endif %}
 </section>
 </div>
@@ -872,13 +910,6 @@
             </div>
             <div class="step-title">Janela inteira, não data travada.</div>
             <div class="step-desc">"Junho de 2026" é suficiente. A gente acha o melhor dia dentro do mês. Você escolhe a intenção, a Órbita escolhe o dia.</div>
-        </div>
-        <div class="landing-card" data-spotlight>
-            <div class="feature-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.91 11.12a8.5 8.5 0 1 1-12-8.49"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </div>
-            <div class="step-title">Grátis pra sempre.</div>
-            <div class="step-desc">A gente ganha comissão do parceiro quando você compra, sem custo extra pra você. Zero anúncio, zero plano premium, zero spam.</div>
         </div>
     </div>
 </section>
