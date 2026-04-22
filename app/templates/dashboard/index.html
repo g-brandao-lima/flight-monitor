@@ -157,36 +157,47 @@
         margin-top: 4px;
         opacity: 0.8;
     }
-    .btn-buy {
-        display: inline-flex;
-        align-items: center;
+    .compare-cluster {
+        display: flex;
+        flex-direction: column;
         gap: 6px;
-        padding: 8px 16px;
-        min-height: 34px;
-        font-size: 13px;
-        font-weight: 700;
-        color: #fff;
-        background: linear-gradient(135deg, var(--brand-500), var(--accent-500, #22d3ee));
-        border: none;
-        border-radius: var(--r-md);
-        text-decoration: none;
-        letter-spacing: 0.01em;
-        transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
-        box-shadow: 0 8px 24px -12px rgba(99,102,241,0.6);
+        align-items: flex-start;
     }
-    .btn-buy:hover { transform: translateY(-1px); filter: brightness(1.07); box-shadow: 0 14px 32px -12px rgba(34,211,238,0.55); }
-    .btn-buy:focus-visible { outline: 2px solid var(--brand-400, #818cf8); outline-offset: 3px; }
-    .btn-buy-arrow { transition: transform 160ms ease; }
-    .btn-buy:hover .btn-buy-arrow { transform: translateX(3px); }
-    .card-actions-secondary {
+    .compare-cluster-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-2);
+        opacity: 0.75;
+    }
+    .compare-buttons {
         display: inline-flex;
         flex-wrap: wrap;
-        gap: 4px 12px;
-        align-items: center;
-        font-size: 12px;
-        color: var(--text-2);
+        gap: 6px;
     }
-    .card-actions-secondary-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; }
+    .btn-compare {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 12px;
+        min-height: 30px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-1);
+        background: var(--bg-2);
+        border: 1px solid var(--border-2);
+        border-radius: var(--r-md);
+        text-decoration: none;
+        transition: background 150ms ease, border-color 150ms ease, transform 150ms ease, color 150ms ease;
+    }
+    .btn-compare:hover {
+        background: var(--bg-3, rgba(255,255,255,0.05));
+        border-color: rgba(99,102,241,0.45);
+        color: var(--text-0);
+        transform: translateY(-1px);
+    }
+    .btn-compare:focus-visible { outline: 2px solid var(--brand-400, #818cf8); outline-offset: 2px; }
+    .btn-compare-ext { font-size: 10px; opacity: 0.55; }
     .price-mode-btn {
         background: var(--bg-2);
         color: var(--text-2);
@@ -611,19 +622,14 @@
             <div class="spacer"></div>
             {% if snap %}
             {% set urls = booking_urls(snap.origin, snap.destination, snap.departure_date, snap.return_date, pax) %}
-            {% set buy_url = "/comprar/" ~ snap.origin ~ "-" ~ snap.destination ~ "?dep=" ~ snap.departure_date.isoformat() ~ "&ret=" ~ snap.return_date.isoformat() ~ "&pax=" ~ pax ~ "&source=dashboard" %}
-            <a href="{{ buy_url }}" class="btn-buy" aria-label="Comprar passagem {{ snap.origin }} para {{ snap.destination }} por {{ format_price_brl(snap.price) }}">
-                Comprar por {{ format_price_brl(snap.price) }}
-                <span class="btn-buy-arrow" aria-hidden="true">→</span>
-            </a>
-            <div class="card-actions card-actions-secondary">
-                <span class="card-actions-secondary-label">Comparar em:</span>
-                <a href="{{ urls.google_flights }}" target="_blank" rel="noopener" aria-label="Comparar no Google Flights">Google Flights</a>
-                <a href="{{ urls.decolar }}" target="_blank" rel="noopener" aria-label="Comparar na Decolar">Decolar</a>
-                <a href="{{ urls.skyscanner }}" target="_blank" rel="noopener" aria-label="Comparar no Skyscanner">Skyscanner</a>
-                {% if item.public_route_slug %}
-                <a href="/rotas/{{ item.public_route_slug }}" aria-label="Pagina publica desta rota" title="Pagina publica SEO">Ver pagina publica</a>
-                {% endif %}
+            <div class="compare-cluster">
+                <span class="compare-cluster-label">Comparar preços em</span>
+                <div class="compare-buttons">
+                    <a href="{{ urls.google_flights }}" target="_blank" rel="noopener" class="btn-compare" aria-label="Comparar no Google Flights">Google Flights <span class="btn-compare-ext" aria-hidden="true">↗</span></a>
+                    <a href="{{ urls.decolar }}" target="_blank" rel="noopener" class="btn-compare" aria-label="Comparar na Decolar">Decolar <span class="btn-compare-ext" aria-hidden="true">↗</span></a>
+                    <a href="{{ urls.skyscanner }}" target="_blank" rel="noopener" class="btn-compare" aria-label="Comparar no Skyscanner">Skyscanner <span class="btn-compare-ext" aria-hidden="true">↗</span></a>
+                    <a href="{{ urls.kayak }}" target="_blank" rel="noopener" class="btn-compare" aria-label="Comparar no Kayak">Kayak <span class="btn-compare-ext" aria-hidden="true">↗</span></a>
+                </div>
             </div>
             {% endif %}
         </div>
