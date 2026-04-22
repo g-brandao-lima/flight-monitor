@@ -7,13 +7,17 @@
     /* ==========================================================================
        HERO SPLIT
        ========================================================================== */
-    /* Wrapper full-width pra o gradient sangrar até as bordas da tela */
+    /* Wrapper full-width pra o gradient sangrar ate as bordas da tela.
+       margin-top negativo compensa o padding-top do .container do base.html
+       (24px = sp-6) pra nao deixar faixa preta de costura abaixo do header. */
     .landing-hero-bg {
         position: relative;
         width: 100vw;
         margin-left: calc(50% - 50vw);
         margin-right: calc(50% - 50vw);
-        padding: 0;
+        margin-top: calc(var(--sp-6) * -1);
+        padding-top: var(--sp-6);
+        overflow: hidden;
     }
     .landing-hero-bg::before {
         content: "";
@@ -21,9 +25,9 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 640px;
-        background: radial-gradient(ellipse 70% 60% at 25% 0%, rgba(99,102,241,0.20), transparent 70%),
-                    radial-gradient(ellipse 65% 55% at 78% 5%, rgba(34,211,238,0.14), transparent 72%);
+        height: 720px;
+        background: radial-gradient(ellipse 80% 65% at 22% -10%, rgba(99,102,241,0.22), transparent 70%),
+                    radial-gradient(ellipse 70% 60% at 82% -5%, rgba(34,211,238,0.16), transparent 72%);
         pointer-events: none;
         z-index: 0;
     }
@@ -581,6 +585,11 @@
         .landing-hero-minis { max-width: 100%; }
     }
     @media (max-width: 768px) {
+        /* container padding-top muda pra sp-4 no mobile, ajusta o compensador */
+        .landing-hero-bg {
+            margin-top: calc(var(--sp-4) * -1);
+            padding-top: var(--sp-4);
+        }
         .landing-hero h1 { font-size: 32px; }
         .landing-hero-minis { grid-template-columns: 1fr; }
         .landing-section { padding: var(--sp-12) 0; }
