@@ -526,4 +526,4 @@ Plans:
 | 33. Public Route Index (SEO) | v2.3 | 0/? | Not started | - |
 | 34. Price Prediction Engine | v2.3 | 0/? | Not started | - |
 | 35. Onboarding Wizard | v2.3 | 0/? | Not started | - |
-| 36. Multi-Leg Trip Builder | v2.3 | 4/4 | Complete   | 2026-04-23 |
+| 36. Multi-Leg Trip Builder | v2.3 | 4/4 | Complete    | 2026-04-23 |
