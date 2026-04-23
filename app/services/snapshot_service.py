@@ -78,7 +78,29 @@ def is_duplicate_snapshot(
     price: float,
     airline: str,
 ) -> bool:
-    """Verifica se ja existe snapshot identico coletado na ultima hora."""
+    """Verifica se ja existe snapshot identico coletado na ultima hora.
+
+    Pitfall 2 (Phase 36): snapshots multi (airline=MULTI) usam janela de 6h
+    e dispensam match de origin/destination direto (cadeia pode variar),
+    confiando em (route_group_id, total, departure_date, return_date) para
+    evitar falsos positivos entre combinacoes diferentes.
+    """
+    if airline == "MULTI":
+        cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=6)
+        existing = (
+            db.query(FlightSnapshot)
+            .filter(
+                FlightSnapshot.route_group_id == route_group_id,
+                FlightSnapshot.airline == "MULTI",
+                FlightSnapshot.price == price,
+                FlightSnapshot.departure_date == departure_date,
+                FlightSnapshot.return_date == return_date,
+                FlightSnapshot.collected_at >= cutoff,
+            )
+            .first()
+        )
+        return existing is not None
+
     cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
     existing = (
         db.query(FlightSnapshot)
