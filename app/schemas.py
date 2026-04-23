@@ -1,6 +1,7 @@
 import datetime
 import re
-from pydantic import BaseModel, field_validator
+from datetime import date, timedelta
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 IATA_PATTERN = re.compile(r"^[A-Z]{3}$")
 
@@ -69,3 +70,52 @@ class RouteGroupResponse(BaseModel):
     is_active: bool
 
     model_config = {"from_attributes": True}
+
+
+class LegCreate(BaseModel):
+    order: int
+    origin: str
+    destination: str
+    window_start: date
+    window_end: date
+    min_stay_days: int
+    max_stay_days: int | None = None
+    max_stops: int | None = None
+
+
+class LegOut(LegCreate):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RouteGroupMultiCreate(BaseModel):
+    name: str
+    passengers: int = 1
+    target_price: float | None = None
+    legs: list[LegCreate]
+
+    @model_validator(mode="after")
+    def validate_chain(self) -> "RouteGroupMultiCreate":
+        if not (2 <= len(self.legs) <= 5):
+            raise ValueError("Roteiro multi-trecho exige entre 2 e 5 trechos.")
+        sorted_legs = sorted(self.legs, key=lambda l: l.order)
+        for leg in sorted_legs:
+            if leg.min_stay_days < 1:
+                raise ValueError("Estadia minima precisa ser de pelo menos 1 dia.")
+            if leg.max_stay_days is not None and leg.max_stay_days < leg.min_stay_days:
+                raise ValueError("Estadia maxima nao pode ser menor que a minima.")
+            if len(leg.origin) != 3 or len(leg.destination) != 3:
+                raise ValueError(
+                    "Codigo IATA deve ter 3 letras (exemplo: GRU, FCO, MAD)."
+                )
+        for i in range(1, len(sorted_legs)):
+            prev = sorted_legs[i - 1]
+            cur = sorted_legs[i]
+            min_start = prev.window_end + timedelta(days=prev.min_stay_days)
+            if cur.window_start < min_start:
+                raise ValueError(
+                    f"Trecho {cur.order} precisa sair em ou apos "
+                    f"{min_start.strftime('%d/%m/%Y')}. "
+                    f"Ajuste a janela ou reduza a estadia minima do trecho {prev.order}."
+                )
+        return self
