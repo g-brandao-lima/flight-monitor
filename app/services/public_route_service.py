@@ -76,6 +76,34 @@ def get_featured_route_for_hero(db: Session) -> dict | None:
     }
 
 
+def get_hero_routes(db: Session, limit: int = 6) -> list[dict]:
+    """Top N rotas mais recentes do route_cache com min_price > 0.
+
+    Ordenado por cached_at DESC. Retorna lista vazia se nenhuma qualifica.
+    Nao chama API externa; leitura direta de route_cache.
+    """
+    rows = (
+        db.query(RouteCache)
+        .filter(RouteCache.min_price > 0)
+        .order_by(RouteCache.cached_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "origin": r.origin,
+            "destination": r.destination,
+            "origin_city": iata_to_city(r.origin),
+            "destination_city": iata_to_city(r.destination),
+            "min_price": r.min_price,
+            "departure_date": r.departure_date,
+            "return_date": r.return_date,
+            "cached_at": r.cached_at,
+        }
+        for r in rows
+    ]
+
+
 def get_top_public_routes(db: Session, limit: int = 5) -> list[dict]:
     """Rotas com >= MIN_SNAPSHOTS_FOR_INDEX, ordenadas por volume desc."""
     rows = (
