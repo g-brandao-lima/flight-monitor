@@ -1,10 +1,12 @@
 import re
 import datetime
+from collections import defaultdict
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from app.templates_config import get_templates
+from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -12,7 +14,8 @@ from fastapi.responses import JSONResponse
 
 from app.auth.dependencies import get_current_user
 from app.database import get_db
-from app.models import DetectedSignal, RouteGroup, User
+from app.models import DetectedSignal, RouteGroup, RouteGroupLeg, User
+from app.schemas import RouteGroupMultiCreate
 from app.rate_limit import (
     limiter,
     LIMIT_AUTOCOMPLETE,
@@ -271,6 +274,173 @@ def api_search_airports(request: Request, q: str = ""):
     return JSONResponse(results)
 
 
+LEG_FIELD_PATTERN = re.compile(r"legs\[(\d+)\]\[(\w+)\]")
+
+
+def _parse_legs_from_form(form_items) -> list[dict]:
+    """Parse form data into list of leg dicts sorted by form index.
+
+    Accepts any iterable of (key, value) pairs. Returns list of dicts with
+    normalized fields: order, origin, destination, window_start (date),
+    window_end (date), min_stay_days (int), max_stay_days (int | None),
+    max_stops (int | None).
+    """
+    legs_raw: dict[int, dict[str, str]] = defaultdict(dict)
+    for key, value in form_items:
+        match = LEG_FIELD_PATTERN.match(key)
+        if not match:
+            continue
+        idx, field = int(match.group(1)), match.group(2)
+        legs_raw[idx][field] = value
+
+    legs_list: list[dict] = []
+    for position, idx in enumerate(sorted(legs_raw.keys()), start=1):
+        raw = legs_raw[idx]
+        if not raw.get("origin"):
+            continue
+
+        def _to_int(val: str | None) -> int | None:
+            if val is None or val == "":
+                return None
+            return int(val)
+
+        def _to_date(val: str) -> datetime.date:
+            return datetime.date.fromisoformat(val)
+
+        leg = {
+            "order": _to_int(raw.get("order")) or position,
+            "origin": (raw.get("origin") or "").strip().upper(),
+            "destination": (raw.get("destination") or "").strip().upper(),
+            "window_start": _to_date(raw["window_start"]),
+            "window_end": _to_date(raw["window_end"]),
+            "min_stay_days": _to_int(raw.get("min_stay_days")) or 1,
+            "max_stay_days": _to_int(raw.get("max_stay_days")),
+            "max_stops": _to_int(raw.get("max_stops")),
+        }
+        legs_list.append(leg)
+    return legs_list
+
+
+@router.post("/groups", response_class=HTMLResponse)
+@limiter.limit(LIMIT_WRITE)
+async def create_group_dispatch(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_current_user),
+):
+    """Dispatch POST /groups by mode.
+
+    mode=multi_leg: parse legs[] and create RouteGroup with legs.
+    Any other mode: delegate to existing /groups/create handler flow.
+    """
+    form = await request.form()
+    mode = form.get("mode", "roundtrip")
+
+    if mode != "multi_leg":
+        return RedirectResponse(url="/groups/create", status_code=303)
+
+    # Parse legs and build payload for Pydantic validation
+    try:
+        legs_list = _parse_legs_from_form(form.multi_items())
+    except (ValueError, KeyError) as exc:
+        return templates.TemplateResponse(
+            request=request,
+            name="dashboard/create.html",
+            context={
+                "error": f"Dados invalidos no formulario multi-trecho: {exc}",
+                "airports": get_all_airports(),
+                "user": user,
+            },
+            status_code=400,
+        )
+
+    name = (form.get("name") or "").strip()
+    passengers_raw = form.get("passengers", "1")
+    target_price_raw = form.get("target_price", "")
+
+    try:
+        passengers = max(1, min(9, int(passengers_raw or "1")))
+    except ValueError:
+        passengers = 1
+    target_price = float(target_price_raw) if target_price_raw.strip() else None
+
+    try:
+        payload = RouteGroupMultiCreate(
+            name=name,
+            passengers=passengers,
+            target_price=target_price,
+            legs=legs_list,
+        )
+    except ValidationError as exc:
+        first = exc.errors()[0]
+        msg = first.get("msg", "Dados invalidos.")
+        if msg.startswith("Value error, "):
+            msg = msg[len("Value error, "):]
+        return templates.TemplateResponse(
+            request=request,
+            name="dashboard/create.html",
+            context={
+                "error": msg,
+                "airports": get_all_airports(),
+                "user": user,
+            },
+            status_code=400,
+        )
+
+    active_count = _count_active_groups(db, user_id=user.id if user else None)
+    if active_count >= MAX_ACTIVE_GROUPS:
+        return templates.TemplateResponse(
+            request=request,
+            name="dashboard/create.html",
+            context={
+                "error": f"Limite de {MAX_ACTIVE_GROUPS} grupos ativos atingido.",
+                "airports": get_all_airports(),
+                "user": user,
+            },
+            status_code=400,
+        )
+
+    sorted_legs = sorted(payload.legs, key=lambda l: l.order)
+    first_leg = sorted_legs[0]
+    last_leg = sorted_legs[-1]
+
+    group = RouteGroup(
+        user_id=user.id if user else None,
+        name=payload.name,
+        origins=[first_leg.origin],
+        destinations=[last_leg.destination],
+        duration_days=max(1, (last_leg.window_end - first_leg.window_start).days),
+        travel_start=first_leg.window_start,
+        travel_end=last_leg.window_end,
+        mode="multi_leg",
+        passengers=payload.passengers,
+        target_price=payload.target_price,
+        is_active=True,
+    )
+    db.add(group)
+    db.flush()
+
+    for leg_in in sorted_legs:
+        db.add(
+            RouteGroupLeg(
+                route_group_id=group.id,
+                order=leg_in.order,
+                origin=leg_in.origin,
+                destination=leg_in.destination,
+                window_start=leg_in.window_start,
+                window_end=leg_in.window_end,
+                min_stay_days=leg_in.min_stay_days,
+                max_stay_days=leg_in.max_stay_days,
+                max_stops=leg_in.max_stops,
+            )
+        )
+    db.commit()
+    return RedirectResponse(
+        url="/?msg=grupo_multi_criado",
+        status_code=303,
+    )
+
+
 @router.get("/groups/create", response_class=HTMLResponse)
 def create_group_page(
     request: Request,
@@ -401,27 +571,123 @@ def edit_group_page(
 
 @router.post("/groups/{group_id}/edit", response_class=HTMLResponse)
 @limiter.limit(LIMIT_WRITE)
-def edit_group_form(
+async def edit_group_form(
     request: Request,
     group_id: int,
-    name: str = Form(""),
-    origins: str = Form(""),
-    destinations: str = Form(""),
-    duration_days: int = Form(1),
-    travel_start: datetime.date | None = Form(None),
-    travel_end: datetime.date | None = Form(None),
-    mode: str = Form("normal"),
-    passengers: int = Form(1),
-    max_stops: str = Form(""),
-    target_price: str = Form(""),
     db: Session = Depends(get_db),
     user: User | None = Depends(get_current_user),
 ):
+    form = await request.form()
     group = db.query(RouteGroup).filter(RouteGroup.id == group_id).first()
     if group is None:
         raise HTTPException(status_code=404, detail="Grupo nao encontrado")
     if user and group.user_id != user.id:
         raise HTTPException(status_code=404, detail="Grupo nao encontrado")
+
+    mode = form.get("mode", "normal")
+
+    if mode == "multi_leg":
+        try:
+            legs_list = _parse_legs_from_form(form.multi_items())
+        except (ValueError, KeyError) as exc:
+            return templates.TemplateResponse(
+                request=request,
+                name="dashboard/edit.html",
+                context={
+                    "group": group,
+                    "error": f"Dados invalidos: {exc}",
+                    "airports": get_all_airports(),
+                    "user": user,
+                },
+                status_code=400,
+            )
+        name_val = (form.get("name") or "").strip()
+        try:
+            passengers_val = max(1, min(9, int(form.get("passengers", "1") or "1")))
+        except ValueError:
+            passengers_val = 1
+        target_price_raw = form.get("target_price", "")
+        target_price_val = (
+            float(target_price_raw) if target_price_raw and target_price_raw.strip() else None
+        )
+        try:
+            payload = RouteGroupMultiCreate(
+                name=name_val,
+                passengers=passengers_val,
+                target_price=target_price_val,
+                legs=legs_list,
+            )
+        except ValidationError as exc:
+            first = exc.errors()[0]
+            msg = first.get("msg", "Dados invalidos.")
+            if msg.startswith("Value error, "):
+                msg = msg[len("Value error, "):]
+            return templates.TemplateResponse(
+                request=request,
+                name="dashboard/edit.html",
+                context={
+                    "group": group,
+                    "error": msg,
+                    "airports": get_all_airports(),
+                    "user": user,
+                },
+                status_code=400,
+            )
+
+        sorted_legs = sorted(payload.legs, key=lambda l: l.order)
+        first_leg = sorted_legs[0]
+        last_leg = sorted_legs[-1]
+        group.name = payload.name
+        group.mode = "multi_leg"
+        group.passengers = payload.passengers
+        group.target_price = payload.target_price
+        group.origins = [first_leg.origin]
+        group.destinations = [last_leg.destination]
+        group.duration_days = max(1, (last_leg.window_end - first_leg.window_start).days)
+        group.travel_start = first_leg.window_start
+        group.travel_end = last_leg.window_end
+        # Recriar legs (cascade delete-orphan cuida dos antigos)
+        group.legs.clear()
+        db.flush()
+        for leg_in in sorted_legs:
+            db.add(
+                RouteGroupLeg(
+                    route_group_id=group.id,
+                    order=leg_in.order,
+                    origin=leg_in.origin,
+                    destination=leg_in.destination,
+                    window_start=leg_in.window_start,
+                    window_end=leg_in.window_end,
+                    min_stay_days=leg_in.min_stay_days,
+                    max_stay_days=leg_in.max_stay_days,
+                    max_stops=leg_in.max_stops,
+                )
+            )
+        db.commit()
+        return RedirectResponse(url="/?msg=grupo_atualizado", status_code=303)
+
+    # Fluxo roundtrip/legado preservado
+    name = (form.get("name") or "").strip()
+    origins = form.get("origins", "")
+    destinations = form.get("destinations", "")
+    try:
+        duration_days = int(form.get("duration_days", "1") or "1")
+    except ValueError:
+        duration_days = 1
+    travel_start_raw = form.get("travel_start", "")
+    travel_end_raw = form.get("travel_end", "")
+    travel_start = (
+        datetime.date.fromisoformat(travel_start_raw) if travel_start_raw else None
+    )
+    travel_end = (
+        datetime.date.fromisoformat(travel_end_raw) if travel_end_raw else None
+    )
+    try:
+        passengers = int(form.get("passengers", "1") or "1")
+    except ValueError:
+        passengers = 1
+    max_stops = form.get("max_stops", "")
+    target_price = form.get("target_price", "")
 
     parsed_origins, parsed_destinations, error = _validate_form(
         name, origins, destinations, duration_days
