@@ -51,6 +51,50 @@
     .flatpickr-day.flatpickr-disabled { color: #3f4652 !important; }
     .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month { fill: #94a3b8 !important; }
     .flatpickr-months .flatpickr-prev-month:hover svg, .flatpickr-months .flatpickr-next-month:hover svg { fill: #f1f5f9 !important; }
+    /* Multi-leg builder (Phase 36) — apenas tokens de base.html */
+    .mode-toggle { margin-bottom: var(--sp-6); }
+    .mode-toggle-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-2); margin-bottom: var(--sp-2); }
+    .mode-toggle-buttons { display: flex; gap: var(--sp-2); }
+    .mode-btn {
+        padding: var(--sp-2) var(--sp-4); border: 1px solid var(--border-2);
+        background: transparent; color: var(--text-1); border-radius: 6px;
+        cursor: pointer; font-family: inherit; font-size: 14px;
+    }
+    .mode-btn.active { background: var(--brand-500); color: #fff; border-color: var(--brand-500); }
+    .mode-btn:hover:not(.active) { border-color: var(--accent-500); color: var(--accent-500); }
+    .mode-subtitle { color: var(--text-2); font-size: 13px; margin-bottom: var(--sp-4); line-height: 1.5; }
+    .leg {
+        background: var(--bg-1); border: 1px solid var(--border-2);
+        border-radius: 8px; padding: var(--sp-4); margin-bottom: var(--sp-6);
+    }
+    .leg legend { font-size: 16px; font-weight: 600; padding: 0 var(--sp-2); color: var(--text-0); }
+    .leg-row { display: flex; gap: var(--sp-4); margin-bottom: var(--sp-3); }
+    .leg-row label { flex: 1; display: flex; flex-direction: column; gap: var(--sp-1); font-size: 13px; color: var(--text-2); }
+    .leg-row input {
+        padding: 10px 12px; border: 1px solid var(--border-2); border-radius: 6px;
+        background: var(--bg-0); color: var(--text-0); font-size: 14px; font-family: inherit;
+    }
+    .leg-row input:focus { outline: none; border-color: var(--brand-500); }
+    .leg-hint { font-size: 12px; color: var(--text-3); margin-top: var(--sp-2); }
+    .leg-error { color: var(--danger-500); font-size: 13px; margin-top: var(--sp-2); min-height: 0; }
+    .leg-error:not(:empty) { min-height: 20px; }
+    .remove-leg {
+        background: transparent; color: var(--text-2); border: 1px solid var(--border-2);
+        padding: var(--sp-2) var(--sp-3); border-radius: 4px; cursor: pointer;
+        margin-top: var(--sp-3); font-size: 13px; font-family: inherit;
+    }
+    .remove-leg:hover { color: var(--danger-500); border-color: var(--danger-500); }
+    #add-leg-btn {
+        background: var(--brand-500); color: #fff; border: none;
+        padding: var(--sp-3) var(--sp-5); border-radius: 6px;
+        cursor: pointer; font-size: 14px; font-family: inherit;
+    }
+    #add-leg-btn:hover { filter: brightness(1.1); }
+    @media (max-width: 768px) {
+        .leg-row { flex-direction: column; }
+        .remove-leg, #add-leg-btn { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { .leg { transition: none; } }
 </style>
 {% endblock %}
 
@@ -65,6 +109,16 @@
 </div>
 {% endif %}
 
+<section class="mode-toggle" aria-label="Tipo de roteiro">
+    <span class="mode-toggle-label">Tipo de roteiro</span>
+    <div class="mode-toggle-buttons">
+        <button type="button" class="mode-btn {% if group.mode != 'multi_leg' %}active{% endif %}" data-mode="roundtrip">Roundtrip simples</button>
+        <button type="button" class="mode-btn {% if group.mode == 'multi_leg' %}active{% endif %}" data-mode="multi_leg">Multi-trecho</button>
+    </div>
+    <input type="hidden" name="mode" id="mode-input" value="{{ group.mode }}">
+</section>
+
+<section data-mode="roundtrip" {% if group.mode == 'multi_leg' %}style="display:none"{% endif %}>
 <div style="background: #1a1e2e; border: 1px solid #2d3748; border-radius: 12px; padding: 24px;">
     <form method="POST" action="/groups/{{ group.id }}/edit" novalidate>
         <div class="form-group">
@@ -159,11 +213,99 @@
         </div>
 
         <div style="display: flex; gap: 16px; align-items: center; padding-top: 8px;">
-            <button type="submit" class="btn-submit">Salvar Alterações</button>
+            <button type="submit" class="btn-submit" id="submit-btn">Salvar alteracoes</button>
             <a href="/" style="color: #64748b; text-decoration: none; font-size: 14px;">Cancelar</a>
         </div>
     </form>
 </div>
+</section>
+
+<section data-mode="multi" {% if group.mode != 'multi_leg' %}style="display:none"{% endif %}>
+<div style="background: #1a1e2e; border: 1px solid #2d3748; border-radius: 12px; padding: 24px;">
+    <p class="mode-subtitle">De 2 a 5 trechos sequenciais. O sinal de compra considera o preco total do roteiro.</p>
+    <form method="POST" action="/groups/{{ group.id }}/edit" novalidate id="multi-form">
+        <input type="hidden" name="mode" value="multi_leg">
+
+        <div class="form-group">
+            <label for="multi-name" class="form-label">Nome do grupo <span class="required">*</span></label>
+            <input type="text" id="multi-name" name="name" required class="form-input" value="{{ group.name }}">
+        </div>
+
+        <template id="leg-template">
+            <fieldset class="leg" data-order="__N__" data-manual-override="false">
+                <legend>Trecho <span class="leg-num">__N__</span></legend>
+                <div class="leg-row">
+                    <label>Origem (IATA)
+                        <input type="text" name="legs[__I__][origin]" maxlength="3" data-field="origin" required>
+                    </label>
+                    <label>Destino (IATA)
+                        <input type="text" name="legs[__I__][destination]" maxlength="3" data-field="destination" required>
+                    </label>
+                </div>
+                <div class="leg-row">
+                    <label>Saida a partir de
+                        <input type="date" name="legs[__I__][window_start]" data-field="window_start" required>
+                    </label>
+                    <label>Saida ate
+                        <input type="date" name="legs[__I__][window_end]" data-field="window_end" required>
+                    </label>
+                </div>
+                <div class="leg-row">
+                    <label>Estadia minima (dias)
+                        <input type="number" min="1" name="legs[__I__][min_stay_days]" data-field="min_stay_days" value="1" required>
+                    </label>
+                    <label>Estadia maxima (dias, opcional)
+                        <input type="number" min="1" name="legs[__I__][max_stay_days]" data-field="max_stay_days" placeholder="Sem teto">
+                    </label>
+                </div>
+                <input type="hidden" name="legs[__I__][order]" value="__N__" data-field="order">
+                <p class="leg-hint">Janela preenchida a partir do trecho anterior. Edite se precisar.</p>
+                <div class="leg-error" role="alert" aria-live="polite"></div>
+                <button type="button" class="remove-leg">Remover trecho</button>
+            </fieldset>
+        </template>
+
+        <div id="legs-container"></div>
+
+        <button type="button" id="add-leg-btn">+ Adicionar trecho</button>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0;">
+            <div>
+                <label for="multi-passengers" class="form-label">Passageiros</label>
+                <input type="number" id="multi-passengers" name="passengers" min="1" max="9" value="{{ group.passengers }}" class="form-input">
+            </div>
+            <div>
+                <label for="multi-target-price" class="form-label">Preco-alvo do total</label>
+                <input type="number" id="multi-target-price" name="target_price" step="0.01" class="form-input" placeholder="R$" value="{{ group.target_price if group.target_price else '' }}">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; align-items: center; padding-top: 8px;">
+            <button type="submit" class="btn-submit" id="multi-submit-btn">Salvar alteracoes</button>
+            <a href="/" style="color: #64748b; text-decoration: none; font-size: 14px;">Cancelar</a>
+        </div>
+    </form>
+</div>
+</section>
+
+{% if group.mode == "multi_leg" %}
+<script>
+    window.__PRELOADED_LEGS__ = [
+        {% for leg in group.legs | sort(attribute='order') %}
+        {
+            "order": {{ leg.order }},
+            "origin": "{{ leg.origin }}",
+            "destination": "{{ leg.destination }}",
+            "window_start": "{{ leg.window_start.isoformat() }}",
+            "window_end": "{{ leg.window_end.isoformat() }}",
+            "min_stay_days": {{ leg.min_stay_days }},
+            "max_stay_days": {{ leg.max_stay_days if leg.max_stay_days is not none else "null" }}
+        }{{ "," if not loop.last else "" }}
+        {% endfor %}
+    ];
+</script>
+{% endif %}
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -354,5 +496,166 @@ function setupAirportSearch(searchId, resultsId, tagsId, hiddenId) {
 
 setupAirportSearch('origins-search', 'origins-results', 'origins-tags', 'origins');
 setupAirportSearch('destinations-search', 'destinations-results', 'destinations-tags', 'destinations');
+
+// Multi-leg builder (Phase 36) — mesmo comportamento de create.html; suporta preload via __PRELOADED_LEGS__
+(function() {
+    const MAX_LEGS = 5;
+    const MIN_LEGS = 2;
+    const container = document.getElementById('legs-container');
+    const addBtn = document.getElementById('add-leg-btn');
+    const template = document.getElementById('leg-template');
+    const sectionRound = document.querySelector('section[data-mode="roundtrip"]');
+    const sectionMulti = document.querySelector('section[data-mode="multi"]');
+    const modeInput = document.getElementById('mode-input');
+    if (!container || !addBtn || !template || !sectionRound || !sectionMulti) return;
+
+    function currentLegs() { return container.querySelectorAll('fieldset.leg'); }
+
+    function addLeg() {
+        const legs = currentLegs();
+        if (legs.length >= MAX_LEGS) return;
+        const idx = legs.length;
+        const num = idx + 1;
+        const html = template.innerHTML
+            .replace(/__N__/g, String(num))
+            .replace(/__I__/g, String(idx));
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        container.appendChild(wrapper.firstElementChild);
+        renumberAndToggle();
+        recalcLegs();
+    }
+
+    function removeLeg(fieldset) {
+        if (currentLegs().length <= MIN_LEGS) return;
+        fieldset.remove();
+        renumberAndToggle();
+        recalcLegs();
+    }
+
+    function renumberAndToggle() {
+        const legs = currentLegs();
+        legs.forEach(function(fs, i) {
+            fs.dataset.order = i + 1;
+            fs.querySelector('.leg-num').textContent = i + 1;
+            fs.querySelectorAll('[name^="legs["]').forEach(function(inp) {
+                inp.name = inp.name.replace(/legs\[\d+\]/, 'legs[' + i + ']');
+            });
+            const orderInput = fs.querySelector('[data-field="order"]');
+            if (orderInput) orderInput.value = String(i + 1);
+            const removeBtn = fs.querySelector('.remove-leg');
+            removeBtn.style.display = legs.length > MIN_LEGS ? '' : 'none';
+            removeBtn.setAttribute('aria-label', 'Remover trecho ' + (i + 1));
+        });
+        addBtn.style.display = legs.length >= MAX_LEGS ? 'none' : '';
+        addBtn.setAttribute('aria-label', 'Adicionar trecho ' + (legs.length + 1));
+    }
+
+    function parseDate(s) { return s ? new Date(s + 'T00:00:00') : null; }
+    function fmtDate(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + dd;
+    }
+    function fmtDateBR(d) {
+        const dd = String(d.getDate()).padStart(2, '0');
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const y = d.getFullYear();
+        return dd + '/' + m + '/' + y;
+    }
+
+    function recalcLegs() {
+        const legs = Array.from(currentLegs());
+        for (let i = 1; i < legs.length; i++) {
+            const fs = legs[i];
+            if (fs.dataset.manualOverride === 'true') continue;
+            const prev = legs[i - 1];
+            const prevEnd = parseDate(prev.querySelector('[data-field="window_end"]').value);
+            const prevMin = parseInt(prev.querySelector('[data-field="min_stay_days"]').value, 10) || 1;
+            const prevMaxRaw = prev.querySelector('[data-field="max_stay_days"]').value;
+            const prevMax = prevMaxRaw ? parseInt(prevMaxRaw, 10) : 30;
+            if (!prevEnd) continue;
+            const wStart = new Date(prevEnd.getTime() + prevMin * 86400000);
+            const wEnd = new Date(wStart.getTime() + prevMax * 86400000);
+            fs.querySelector('[data-field="window_start"]').value = fmtDate(wStart);
+            fs.querySelector('[data-field="window_end"]').value = fmtDate(wEnd);
+        }
+        validateChainLocal();
+    }
+
+    function validateChainLocal() {
+        const legs = Array.from(currentLegs());
+        for (let i = 1; i < legs.length; i++) {
+            const fs = legs[i];
+            const prev = legs[i - 1];
+            const err = fs.querySelector('.leg-error');
+            err.textContent = '';
+            const prevEnd = parseDate(prev.querySelector('[data-field="window_end"]').value);
+            const prevMin = parseInt(prev.querySelector('[data-field="min_stay_days"]').value, 10) || 1;
+            const curStart = parseDate(fs.querySelector('[data-field="window_start"]').value);
+            if (!prevEnd || !curStart) continue;
+            const minStart = new Date(prevEnd.getTime() + prevMin * 86400000);
+            if (curStart < minStart) {
+                err.textContent = 'Trecho ' + (i + 1) + ' precisa sair em ou apos ' + fmtDateBR(minStart) + '. Ajuste a janela ou reduza a estadia minima do trecho ' + i + '.';
+            }
+        }
+    }
+
+    function setMode(mode) {
+        if (modeInput) modeInput.value = mode;
+        if (mode === 'multi_leg') {
+            sectionRound.style.display = 'none';
+            sectionMulti.style.display = '';
+            if (currentLegs().length === 0) { addLeg(); addLeg(); }
+        } else {
+            sectionRound.style.display = '';
+            sectionMulti.style.display = 'none';
+        }
+        document.querySelectorAll('.mode-btn').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.mode === mode);
+        });
+    }
+
+    document.querySelectorAll('.mode-btn').forEach(function(b) {
+        b.addEventListener('click', function() { setMode(b.dataset.mode); });
+    });
+    addBtn.addEventListener('click', addLeg);
+    container.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-leg')) removeLeg(e.target.closest('fieldset.leg'));
+    });
+    container.addEventListener('input', function(e) {
+        const fs = e.target.closest('fieldset.leg');
+        if (!fs) return;
+        if (e.target.matches('[data-field="window_start"], [data-field="window_end"]')) {
+            const legs = Array.from(currentLegs());
+            const idx = legs.indexOf(fs);
+            if (idx > 0) fs.dataset.manualOverride = 'true';
+        }
+        if (e.target.matches('[data-field="window_end"], [data-field="min_stay_days"], [data-field="max_stay_days"]')) {
+            recalcLegs();
+        }
+        validateChainLocal();
+    });
+
+    // Preload: se backend injetou __PRELOADED_LEGS__, popular builder e forcar modo multi
+    if (window.__PRELOADED_LEGS__) {
+        setMode('multi_leg');
+        container.innerHTML = '';
+        window.__PRELOADED_LEGS__.forEach(function(leg, idx) {
+            addLeg();
+            const fs = currentLegs()[idx];
+            fs.querySelector('[data-field="origin"]').value = leg.origin;
+            fs.querySelector('[data-field="destination"]').value = leg.destination;
+            fs.querySelector('[data-field="window_start"]').value = leg.window_start;
+            fs.querySelector('[data-field="window_end"]').value = leg.window_end;
+            fs.querySelector('[data-field="min_stay_days"]').value = leg.min_stay_days;
+            if (leg.max_stay_days !== null && leg.max_stay_days !== undefined) {
+                fs.querySelector('[data-field="max_stay_days"]').value = leg.max_stay_days;
+            }
+            fs.dataset.manualOverride = 'true';
+        });
+    }
+})();
 </script>
 {% endblock %}
