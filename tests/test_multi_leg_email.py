@@ -41,3 +41,39 @@ def test_consolidated_multi_has_chain_and_total(
     assert "GRU" in html and "FCO" in html
     assert "->" in html, "cadeia deve usar seta ASCII ->"
     assert "Preco total do roteiro" in html
+
+
+def test_consolidated_multi_has_recommendation_before_legs(
+    db, multi_leg_group_factory, multi_leg_snapshot_factory
+):
+    """D-19: bloco de recomendacao mandatorio no TOPO, antes da cadeia e da tabela de legs."""
+    from app.services import alert_service
+
+    group = multi_leg_group_factory(num_legs=3, name="Asia Multi")
+    snapshot = multi_leg_snapshot_factory(group, total_price=4800.0)
+
+    payload = alert_service.compose_consolidated_email(db, group, [snapshot], [])
+    html = payload["html"] if isinstance(payload, dict) else payload[1]
+    text = payload["text"] if isinstance(payload, dict) else payload[2]
+
+    # HTML: bloco de recomendacao deve vir antes da cadeia e antes do primeiro "Trecho 1"
+    rec_pos = html.find("recommendation-block")
+    chain_pos = html.find("GRU -&gt;") if "GRU -&gt;" in html else html.find("GRU -&gt")
+    if chain_pos == -1:
+        chain_pos = html.find('class="chain"')
+    first_leg_pos = html.find("Trecho 1")
+
+    assert rec_pos >= 0, "bloco recommendation-block ausente no HTML"
+    assert chain_pos > 0, "cadeia ausente no HTML"
+    assert first_leg_pos > 0, "primeiro trecho ausente no HTML"
+    assert rec_pos < chain_pos, f"recomendacao ({rec_pos}) deve vir antes da cadeia ({chain_pos})"
+    assert rec_pos < first_leg_pos, f"recomendacao ({rec_pos}) deve vir antes da tabela de legs ({first_leg_pos})"
+
+    # Plain text idem
+    assert "Recomendacao:" in text
+    rec_text_pos = text.find("Recomendacao:")
+    trecho_text_pos = text.find("Trecho 1")
+    preco_text_pos = text.find("Preco total do roteiro")
+    assert rec_text_pos >= 0
+    assert trecho_text_pos > rec_text_pos
+    assert preco_text_pos > rec_text_pos

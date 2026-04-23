@@ -220,18 +220,41 @@ def _fmt_date(d) -> str:
 
 
 def compose_consolidated_email(
-    signals: list[DetectedSignal],
-    snapshots: list[FlightSnapshot],
-    group: RouteGroup,
+    signals_or_db,
+    snapshots_or_group=None,
+    group_or_snapshots=None,
     recipient_email: str | None = None,
     db=None,
-) -> MIMEMultipart:
-    """Compoe email consolidado com rota mais barata, top 3 datas e resumo.
+    signals_kw=None,
+):
+    """Compoe email consolidado. Dispatch por modo do grupo (Phase 36 D-19).
 
-    Retorna MIMEMultipart com partes text/plain e text/html.
-    recipient_email: email do dono do grupo. Fallback para settings.gmail_recipient.
-    db: Session opcional para enriquecer com contexto historico (Phase 22).
+    Duas assinaturas suportadas (backward compatibility + new multi_leg signature):
+    - Roundtrip legado: `(signals: list, snapshots: list, group, recipient_email=None, db=None)`
+    - Multi-leg novo: `(db: Session, group, snapshots: list, signals: list)` — dispatch
+      automatico quando `group.mode == "multi_leg"`.
+
+    Retorna MIMEMultipart para roundtrip. Para multi_leg, retorna dict com keys
+    {subject, html, text, message} (message = MIMEMultipart pronto para send_email).
     """
+    # Dispatch: primeira posicao e Session (novo) ou list (legado)?
+    if hasattr(signals_or_db, "query") and not isinstance(signals_or_db, list):
+        # Novo formato: (db, group, snapshots, signals)
+        db_arg = signals_or_db
+        group = snapshots_or_group
+        snapshots = group_or_snapshots or []
+        signals_list = recipient_email if isinstance(recipient_email, list) else (signals_kw or [])
+        return _render_consolidated_multi(db_arg, group, snapshots[0] if snapshots else None, signals_list)
+
+    # Formato legado: (signals, snapshots, group, recipient_email, db)
+    signals = signals_or_db
+    snapshots = snapshots_or_group
+    group = group_or_snapshots
+
+    # Phase 36: se for multi_leg chamado pelo formato legado, ainda dispatch para multi
+    if group is not None and getattr(group, "mode", None) == "multi_leg":
+        return _render_consolidated_multi(db, group, snapshots[0] if snapshots else None, signals or [])
+
     sorted_snaps = sorted(snapshots, key=lambda s: s.price)
     cheapest = sorted_snaps[0]
     top3 = sorted_snaps[:3]
@@ -570,3 +593,234 @@ def _render_consolidated_plain(
     lines.append(f"Silenciar alertas por 24h: {silence_url}")
 
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Phase 36 Plan 04: email consolidado MULTI-TRECHO (D-19, D-20)
+# ---------------------------------------------------------------------------
+
+
+def _render_consolidated_multi(db, group: RouteGroup, snapshot, signals_list):
+    """Renderiza email consolidado multi-leg.
+
+    Ordem obrigatoria por D-19:
+    1. Bloco de recomendacao (topo, sempre presente)
+    2. Cadeia de trechos mono
+    3. Preco total em destaque
+    4. Tabela breakdown por leg
+    5. Rodape total
+    6. Cluster comparadores por leg (one-way)
+    7. CTA ver detalhes
+
+    Subject por D-20: "Orbita multi: {nome} R$ X,XX (N trechos)".
+
+    Retorna dict {subject, html, text, message} onde message e MIMEMultipart pronto.
+    NOTA: email inline hex e excecao documentada (clients Gmail/Outlook nao suportam
+    CSS variables de forma confiavel). Mapeados a partir de tokens de base.html.
+    """
+    from app.services.dashboard_service import booking_urls_oneway
+
+    legs = sorted(group.legs, key=lambda l: l.order)
+    chain_parts = [legs[0].origin] + [leg.destination for leg in legs] if legs else []
+    chain_str = " -> ".join(chain_parts)
+    num_legs = len(legs)
+
+    total_price = snapshot.price if snapshot is not None else 0.0
+    total_br = format_price_brl(total_price)
+    subject = f"Orbita multi: {group.name} {total_br} ({num_legs} trechos)"
+
+    # Computa recomendacao (reusa mesma engine do dashboard)
+    recommendation = None
+    if snapshot is not None:
+        try:
+            from app.services.dashboard_service import _build_multi_leg_item
+            item = _build_multi_leg_item(db, group)
+            recommendation = item.get("recommendation")
+        except Exception:
+            recommendation = None
+
+    # Parse legs_breakdown do snapshot.details
+    leg_details = []
+    if snapshot is not None and snapshot.details:
+        raw_legs = snapshot.details.get("legs", [])
+        for leg_detail in sorted(raw_legs, key=lambda x: x.get("order", 0)):
+            try:
+                dep_date = datetime.strptime(leg_detail["date"], "%Y-%m-%d").date()
+            except (KeyError, ValueError):
+                dep_date = None
+            leg_details.append({
+                "order": leg_detail.get("order"),
+                "origin": leg_detail.get("origin"),
+                "destination": leg_detail.get("destination"),
+                "date_br": dep_date.strftime("%d/%m/%Y") if dep_date else "",
+                "dep_date": dep_date,
+                "price": leg_detail.get("price", 0.0),
+                "airline": leg_detail.get("airline", ""),
+            })
+
+    detail_url = f"{settings.app_base_url}/groups/{group.id}"
+
+    # Token hex (justificados; email clients nao suportam CSS vars)
+    COLOR_BG = "#0E1220"  # --bg-1
+    COLOR_BG_2 = "#161B2E"  # --bg-2
+    COLOR_TEXT_0 = "#FFFFFF"  # --text-0
+    COLOR_TEXT_1 = "#E5E7EB"  # --text-1
+    COLOR_TEXT_2 = "#9CA3AF"  # --text-2
+    COLOR_BRAND = "#6366F1"  # --brand-500
+    COLOR_ACCENT = "#22D3EE"  # --accent-500
+    COLOR_BORDER = "rgba(255,255,255,0.10)"
+
+    # Bloco de recomendacao (MANDATORIO D-19, mesmo se recommendation is None)
+    if recommendation is not None:
+        rec_label = recommendation.action
+        rec_reason = recommendation.reason
+        rec_text = f"Recomendacao: {rec_label} - {rec_reason}"
+    else:
+        rec_label = "Coletando historico"
+        rec_reason = "Aguarde alguns ciclos para uma recomendacao confiavel."
+        rec_text = f"Recomendacao: {rec_label}. {rec_reason}"
+
+    rec_html = (
+        f'<section class="recommendation-block" '
+        f'style="background:{COLOR_BG_2};border-left:4px solid {COLOR_ACCENT};'
+        f'padding:14px 18px;margin:0 0 20px;border-radius:6px;">'
+        f'<div style="font-size:12px;font-weight:700;letter-spacing:0.1em;'
+        f'color:{COLOR_ACCENT};text-transform:uppercase;">Recomendacao: {rec_label}</div>'
+        f'<div style="font-size:14px;color:{COLOR_TEXT_1};margin-top:6px;">{rec_reason}</div>'
+        f"</section>"
+    )
+
+    # Cadeia mono 20px
+    chain_html = (
+        f'<div class="chain" style="font-family:\'JetBrains Mono\',monospace;'
+        f'font-size:20px;font-weight:700;color:{COLOR_TEXT_0};'
+        f'margin:0 0 8px;letter-spacing:0.02em;">{chain_str}</div>'
+    )
+
+    # Total topo (28px brand)
+    total_html = (
+        f'<div class="total-top" style="margin:0 0 24px;">'
+        f'<div style="font-size:13px;font-weight:500;color:{COLOR_TEXT_2};">Preco total do roteiro</div>'
+        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:28px;'
+        f'font-weight:700;color:{COLOR_BRAND};letter-spacing:-0.02em;">{total_br}</div>'
+        f"</div>"
+    )
+
+    # Tabela breakdown
+    rows = []
+    for leg in leg_details:
+        rows.append(
+            f'<tr>'
+            f'<td style="padding:10px 8px;color:{COLOR_TEXT_1};">Trecho {leg["order"]}</td>'
+            f'<td style="padding:10px 8px;font-family:\'JetBrains Mono\',monospace;color:{COLOR_TEXT_1};">'
+            f'{leg["origin"]} -&gt; {leg["destination"]}</td>'
+            f'<td style="padding:10px 8px;color:{COLOR_TEXT_1};">{leg["date_br"]}</td>'
+            f'<td style="padding:10px 8px;text-align:right;font-family:\'JetBrains Mono\',monospace;'
+            f'color:{COLOR_TEXT_0};font-weight:600;">{format_price_brl(leg["price"])}</td>'
+            f'</tr>'
+        )
+    rows_html = "".join(rows) if rows else (
+        f'<tr><td colspan="4" style="padding:10px 8px;color:{COLOR_TEXT_2};">'
+        f'Primeira busca em andamento.</td></tr>'
+    )
+    table_html = (
+        f'<table class="legs-breakdown" style="width:100%;border-collapse:collapse;'
+        f'margin:0 0 16px;font-size:14px;">'
+        f'<thead><tr style="border-bottom:1px solid {COLOR_BORDER};">'
+        f'<th style="padding:10px 8px;text-align:left;font-size:13px;font-weight:600;color:{COLOR_TEXT_1};">Trecho</th>'
+        f'<th style="padding:10px 8px;text-align:left;font-size:13px;font-weight:600;color:{COLOR_TEXT_1};">Rota</th>'
+        f'<th style="padding:10px 8px;text-align:left;font-size:13px;font-weight:600;color:{COLOR_TEXT_1};">Data</th>'
+        f'<th style="padding:10px 8px;text-align:right;font-size:13px;font-weight:600;color:{COLOR_TEXT_1};">Preco</th>'
+        f'</tr></thead>'
+        f'<tbody>{rows_html}</tbody></table>'
+    )
+
+    # Rodape total
+    footer_html = (
+        f'<div class="legs-total-footer" '
+        f'style="border-top:1px solid {COLOR_BORDER};padding-top:12px;margin:0 0 20px;'
+        f'display:flex;justify-content:space-between;align-items:baseline;">'
+        f'<span style="font-size:14px;font-weight:600;color:{COLOR_TEXT_1};">Total: {total_br}</span>'
+        f"</div>"
+    )
+
+    # Cluster comparadores por leg (one-way)
+    pax = max(1, int(group.passengers or 1))
+    cluster_blocks = []
+    for leg in leg_details:
+        if leg["dep_date"] is None:
+            continue
+        urls = booking_urls_oneway(leg["origin"], leg["destination"], leg["dep_date"], pax)
+        btn_style = (
+            f"display:inline-block;margin:4px 6px 4px 0;padding:8px 14px;"
+            f"background:{COLOR_BG_2};border:1px solid {COLOR_BORDER};border-radius:6px;"
+            f"color:{COLOR_TEXT_1};font-size:12px;font-weight:500;text-decoration:none;"
+        )
+        cluster_blocks.append(
+            f'<div style="margin-bottom:14px;">'
+            f'<div style="font-size:12px;font-weight:500;color:{COLOR_TEXT_2};margin-bottom:6px;">'
+            f'Comparar trecho {leg["order"]} ({leg["origin"]} -&gt; {leg["destination"]}) em</div>'
+            f'<a href="{urls["google_flights"]}" style="{btn_style}">Google Flights</a>'
+            f'<a href="{urls["decolar"]}" style="{btn_style}">Decolar</a>'
+            f'<a href="{urls["skyscanner"]}" style="{btn_style}">Skyscanner</a>'
+            f'<a href="{urls["kayak"]}" style="{btn_style}">Kayak</a>'
+            f"</div>"
+        )
+    clusters_html = (
+        f'<section class="compare-clusters" style="margin:0 0 20px;">'
+        + "".join(cluster_blocks) +
+        f"</section>"
+    )
+
+    # CTA
+    cta_html = (
+        f'<p class="cta" style="font-size:13px;color:{COLOR_TEXT_2};margin:16px 0 0;">'
+        f'Ver detalhes em <a href="{detail_url}" style="color:{COLOR_ACCENT};">{detail_url}</a>'
+        f"</p>"
+    )
+
+    html = (
+        f'<html><body style="font-family:\'Space Grotesk\',Arial,sans-serif;'
+        f'max-width:620px;margin:0 auto;background:{COLOR_BG};color:{COLOR_TEXT_1};'
+        f'padding:24px;">'
+        + rec_html + chain_html + total_html + table_html + footer_html + clusters_html + cta_html +
+        f"</body></html>"
+    )
+
+    # Plain text (ordem identica: recomendacao -> cadeia -> total -> legs -> total rodape -> CTA)
+    plain_lines = [
+        f"Orbita multi: {group.name}",
+        "",
+        rec_text,
+        "",
+        chain_str,
+        f"Preco total do roteiro: {total_br}",
+        "",
+    ]
+    for leg in leg_details:
+        plain_lines.append(
+            f'Trecho {leg["order"]}: {leg["origin"]} -> {leg["destination"]} em '
+            f'{leg["date_br"]} - {format_price_brl(leg["price"])} (via {leg["airline"]})'
+        )
+    if leg_details:
+        plain_lines.append("")
+    plain_lines.append(f"Total: {total_br}")
+    plain_lines.append("")
+    plain_lines.append(f"Ver detalhes em {detail_url}")
+
+    text = "\n".join(plain_lines)
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = settings.gmail_sender
+    msg["To"] = settings.gmail_recipient
+    msg.attach(MIMEText(text, "plain", "utf-8"))
+    msg.attach(MIMEText(html, "html", "utf-8"))
+
+    return {
+        "subject": subject,
+        "html": html,
+        "text": text,
+        "message": msg,
+    }
+
