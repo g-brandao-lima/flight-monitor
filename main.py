@@ -6,6 +6,17 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+# Configura logging da aplicacao ANTES do Sentry.
+# Sem esta chamada, logger.info/warning/error de app.services.* nao chegam
+# ao stdout do container (Sentry LoggingIntegration captura como breadcrumb
+# mas nao imprime). Em prod (fly.io), isso fazia com que todos os logs de
+# polling_service ficassem invisiveis em `fly logs`.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    stream=sys.stdout,
+)
+
 import sentry_sdk
 
 from app.observability import init_sentry
