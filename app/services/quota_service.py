@@ -43,3 +43,14 @@ def get_remaining_quota(db: Session) -> int:
     """Retorna quantas buscas ainda restam no mes atual."""
     used = get_monthly_usage(db)
     return max(0, MONTHLY_QUOTA - used)
+
+
+def next_reset_date() -> datetime.date:
+    """Retorna o primeiro dia do proximo mes (UTC).
+
+    Usado para informar ao usuario quando a quota mensal sera renovada.
+    """
+    today = datetime.datetime.utcnow().date()
+    if today.month == 12:
+        return datetime.date(today.year + 1, 1, 1)
+    return datetime.date(today.year, today.month + 1, 1)

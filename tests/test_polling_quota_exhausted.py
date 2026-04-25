@@ -56,7 +56,8 @@ def test_run_polling_cycle_with_quota_zero_skips_serpapi(db, test_user, monkeypa
     monkeypatch.setattr(polling_service, "SessionLocal", lambda: db)
 
     serpapi_mock = patch(
-        "app.services.serpapi_client.search_flights"
+        "app.services.serpapi_client.SerpApiClient.search_flights_with_insights",
+        return_value=([], None),
     ).start()
     try:
         # Act

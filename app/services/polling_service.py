@@ -7,7 +7,7 @@ from app.config import settings
 from app.database import SessionLocal
 from app.models import RouteGroup
 from app.services.alert_service import compose_consolidated_email, send_email, should_alert
-from app.services import flight_cache
+from app.services import flight_cache, route_cache_service
 from app.services.flight_search import search_flights
 from app.services.quota_service import increment_usage, get_remaining_quota, MONTHLY_QUOTA
 from app.services.serpapi_client import classify_price
@@ -23,16 +23,29 @@ logger = logging.getLogger(__name__)
 DATE_STEP_DAYS = 7
 
 
-def run_polling_cycle(user_id: int | None = None):
+def run_polling_cycle(user_id: int | None = None) -> dict:
     """Executa um ciclo de polling.
 
     Se user_id for informado, processa apenas os grupos daquele usuario.
     Caso contrario, processa todos os grupos ativos (usado pelo scheduler).
+
+    Retorna dict com estatisticas do ciclo:
+        - processed_groups: numero de grupos processados.
+        - snapshots_created: snapshots gravados no banco.
+        - snapshots_skipped_quota: combinacoes puladas por quota SerpAPI esgotada.
+        - snapshots_skipped_no_data: combinacoes puladas por ausencia de dados.
     """
+    stats = {
+        "processed_groups": 0,
+        "snapshots_created": 0,
+        "snapshots_skipped_quota": 0,
+        "snapshots_skipped_no_data": 0,
+    }
     db = SessionLocal()
     try:
         remaining = get_remaining_quota(db)
-        if remaining <= 0:
+        use_serpapi = remaining > 0
+        if not use_serpapi:
             logger.warning(
                 "SerpAPI monthly quota exhausted (%d searches). "
                 "Apenas rotas do cache Travelpayouts serao processadas.",
@@ -51,7 +64,8 @@ def run_polling_cycle(user_id: int | None = None):
         logger.info(f"Polling {len(groups)} active groups (user_id={user_id})")
         for group in groups:
             try:
-                _poll_group(db, group)
+                _poll_group(db, group, use_serpapi=use_serpapi, stats=stats)
+                stats["processed_groups"] += 1
             except Exception as e:
                 logger.error(
                     f"Polling failed for group {group.id} ({group.name}): {e}"
@@ -59,6 +73,7 @@ def run_polling_cycle(user_id: int | None = None):
                 continue
     finally:
         db.close()
+    return stats
 
 
 def _generate_date_pairs(
@@ -92,12 +107,25 @@ def _generate_date_pairs(
     return pairs
 
 
-def _poll_group(db, group: RouteGroup):
-    """Polling de um grupo: gera combinacoes e busca voos com fallback automatico.
+def _poll_group(
+    db,
+    group: RouteGroup,
+    use_serpapi: bool = True,
+    stats: dict | None = None,
+):
+    """Polling de um grupo: gera combinacoes e busca voos.
 
-    Tenta fast-flights primeiro; fallback para SerpAPI se falhar.
-    Acumula todos os sinais e snapshots do ciclo e envia 1 email consolidado ao final.
+    Se use_serpapi=False (quota esgotada), pula chamadas SerpAPI mas continua
+    processando combinacoes que tenham hit no route_cache (Travelpayouts).
+    Acumula sinais e snapshots e envia 1 email consolidado ao final.
     """
+    if stats is None:
+        stats = {
+            "processed_groups": 0,
+            "snapshots_created": 0,
+            "snapshots_skipped_quota": 0,
+            "snapshots_skipped_no_data": 0,
+        }
     if group.mode == "multi_leg":
         from app.services.multi_leg_service import search_multi_leg_prices
 
@@ -167,6 +195,17 @@ def _poll_group(db, group: RouteGroup):
                 )
                 was_cache_hit = flight_cache.get(cache_key) is not None
 
+                if not use_serpapi and not was_cache_hit:
+                    # Quota SerpAPI esgotada: so processa se houver cache
+                    # persistente Travelpayouts pra essa combinacao.
+                    cached = route_cache_service.get_cached_price(
+                        db, origin, destination,
+                        dep_date.isoformat(), ret_date.isoformat(),
+                    )
+                    if cached is None:
+                        stats["snapshots_skipped_quota"] += 1
+                        continue
+
                 try:
                     flights, insights, source = search_flights(
                         origin=origin,
@@ -181,6 +220,7 @@ def _poll_group(db, group: RouteGroup):
                     logger.warning(
                         f"No flights found for {origin}->{destination} {dep_date}: {e}"
                     )
+                    stats["snapshots_skipped_no_data"] += 1
                     continue
 
                 if source == "serpapi" and not was_cache_hit:
@@ -188,6 +228,7 @@ def _poll_group(db, group: RouteGroup):
 
                 if not flights:
                     logger.info(f"No flights available for {origin}->{destination} {dep_date}")
+                    stats["snapshots_skipped_no_data"] += 1
                     continue
 
                 for flight in flights:
@@ -199,6 +240,7 @@ def _poll_group(db, group: RouteGroup):
                         snapshot, signals = result
                         if snapshot is not None:
                             accumulated_snapshots.append(snapshot)
+                            stats["snapshots_created"] += 1
                         accumulated_signals.extend(signals)
 
     # Enviar email consolidado se houver sinais e grupo nao silenciado

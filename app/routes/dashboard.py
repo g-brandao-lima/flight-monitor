@@ -808,6 +808,14 @@ def delete_group(
 
 FLASH_MESSAGES["polling_ok"] = "Busca iniciada em segundo plano. Atualize a página em instantes."
 FLASH_MESSAGES["polling_erro"] = "Erro na busca. Tente novamente."
+FLASH_MESSAGES["polling_sem_quota"] = (
+    "Cota mensal de busca esgotada. Renovada automaticamente no dia 1 do "
+    "próximo mês. Rotas do cache continuam sendo atualizadas 4x ao dia."
+)
+FLASH_MESSAGES["polling_parcial_quota"] = (
+    "Cota esgotada. Atualizadas apenas rotas do cache popular. "
+    "Renovação no dia 1 do próximo mês."
+)
 
 
 def _run_polling_background(user_id: int | None = None) -> None:
@@ -826,9 +834,19 @@ def _run_polling_background(user_id: int | None = None) -> None:
 def manual_polling(
     request: Request,
     background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
     user: User | None = Depends(get_current_user),
 ):
-    """Dispara o ciclo de polling para os grupos do usuario em background."""
+    """Dispara o ciclo de polling para os grupos do usuario em background.
+
+    Se a quota mensal SerpAPI ja esgotou, redireciona com flash diferenciado
+    sem agendar background (cache Travelpayouts continua sendo atualizado
+    4x/dia pelo cron).
+    """
+    from app.services.quota_service import get_remaining_quota
+
     uid = user.id if user else None
+    if get_remaining_quota(db) <= 0:
+        return RedirectResponse(url="/?msg=polling_sem_quota", status_code=303)
     background_tasks.add_task(_run_polling_background, uid)
     return RedirectResponse(url="/?msg=polling_ok", status_code=303)
