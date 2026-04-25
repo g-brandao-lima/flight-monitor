@@ -129,7 +129,9 @@ TOP_BR_ROUTES: list[tuple[str, str]] = [
     ("CGH", "SDU"), ("GRU", "BSB"), ("GRU", "POA"), ("GRU", "CWB"), ("GRU", "CNF"),
     ("GRU", "MAO"), ("GIG", "SSA"), ("BSB", "GRU"), ("REC", "GRU"), ("FOR", "GRU"),
     ("GRU", "LIS"), ("GRU", "MAD"), ("GRU", "MIA"), ("GRU", "JFK"), ("GRU", "SCL"),
-    ("GRU", "EZE"), ("GRU", "LHR"), ("GRU", "CDG"), ("GRU", "FCO"), ("GRU", "BCN"),
+    ("GRU", "EZE"), ("GIG", "SCL"), ("BSB", "SCL"), ("GIG", "EZE"),
+    ("GRU", "LIM"), ("GRU", "BOG"), ("GRU", "MEX"),
+    ("GRU", "LHR"), ("GRU", "CDG"), ("GRU", "FCO"), ("GRU", "BCN"),
     ("GRU", "FRA"), ("GIG", "LIS"), ("GIG", "MIA"),
 ]
 

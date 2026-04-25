@@ -144,4 +144,4 @@ def test_next_n_months_returns_correct_count():
 def test_top_br_routes_contains_key_routes():
     assert ("GRU", "LIS") in route_cache_service.TOP_BR_ROUTES
     assert ("GRU", "GIG") in route_cache_service.TOP_BR_ROUTES
-    assert len(route_cache_service.TOP_BR_ROUTES) == 28
+    assert len(route_cache_service.TOP_BR_ROUTES) == 34
