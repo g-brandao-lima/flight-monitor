@@ -76,6 +76,7 @@ Progress: [░░░░░░░░░░] 0% (0/6 fases)
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260423-1fg | Hero card carousel na landing com top 6 rotas do route_cache | 2026-04-23 | 3880e48 | [260423-1fg-hero-card-carousel-na-landing-com-top-6-](./quick/260423-1fg-hero-card-carousel-na-landing-com-top-6-/) |
+| 260425-0sf | Fix quota esgotada + cache Travelpayouts expandido + copy | 2026-04-25 | 28974df | [260425-0sf-fix-quota-esgotada-cache-travelpayouts-e](./quick/260425-0sf-fix-quota-esgotada-cache-travelpayouts-e/) |
 
 ## Session Continuity
 
