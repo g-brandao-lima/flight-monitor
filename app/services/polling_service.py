@@ -35,7 +35,7 @@ def run_polling_cycle(user_id: int | None = None):
         if remaining <= 0:
             logger.warning(
                 "SerpAPI monthly quota exhausted (%d searches). "
-                "Tentando via fast-flights.",
+                "Apenas rotas do cache Travelpayouts serao processadas.",
                 MONTHLY_QUOTA,
             )
 
